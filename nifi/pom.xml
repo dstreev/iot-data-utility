@@ -8,7 +8,7 @@
         <artifactId>nifi-nar-bundles</artifactId>
         <version>1.3.0</version>
     </parent>
-    <name>NiFi: IOT Data Utilities</name>
+    <name>NiFi :: IOT Data Utilities</name>
 
     
     <modelVersion>4.0.0</modelVersion>

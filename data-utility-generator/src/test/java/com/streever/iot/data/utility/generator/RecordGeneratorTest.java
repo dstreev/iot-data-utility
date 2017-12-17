@@ -198,31 +198,31 @@ public class RecordGeneratorTest {
         }
     }
 
-    @Test
-    public void Test200() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            File file = new File(cl.getResource("sample-record-ordered-generator.json").getFile());
-            JsonNode rootNode = mapper.readValue(file, JsonNode.class);
-
-            RecordGenerator recGen = new RecordGenerator(rootNode);
-
-            buildFile(recGen,10000000);
-            Thread.sleep(1000);
-            buildFile(recGen,50000);
-            Thread.sleep(1000);
-            buildFile(recGen,20000);
-            Thread.sleep(1000);
-            buildFile(recGen,100000);
-            Thread.sleep(1000);
-            buildFile(recGen,700);
-            Thread.sleep(1000);
-            buildFile(recGen,3000000);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    @Test
+//    public void Test200() {
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            File file = new File(cl.getResource("sample-record-ordered-generator.json").getFile());
+//            JsonNode rootNode = mapper.readValue(file, JsonNode.class);
+//
+//            RecordGenerator recGen = new RecordGenerator(rootNode);
+//
+//            buildFile(recGen,10000000);
+//            Thread.sleep(1000);
+//            buildFile(recGen,50000);
+//            Thread.sleep(1000);
+//            buildFile(recGen,20000);
+//            Thread.sleep(1000);
+//            buildFile(recGen,100000);
+//            Thread.sleep(1000);
+//            buildFile(recGen,700);
+//            Thread.sleep(1000);
+//            buildFile(recGen,3000000);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private void buildFile(RecordGenerator recGen,long count) {
         String fileName = new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss").format(new Date()) + ".txt";

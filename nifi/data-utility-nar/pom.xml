@@ -8,7 +8,7 @@
         <version>3.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <name>NiFi: IOT Data Utilities (nar)</name>
+    <name>NiFi :: IOT Data Utilities (nar)</name>
     
     <groupId>com.streever.iot.nifi.data.utility</groupId>
     <artifactId>data.utility.nar</artifactId>
