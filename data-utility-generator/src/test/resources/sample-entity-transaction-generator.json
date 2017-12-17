@@ -1,0 +1,66 @@
+{
+    "delimiter": ",",
+    "fields": [
+        {
+            "date": {
+                "order": 1,
+                "format": "yyyy-MM-dd HH:mm:ss.SSS"
+            }
+        },
+        {
+            "sequence": {
+                "order": 2,
+                "type": "int",
+                "start": 0
+            }
+        },
+        {
+            "number": {
+                "order": 3,
+                "type": "int",
+                "min": 100,
+                "max": 15000,
+                "pool" : {
+                    "size" : 10000
+                }
+            }
+        },
+        {
+            "string": {
+                "order" : 4,
+                "randon": {
+                    "min" : 10,
+                    "max" : 12,
+                    "chars" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                }
+            }
+        },
+        {
+            "ip": {
+                "order": 5,
+                "minIp": "10.0.14.0",
+                "maxIp": "10.121.32.254"
+            }
+        },
+        {
+            "string": {
+                "order": 6,
+                "random" : {
+                    "min" : 5,
+                    "max" : 5,
+                    "chars" : "1234567890",
+                    "pool" : {
+                        "size" : 1000
+                    }
+                }
+            }
+        },
+        {
+            "boolean": {
+                "order": 7,
+                "format": "true:false"
+            }
+        }
+
+    ]
+}
