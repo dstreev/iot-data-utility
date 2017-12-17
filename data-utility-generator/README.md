@@ -21,7 +21,11 @@ A maven pom is provided and can be used to build the project with:
 <code>mvn clean install</code>
 
 ## Running
-See the JUnit Testcases.
+A CLI wrapper is available to run this utility:
+
+```
+java -cp <jar> com.streever.iot.data.utility.generator.RecordGeneratorCLI -h
+```
 
 ## Json Schema and Examples
 Are in the src/test/resources directory.
