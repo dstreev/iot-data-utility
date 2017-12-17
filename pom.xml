@@ -13,6 +13,7 @@
         <module>mapreduce</module>
         <module>nifi</module>
     </modules>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -41,6 +42,7 @@
         <jackson.json.version>2.6.1</jackson.json.version>
 
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
+        <apache.commons.cli.version>1.4</apache.commons.cli.version>
         <apache.commons.codec.version>1.8</apache.commons.codec.version>
 
         <kafka.artifact>kafka_2.10</kafka.artifact>
