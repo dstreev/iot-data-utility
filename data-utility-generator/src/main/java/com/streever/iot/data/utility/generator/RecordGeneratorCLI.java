@@ -3,11 +3,13 @@ package com.streever.iot.data.utility.generator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -16,6 +18,7 @@ public class RecordGeneratorCLI {
     private Long count;
     private String outputFilename;
     private String configurationFile;
+    private Boolean tsOnFile;
 
     private void buildOptions() {
         options = new Options();
@@ -53,10 +56,19 @@ public class RecordGeneratorCLI {
                 .type(Long.class)
                 .required(true)
                 .build();
+
+        Option oTimestamp = Option.builder("t")
+                .argName("timestamp")
+                .desc("Add Timestamp to Filename")
+                .hasArg(false)
+                .required(false)
+                .build();
+
         options.addOption(oHelp);
         options.addOption(oOutput);
         options.addOption(oConfig);
         options.addOption(oCount);
+        options.addOption(oTimestamp);
 
     }
 
@@ -85,6 +97,11 @@ public class RecordGeneratorCLI {
 
         outputFilename = line.getOptionValue("o");
         configurationFile = line.getOptionValue("cfg");
+        if (line.hasOption("t")) {
+            tsOnFile = true;
+        } else {
+            tsOnFile = false;
+        }
 
         return rtn;
     }
@@ -113,7 +130,22 @@ public class RecordGeneratorCLI {
 
     private void buildFile(RecordGenerator recGen, long count) {
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilename));
+            String output = null;
+
+            if (tsOnFile) {
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+
+                String extension = FilenameUtils.getExtension(outputFilename);
+                String baseName = FilenameUtils.getBaseName(outputFilename);
+                String fullPath = FilenameUtils.getFullPath(outputFilename);
+                String now = df.format(new Date());
+
+                output = fullPath + File.separator + baseName + "_" + now + "." + extension;
+            } else {
+                output = outputFilename;
+            }
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(output));
             for (long i = 0; i < count; i++) {
                 writer.append(recGen.next());
                 writer.append("\n");
