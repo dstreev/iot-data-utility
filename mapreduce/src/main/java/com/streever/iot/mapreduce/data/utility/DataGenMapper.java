@@ -52,9 +52,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
             try {
                 InputStream stream = getClass().getResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE);
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode root = mapper.readValue(stream, JsonNode.class);
-
-                recordGenerator = new RecordGenerator(root);
+                recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(stream);
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -73,9 +71,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
                 fsdis = FS1.open(path);
 
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode root = mapper.readValue(fsdis, JsonNode.class);
-
-                recordGenerator = new RecordGenerator(root);
+                recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(fsdis.getWrappedStream());
 
             } catch (IOException e) {
                 e.printStackTrace();

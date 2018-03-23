@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>nifi.data.utility</artifactId>
         <groupId>com.streever.iot.nifi.data.utility</groupId>
+        <artifactId>nifi-data-utility</artifactId>
         <version>3.0-SNAPSHOT</version>
     </parent>
 
@@ -15,12 +15,12 @@
     <name>NiFi :: IOT Data Utilities (nar)</name>
     
     <groupId>com.streever.iot.nifi.data.utility</groupId>
-    <artifactId>data.utility.nar</artifactId>
+    <artifactId>data-utility-nar</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.streever.iot.nifi.data.utility</groupId>
-            <artifactId>data.utility.processors</artifactId>
+            <artifactId>data-utility-processors</artifactId>
             <version>3.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

@@ -55,9 +55,7 @@ public class KafkaDataGenMapper extends Mapper<LongWritable, NullWritable, Objec
             fsdis = FS1.open(path);
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readValue(fsdis, JsonNode.class);
-
-            recordGenerator = new RecordGenerator(root);
+            recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(fsdis.getWrappedStream());
 
         } catch (IOException e) {
             e.printStackTrace();

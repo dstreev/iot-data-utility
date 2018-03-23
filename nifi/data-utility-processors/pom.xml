@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.streever.iot.nifi.data.utility</groupId>
-        <artifactId>nifi.data.utility</artifactId>
+        <artifactId>nifi-data-utility</artifactId>
         <version>3.0-SNAPSHOT</version>
     </parent>
     <name>NiFi :: IOT Data Utilities (processors)</name>
@@ -13,13 +13,13 @@
     <packaging>jar</packaging>
 
     <groupId>com.streever.iot.nifi.data.utility</groupId>
-    <artifactId>data.utility.processors</artifactId>
+    <artifactId>data-utility-processors</artifactId>
     <version>3.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
             <groupId>com.streever.iot.data.utility</groupId>
-            <artifactId>data.utility.generator</artifactId>
+            <artifactId>data-utility-generator</artifactId>
             <version>${data.utility.generator}</version>
         </dependency>
         <dependency>

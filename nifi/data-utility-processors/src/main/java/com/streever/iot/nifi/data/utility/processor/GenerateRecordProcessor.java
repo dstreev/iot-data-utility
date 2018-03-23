@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streever.iot.data.utility.generator.RecordGenerator;
 import org.apache.commons.logging.Log;
 
+import org.apache.commons.logging.LogFactory;
 import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
@@ -158,7 +159,6 @@ public class GenerateRecordProcessor extends AbstractProcessor {
     public void onTrigger(final ProcessContext context, final ProcessSession session) {
         final String data;
 
-
         // Resolve Dynamic Properties
         Map<PropertyDescriptor, String> processorProperties = context.getProperties();
         Map<String, String> generatedAttributes = new HashMap<String, String>();
@@ -171,17 +171,12 @@ public class GenerateRecordProcessor extends AbstractProcessor {
         }
 
         ObjectMapper mapper = new ObjectMapper();
-
-        JsonNode rootNode = null;
-
         try {
-            rootNode = mapper.readValue(new File(generatedAttributes.get(context.getProperty(GENERATOR_RESOURCE)).toUpperCase()), JsonNode.class);
+            generator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(new File(generatedAttributes.get(context.getProperty(GENERATOR_RESOURCE))));
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
-
-        generator = new RecordGenerator(rootNode);
 
         data = generateData(context);
 
@@ -202,7 +197,7 @@ public class GenerateRecordProcessor extends AbstractProcessor {
 
     /*
      * Validates that one or more files exist, as specified in a single property.
-    */
+     */
     public static final Validator createFilesExistValidator() {
         return new Validator() {
 

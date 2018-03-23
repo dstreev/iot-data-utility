@@ -42,7 +42,7 @@ public class RecordGeneratorTest {
             File file = new File(cl.getResource("generator/one.json").getFile());
             String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
 
-            RecordGenerator recGen = mapper.reader(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
 
             System.out.println("Test001");
             for (int i = 0; i < 10; i++) {

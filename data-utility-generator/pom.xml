@@ -5,13 +5,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.streever.iot.data.utility</groupId>
-    <artifactId>data.utility.generator</artifactId>
+    <artifactId>data-utility-generator</artifactId>
     <version>3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <parent>
         <groupId>com.streever.iot</groupId>
-        <artifactId>iot.data.utility</artifactId>
+        <artifactId>iot-data-utility</artifactId>
         <version>3.0-SNAPSHOT</version>
     </parent>
 
