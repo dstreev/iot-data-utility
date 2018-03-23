@@ -33,7 +33,7 @@ Are in the src/test/resources directory.
 ## Supported Datatypes
 
 ### StringField
-Supports both "Random" strings of a desired length range and "Sets".
+Supports both "Range" strings of a desired length range and "Sets".
 
 #### Random String Configuration Example
 <pre><code>
@@ -51,7 +51,7 @@ Supports both "Random" strings of a desired length range and "Sets".
         }
 </code></pre>
 
-Random support a pool of string values when defined.  If present ("pool"), a random set of strings will be generated during construction based on the other settings.  These values are placed in the pool and these values are randomly given out during record creation.  This is helpful if you are trying to establish a field with a constrained bucket of values.  If the list is short, consider using "set" for more control.
+Range support a pool of string values when defined.  If present ("pool"), a random set of strings will be generated during construction based on the other settings.  These values are placed in the pool and these values are randomly given out during record creation.  This is helpful if you are trying to establish a field with a constrained bucket of values.  If the list is short, consider using "set" for more control.
 
 #### Set String Configuration Example
 <pre><code>

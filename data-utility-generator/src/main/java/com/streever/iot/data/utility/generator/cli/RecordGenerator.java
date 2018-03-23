@@ -1,19 +1,19 @@
-package com.streever.iot.data.utility.generator;
+package com.streever.iot.data.utility.generator.cli;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class RecordGeneratorCLI {
+public class RecordGenerator {
     private Options options;
     private Long count;
     private String outputFilename;
@@ -118,9 +118,10 @@ public class RecordGeneratorCLI {
             ObjectMapper mapper = new ObjectMapper();
 
             File file = new File(configurationFile);
-            JsonNode rootNode = mapper.readValue(file, JsonNode.class);
+            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
 
-            RecordGenerator recGen = new RecordGenerator(rootNode);
+            com.streever.iot.data.utility.generator.RecordGenerator recGen = mapper.reader(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+
             buildFile(recGen, count);
 
         }
@@ -128,7 +129,7 @@ public class RecordGeneratorCLI {
         return rtn;
     }
 
-    private void buildFile(RecordGenerator recGen, long count) {
+    private void buildFile(com.streever.iot.data.utility.generator.RecordGenerator recGen, long count) {
         try {
             String output = null;
 
@@ -148,7 +149,13 @@ public class RecordGeneratorCLI {
             BufferedWriter writer = new BufferedWriter(new FileWriter(output));
             for (long i = 0; i < count; i++) {
                 writer.append(recGen.next());
-                writer.append("\n");
+                writer.append(recGen.getOutput().getNewLine());
+                if (i % 10000 == 0) {
+                    System.out.print(".");
+                }
+                if (i % 800000 == 0) {
+                    System.out.println(".");
+                }
             }
             writer.close();
         } catch (Throwable t) {
@@ -159,7 +166,7 @@ public class RecordGeneratorCLI {
 
     public static void main(String[] args) throws Exception {
         int result;
-        RecordGeneratorCLI cli = new RecordGeneratorCLI();
+        RecordGenerator cli = new RecordGenerator();
         result = cli.run(args);
         System.exit(result);
     }

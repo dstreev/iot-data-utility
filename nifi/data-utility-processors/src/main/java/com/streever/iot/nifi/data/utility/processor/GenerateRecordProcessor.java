@@ -19,6 +19,7 @@ package com.streever.iot.nifi.data.utility.processor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streever.iot.data.utility.generator.RecordGenerator;
+import org.apache.commons.logging.Log;
 
 import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.InputRequirement;
@@ -55,6 +56,8 @@ import java.util.concurrent.atomic.AtomicReference;
                 " If Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles.")
 */
 public class GenerateRecordProcessor extends AbstractProcessor {
+
+    private static final Log LOG = LogFactory.getLog(GenerateRecordProcessor.class);
 
     private final AtomicReference<String> data = new AtomicReference<>();
     private RecordGenerator generator = null;
@@ -99,17 +102,17 @@ public class GenerateRecordProcessor extends AbstractProcessor {
         return descriptors;
     }
 
-    @Override
-    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
-        return new PropertyDescriptor.Builder()
-                .name(propertyDescriptorName)
-                .required(false)
-                .addValidator(StandardValidators.createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING, true))
-                .addValidator(StandardValidators.ATTRIBUTE_KEY_PROPERTY_NAME_VALIDATOR)
-                .expressionLanguageSupported(true)
-                .dynamic(true)
-                .build();
-    }
+//    @Override
+//    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+//        return new PropertyDescriptor.Builder()
+//                .name(propertyDescriptorName)
+//                .required(false)
+//                .addValidator(StandardValidators.createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING, true))
+//                .addValidator(StandardValidators.ATTRIBUTE_KEY_PROPERTY_NAME_VALIDATOR)
+//                .expressionLanguageSupported(true)
+//                .dynamic(true)
+//                .build();
+//    }
 
     @Override
     public Set<Relationship> getRelationships() {
@@ -125,17 +128,17 @@ public class GenerateRecordProcessor extends AbstractProcessor {
     protected Collection<ValidationResult> customValidate(ValidationContext validationContext) {
         final List<ValidationResult> results = new ArrayList<>(1);
 
-        ObjectMapper mapper = new ObjectMapper();
-
-        JsonNode rootNode = null;
-        try {
-            rootNode = mapper.readValue(new File(validationContext.getProperty(GENERATOR_RESOURCE).getValue()), JsonNode.class);
-
-            generator = new RecordGenerator(rootNode);
-
-        } catch (IOException ioe) {
-            results.add(new ValidationResult.Builder().subject("Generator Resource").valid(false).explanation("Couldn't read specified resource").build());
-        }
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//        JsonNode rootNode = null;
+//        try {
+//            rootNode = mapper.readValue(new File(validationContext.getProperty(GENERATOR_RESOURCE).getValue()), JsonNode.class);
+//
+//            generator = new RecordGenerator(rootNode);
+//
+//        } catch (IOException ioe) {
+//            results.add(new ValidationResult.Builder().subject("Generator Resource").valid(false).explanation("Couldn't read specified resource").build());
+//        }
 
         return results;
     }
@@ -155,8 +158,8 @@ public class GenerateRecordProcessor extends AbstractProcessor {
     public void onTrigger(final ProcessContext context, final ProcessSession session) {
         final String data;
 
-        data = generateData(context);
 
+        // Resolve Dynamic Properties
         Map<PropertyDescriptor, String> processorProperties = context.getProperties();
         Map<String, String> generatedAttributes = new HashMap<String, String>();
         for (final Map.Entry<PropertyDescriptor, String> entry : processorProperties.entrySet()) {
@@ -166,6 +169,21 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 generatedAttributes.put(property.getName(), dynamicValue);
             }
         }
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        JsonNode rootNode = null;
+
+        try {
+            rootNode = mapper.readValue(new File(generatedAttributes.get(context.getProperty(GENERATOR_RESOURCE)).toUpperCase()), JsonNode.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        generator = new RecordGenerator(rootNode);
+
+        data = generateData(context);
 
         FlowFile flowFile = session.create();
         if (data.length() > 0) {

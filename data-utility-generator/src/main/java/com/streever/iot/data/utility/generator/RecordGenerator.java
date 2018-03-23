@@ -1,159 +1,167 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.streever.iot.data.utility.generator;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.streever.iot.data.utility.generator.fields.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.support.StartStopState;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang3.ClassUtils;
 
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
+@JsonIgnoreProperties({"orderedFields"})
 public class RecordGenerator {
-    private Map<Integer, FieldType> keyFields = new TreeMap<Integer, FieldType>();
-    private Map<Integer, FieldType> fields = new TreeMap<Integer, FieldType>();
-    private String delimiter = "\t";
-    private boolean orderForced = false;
-    private boolean cdc = false;
-    private int cdctype = 1;
-    private Random rand = new Random(new Date().getTime());
+    private String title;
+    private String description;
+    private Output output;
+    private List<String> order;
+    private Map<String, FieldBase> orderedFields;
 
-    public RecordGenerator(JsonNode node) {
-        // This node should be either the "root" node OR the "fields" node.
-        delimiter = node.get("delimiter").asText();
-        if (node.has("cdc")) {
-            cdc = node.get("cdc").asBoolean();
-            if (node.has("cdctype")) {
-                cdctype = node.get("cdctype").asInt();
-            }
-        }
+    private JsonFactory jFactory = new JsonFactory();
 
-        JsonNode fieldsNode = node.get("fields");
+    private List<FieldBase> fields;
 
-        for (int i = 0; i < fieldsNode.size(); i++) {
-            JsonNode fieldNode = fieldsNode.get(i);
-            if (fieldNode.has("string")) {
-                FieldType field = new StringField(fieldNode.get("string"));
-                addFields(field);
-            } else if (fieldNode.has("number")) {
-                FieldType field = new NumberField(fieldNode.get("number"));
-                addFields(field);
-            } else if (fieldNode.has("sequence")) {
-                FieldType field = new SequenceField(fieldNode.get("sequence"));
-                addFields(field);
-            } else if (fieldNode.has("ip")) {
-                FieldType field = new IPAddressField(fieldNode.get("ip"));
-                addFields(field);
-            } else if (fieldNode.has("boolean")) {
-                FieldType field = new BooleanField(fieldNode.get("boolean"));
-                addFields(field);
-            } else if (fieldNode.has("date")) {
-                FieldType field = new DateField(fieldNode.get("date"));
-                addFields(field);
-            } else if (fieldNode.has("null")) {
-                FieldType field = new NullField(fieldNode.get("null"));
-                addFields(field);
-            } else if (fieldNode.has("start.stop")) {
-                StartStopFields fields = new StartStopFields(fieldNode.get("start.stop"));
-                addFields(fields.getStartField());
-                addFields(fields.getStopField());
-            } else if (fieldNode.has("nested")) {
-                FieldType field = new NestedField(fieldNode.get("nested"));
-                addFields(field);
-            }
-        }
+    public String getTitle() {
+        return title;
     }
 
-    private void addFields(FieldType field) {
-        boolean fieldHasOrder = field.hasOrder();
-        if (orderForced | fieldHasOrder) {
-            orderForced = true;
-            if (!fieldHasOrder) {
-                throw new RuntimeException("Once order is used to control field positions, it must be used in every field definition.");
-            } else {
-                if (field.isKey()) {
-                    keyFields.put(field.getOrder(), field);
-                } else {
-                    fields.put(field.getOrder(), field);
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Output getOutput() {
+        return output;
+    }
+
+    public void setOutput(Output output) {
+        this.output = output;
+    }
+
+    public List<FieldBase> getFields() {
+        return fields;
+    }
+
+    public void setFields(List<FieldBase> fields) {
+
+        this.fields = fields;
+        if (this.order != null)
+            orderFields();
+
+    }
+
+    public List<String> getOrder() {
+        return order;
+    }
+
+    public void setOrder(List<String> order) {
+        this.order = order;
+        if (this.fields != null)
+            orderFields();
+    }
+
+    protected void orderFields() {
+        if (this.fields != null && this.order != null) {
+            orderedFields = new LinkedHashMap<String,FieldBase>();
+//            int position = 1;
+            for (String fieldName: order) {
+                String[] searchFieldName = fieldName.split("\\.");
+                boolean found = Boolean.FALSE;
+                for (FieldBase field: fields) {
+                    if (field.getName().equals(searchFieldName[0])) {
+                        orderedFields.put(fieldName, field);
+                        found=Boolean.TRUE;
+                        break;
+                    }
+                }
+                if (!found) {
+                    System.err.println("Field Not Found: "+searchFieldName[0]);
                 }
             }
-        } else {
-            if (field.isKey()) {
-                keyFields.put(keyFields.size(), field);
-            } else {
-                fields.put(fields.size(), field);
-            }
         }
     }
 
-    /*
-    Generate New Record.
-     */
     public String next() {
         StringBuilder sb = new StringBuilder();
-        Iterator<Map.Entry<Integer, FieldType>> keyFieldsIterator = keyFields.entrySet().iterator();
-        Iterator<Map.Entry<Integer, FieldType>> fieldsIterator = fields.entrySet().iterator();
+        Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
+        if (output.getFormat() == OutputFormat.JSON) {
 
-        while (keyFieldsIterator.hasNext()) {
-            Map.Entry<Integer, FieldType> fieldMapRec = keyFieldsIterator.next();
-            sb.append(fieldMapRec.getValue().getValue());
-//            if (keyFieldsIterator.hasNext())
-            sb.append(delimiter);
-        }
+            ObjectNode jRoot = JsonNodeFactory.instance.objectNode();
 
-        if (this.cdc) {
-            // Only need one field and value
-            int fieldNum = rand.nextInt(fields.size());
-            int pos = 0;
-            while (fieldsIterator.hasNext()) {
-                switch (this.cdctype) {
-                    case 1:
-                        if (fieldNum == pos++) {
-                            Map.Entry<Integer, FieldType> fieldMapRec = fieldsIterator.next();
-                            sb.append(fieldMapRec.getValue().getName());
-                            sb.append(delimiter);
-                            sb.append(fieldMapRec.getValue().getValue());
-                        } else {
-                            fieldsIterator.next();
+            while (iFieldKeys.hasNext()) {
+                String iFieldKey = iFieldKeys.next();
+                FieldBase fb = orderedFields.get(iFieldKey);
+                String[] keyParts = iFieldKey.split("\\.");
+                if (keyParts[keyParts.length-1].equals("start")) {
+                   fb.setStartStopState(StartStopState.START);
+                } else if (keyParts[keyParts.length-1].equals("stop")) {
+                    fb.setStartStopState(StartStopState.STOP);
+                } else {
+                    fb.setStartStopState(StartStopState.NA);
+                }
+                Object value = fb.getNext();
+                if (value instanceof Short) {
+                    jRoot.put(iFieldKey, (Short) value);
+                } else if (value instanceof Integer) {
+                    jRoot.put(iFieldKey, (Integer) value);
+                } else if (value instanceof Long) {
+                    jRoot.put(iFieldKey, (Long) value);
+                } else if (value instanceof Float) {
+                    jRoot.put(iFieldKey, (Float) value);
+                } else if (value instanceof Double) {
+                    jRoot.put(iFieldKey, (Double) value);
+                } else if (value instanceof BigDecimal) {
+                    jRoot.put(iFieldKey, (BigDecimal) value);
+                } else if (value instanceof BigInteger) {
+                    jRoot.put(iFieldKey, (BigInteger) value);
+                } else if (value instanceof Boolean) {
+                    jRoot.put(iFieldKey, (Boolean) value);
+                } else if (value instanceof String) {
+                    jRoot.put(iFieldKey, value.toString());
+                } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
+                    try {
+                        for (Field f : value.getClass().getDeclaredFields()) {
+                            String fName = f.getName();
+                            Object fValue = PropertyUtils.getProperty(value, fName);
+                            jRoot.put(iFieldKey + "." + fName, fValue.toString());
                         }
-                        break;
-                    case 2:
-                        Map.Entry<Integer, FieldType> fieldMapRec = fieldsIterator.next();
-                        if (fieldNum == pos++) {
-                            sb.append(fieldMapRec.getValue().getValue());
-                            if (fieldsIterator.hasNext())
-                                sb.append(delimiter);
-                        } else {
-                            if (fieldsIterator.hasNext())
-                                sb.append(delimiter);
-                        }
-                        break;
-                    default:
+                    } catch (Exception e) {
+                        // TODO: Handle Error
+                        e.printStackTrace();
+                    }
                 }
             }
+            ObjectMapper om = new ObjectMapper();
+            try {
+                sb.append(om.writeValueAsString(jRoot));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+
         } else {
-            while (fieldsIterator.hasNext()) {
-                Map.Entry<Integer, FieldType> fieldMapRec = fieldsIterator.next();
-                sb.append(fieldMapRec.getValue().getValue());
-                if (fieldsIterator.hasNext())
-                    sb.append(delimiter);
+
+            while (iFieldKeys.hasNext()) {
+                String iFieldKey = iFieldKeys.next();
+                FieldBase fb = orderedFields.get(iFieldKey);
+                sb.append(fb.getNext());
+                if (iFieldKeys.hasNext()) {
+                    sb.append(output.getDelimiter());
+                }
             }
         }
-
         return sb.toString();
     }
 

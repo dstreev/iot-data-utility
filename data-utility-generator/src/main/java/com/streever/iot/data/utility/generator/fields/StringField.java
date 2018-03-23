@@ -1,114 +1,74 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.streever.iot.data.utility.generator.fields;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.streever.iot.data.utility.generator.fields.support.Pool;
+import com.streever.iot.data.utility.generator.fields.support.Range;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.math3.random.RandomDataGenerator;
 
-import java.util.Iterator;
+public class StringField extends FieldBase<String> {
+    private Pool<String> pool;
+    private String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private Range<Integer> range = new Range<Integer>(10, 10);
 
-public class StringField extends AbstractFieldType implements FieldType<String> {
-
-    private enum TYPE {
-        RANDOM,SET;
-    }
-    private TYPE type = TYPE.RANDOM;
-    private String[] pool;
-    private int min = 15;
-    private int max = 15;
-    private int diff = 0;
-    private int poolSize = 100;
-    private String[] set;
-    private boolean hasPool = false;
-    private String charStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-    public StringField(JsonNode node) {
-        super(node);
-        if (node.has("random")) {
-            JsonNode rNode = node.get("random");
-            if (rNode.get("min") != null)
-                min = rNode.get("min").asInt();
-            if (rNode.get("max") != null)
-                max = rNode.get("max").asInt();
-            if (min < max)
-                diff = Math.abs(max - min);
-            if (rNode.get("chars") != null) {
-                charStr = rNode.get("chars").asText();
-            }
-            if (rNode.get("pool") != null) {
-                // size is required
-                poolSize = rNode.get("pool").get("size").asInt();
-                fillPool();
-            }
-        } else if (node.has("set")) {
-            JsonNode setNode = node.get("set");
-            type = TYPE.SET;
-            set = new String[setNode.size()];
-            int i=0;
-            for (Iterator<JsonNode> it=setNode.elements();it.hasNext();) {
-                JsonNode element = it.next();
-                set[i++] = element.asText();
-            }
-        }
+    public Pool<String> getPool() {
+        return pool;
     }
 
-    private int getStringSize() {
-        if (diff == 0) {
-            return min;
+    public void setPool(Pool<String> pool) {
+        this.pool = pool;
+    }
+
+    public Range<Integer> getRange() {
+        return range;
+    }
+
+    public void setRange(Range<Integer> range) {
+        this.range = range;
+    }
+
+    public String getCharacters() {
+        return characters;
+    }
+
+    public void setCharacters(String characters) {
+        this.characters = characters;
+    }
+
+    // Get a random Length from the Range.
+    protected Integer getCharacterLength() {
+        if (range != null) {
+            if (range.getMin() > range.getMax()) {
+                Long value = new RandomDataGenerator().nextLong(range.getMin(), range.getMax());
+                return value.intValue();
+            } else {
+                return range.getMin();
+            }
         } else {
-            double ran = Math.random();
-            long vector = Math.round(diff * ran);
-            return (int)(min + vector);
-        }
-
-    }
-
-    private void fillPool() {
-        hasPool = true;
-        pool = new String[poolSize];
-        for (int i=0;i < poolSize;i++) {
-            pool[i] = RandomStringUtils.random(getStringSize(), charStr);
+            return 10;
         }
     }
 
-    public String getPoolValue() {
-        int ran = (int)Math.round((poolSize-1) * Math.random());
-        return pool[ran];
+    protected void buildPool() {
+        if (pool != null) {
+            for (int i = 0; i < pool.getSize(); i++) {
+                pool.getItems().add(RandomStringUtils.random(getCharacterLength(), getCharacters()));
+            }
+        }
     }
 
-    public String getValue() {
+    @Override
+    public String getNext() {
         String rtn = null;
-        if (hasPool) {
-            rtn = getPoolValue();
+        if (pool == null) {
+            rtn = RandomStringUtils.random(getCharacterLength(), getCharacters());
         } else {
-            switch (type) {
-                case RANDOM:
-                    rtn = RandomStringUtils.random(getStringSize(),charStr);
-                    break;
-                case SET:
-                    double multiplier = Math.random();
-                    rtn = set[(int)(set.length * multiplier)];
-                    break;
+            if (pool != null && pool.getInitialized() == Boolean.FALSE) {
+                buildPool();
+            }
+            if (pool != null) {
+                rtn = pool.getItem();
             }
         }
         return rtn;
     }
-
-
 }

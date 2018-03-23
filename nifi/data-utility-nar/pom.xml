@@ -7,11 +7,23 @@
         <groupId>com.streever.iot.nifi.data.utility</groupId>
         <version>3.0-SNAPSHOT</version>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
+
+    <packaging>nar</packaging>
+
     <name>NiFi :: IOT Data Utilities (nar)</name>
     
     <groupId>com.streever.iot.nifi.data.utility</groupId>
     <artifactId>data.utility.nar</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.streever.iot.nifi.data.utility</groupId>
+            <artifactId>data.utility.processors</artifactId>
+            <version>3.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
 
 </project>

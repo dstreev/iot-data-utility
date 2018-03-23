@@ -37,13 +37,15 @@
 
         <jdom.version>2.0.5</jdom.version>
         
+
+        <jackson.json.version>2.9.4</jackson.json.version>
+
         <apache.commons.io.version>2.5</apache.commons.io.version>
-
-        <jackson.json.version>2.6.1</jackson.json.version>
-
+        <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
         <apache.commons.cli.version>1.4</apache.commons.cli.version>
         <apache.commons.codec.version>1.8</apache.commons.codec.version>
+        <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
 
         <kafka.artifact>kafka_2.10</kafka.artifact>
         <kafka.version>0.9.0.2.4.0.0-169</kafka.version>
@@ -136,7 +138,7 @@
                 </executions>
             </plugin>
 
-            <plugin>
+            <!--plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptor>src/main/assembly/assembly.xml</descriptor>
@@ -144,15 +146,13 @@
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <!-- this is used for inheritance merges -->
                         <phase>package</phase>
-                        <!-- bind to the packaging phase -->
                         <goals>
                             <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin-->
 
         </plugins>
     </build>
