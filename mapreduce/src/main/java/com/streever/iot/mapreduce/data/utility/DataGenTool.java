@@ -71,10 +71,10 @@ public class DataGenTool extends Configured implements Tool {
                 .hasArg()
                 .withDescription("Sink output information. HDFS-Output Directory.")
                 .create("output");
-        Option config = OptionBuilder.withArgName("json config")
+        Option config = OptionBuilder.withArgName("config")
                 .hasArg()
                 .withDescription("control file (hdfs location)")
-                .create("jsonCfg");
+                .create("cfg");
         Option count = OptionBuilder.withArgName("count")
                 .hasArg()
                 .withDescription("total record count")

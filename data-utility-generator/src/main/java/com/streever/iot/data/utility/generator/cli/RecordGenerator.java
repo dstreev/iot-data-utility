@@ -1,6 +1,7 @@
 package com.streever.iot.data.utility.generator.cli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -14,6 +15,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class RecordGenerator {
+    enum FILE_TYPE {
+        JSON, YAML;
+    }
     private Options options;
     private Long count;
     private String outputFilename;
@@ -115,7 +119,16 @@ public class RecordGenerator {
             printUsage();
             rtn = -1;
         } else {
-            ObjectMapper mapper = new ObjectMapper();
+            String ext = FilenameUtils.getExtension(configurationFile);
+
+            ObjectMapper mapper = null;
+            if (ext.toUpperCase().equals(FILE_TYPE.JSON.toString())) {
+                mapper = new ObjectMapper();
+            } else if (ext.toUpperCase().equals(FILE_TYPE.YAML.toString())) {
+                mapper = new ObjectMapper(new YAMLFactory());
+            } else {
+                throw new RuntimeException("Unknown file extension: " + ext + ".  json or yaml supported.");
+            }
 
             File file = new File(configurationFile);
             String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));

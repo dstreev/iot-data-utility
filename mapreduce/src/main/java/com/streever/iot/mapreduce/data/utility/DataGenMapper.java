@@ -71,6 +71,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
                 fsdis = FS1.open(path);
 
                 ObjectMapper mapper = new ObjectMapper();
+
                 recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(fsdis.getWrappedStream());
 
             } catch (IOException e) {

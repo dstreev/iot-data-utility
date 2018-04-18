@@ -38,7 +38,8 @@
         <jdom.version>2.0.5</jdom.version>
         
 
-        <jackson.json.version>2.9.4</jackson.json.version>
+        <jackson.json.version>2.9.5</jackson.json.version>
+        <jackson.yaml.version>2.9.5</jackson.yaml.version>
 
         <apache.commons.io.version>2.5</apache.commons.io.version>
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
@@ -47,9 +48,9 @@
         <apache.commons.codec.version>1.8</apache.commons.codec.version>
         <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
 
-        <kafka.artifact>kafka_2.10</kafka.artifact>
-        <kafka.version>0.9.0.2.4.0.0-169</kafka.version>
-        <kafka.hadoop.producer.version>0.8.0</kafka.hadoop.producer.version>
+        <kafka.artifact>kafka-clients</kafka.artifact>
+        <kafka.version>0.10.1.2.6.4.9-3</kafka.version>
+        <!--<kafka.hadoop.producer.version>0.8.0</kafka.hadoop.producer.version>-->
     </properties>
 
     <repositories>

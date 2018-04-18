@@ -13,6 +13,10 @@
 >   See the License for the specific language governing permissions and
 >   limitations under the License.
 
+## References
+
+US Cities List provided by: [US Cities](https://simplemaps.com/data/us-cities)
+
 ## Summary
 This project is the core Java Implementation for a json driven data generator utility.
 

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
 import com.streever.iot.data.utility.generator.fields.support.StartStopState;
+import com.streever.iot.data.utility.generator.output.Output;
+import com.streever.iot.data.utility.generator.output.OutputFormat;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.ClassUtils;
 
