@@ -21,7 +21,9 @@ package com.streever.iot.mapreduce.data.utility;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.RecordGenerator;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -51,6 +53,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
             LOG.info("Using DEFAULT Config File: " + DEFAULT_CONFIG_RESOURCE_FILE + " from package resources.");
             try {
                 InputStream stream = getClass().getResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE);
+
                 ObjectMapper mapper = new ObjectMapper();
                 recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(stream);
             } catch (IOException e) {
@@ -70,7 +73,16 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
                 fsdis = FS1.open(path);
 
-                ObjectMapper mapper = new ObjectMapper();
+                String ext = FilenameUtils.getExtension(config);
+
+                ObjectMapper mapper = null;
+                if (ext.toUpperCase().equals(com.streever.iot.data.utility.generator.cli.RecordGenerator.FILE_TYPE.JSON.toString())) {
+                    mapper = new ObjectMapper();
+                } else if (ext.toUpperCase().equals(com.streever.iot.data.utility.generator.cli.RecordGenerator.FILE_TYPE.YAML.toString())) {
+                    mapper = new ObjectMapper(new YAMLFactory());
+                } else {
+                    throw new RuntimeException("Unknown file extension: " + ext + ".  json or yaml supported.");
+                }
 
                 recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(fsdis.getWrappedStream());
 

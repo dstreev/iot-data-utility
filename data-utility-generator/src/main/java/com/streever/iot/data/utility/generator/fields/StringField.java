@@ -53,6 +53,7 @@ public class StringField extends FieldBase<String> {
             for (int i = 0; i < pool.getSize(); i++) {
                 pool.getItems().add(RandomStringUtils.random(getCharacterLength(), getCharacters()));
             }
+            pool.setInitialized(true);
         }
     }
 
