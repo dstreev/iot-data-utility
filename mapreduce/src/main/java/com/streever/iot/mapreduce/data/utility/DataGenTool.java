@@ -134,13 +134,13 @@ public class DataGenTool extends Configured implements Tool {
         job.setInputFormatClass(DataGenInputFormat.class);
 
         if (line.hasOption("c")) {
-            DataGenInputFormat.setNumberOfRows(job, Long.parseLong(line.getOptionValue("count")));
+            DataGenInputFormat.setNumberOfRows(job, Long.parseLong(line.getOptionValue("c")));
         } else {
             DataGenInputFormat.setNumberOfRows(job, DEFAULT_COUNT);
         }
 
         if (line.hasOption("m")) {
-            configuration.set(MRJobConfig.NUM_MAPS, line.getOptionValue("mappers"));
+            configuration.set(MRJobConfig.NUM_MAPS, line.getOptionValue("m"));
         } else {
             // Default
             configuration.setInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS);
