@@ -128,6 +128,12 @@
                                     </excludes>
                                 </filter>
                             </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.apache.commons.cli</pattern>
+                                    <shadedPattern>org.shaded.commons.cli</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <artifactSet>
                                 <excludes>
                                     <exclude>org.apache.kafka:*</exclude>
