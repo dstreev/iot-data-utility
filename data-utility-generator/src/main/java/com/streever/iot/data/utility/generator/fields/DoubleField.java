@@ -8,7 +8,7 @@ import java.text.DecimalFormat;
 public class DoubleField extends FieldBase<Double> {
 
     private Range<Double> range = new Range(0, Integer.MAX_VALUE);
-    private DecimalFormat decimalFormat = new DecimalFormat("#.##");
+    private DecimalFormat format = new DecimalFormat("#.##");
     private Pool<Double> pool;
 
     public Range<Double> getRange() {
@@ -27,12 +27,12 @@ public class DoubleField extends FieldBase<Double> {
         this.pool = pool;
     }
 
-    public DecimalFormat getDecimalFormat() {
-        return decimalFormat;
+    public DecimalFormat getFormat() {
+        return format;
     }
 
-    public void setDecimalFormat(DecimalFormat decimalFormat) {
-        this.decimalFormat = decimalFormat;
+    public void setFormat(DecimalFormat format) {
+        this.format = format;
     }
 
     protected Double getDiff() {
@@ -44,6 +44,6 @@ public class DoubleField extends FieldBase<Double> {
     public Double getNext() {
         double multiplierD2 = randomizer.nextDouble();
         Double valD = (Double)range.getMin() + ((Double)getDiff() * multiplierD2);
-        return Double.valueOf(decimalFormat.format(valD));
+        return Double.valueOf(format.format(valD));
     }
 }
