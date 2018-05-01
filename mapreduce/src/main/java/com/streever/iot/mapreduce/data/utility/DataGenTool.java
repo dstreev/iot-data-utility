@@ -84,7 +84,7 @@ public class DataGenTool extends Configured implements Tool {
 
         Option config = Option.builder("cfg")
                 .argName("config")
-                .desc("Configuration Filename")
+                .desc("Configuration Filename (in HDFS)")
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(String.class)
