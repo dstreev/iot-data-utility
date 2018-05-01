@@ -24,7 +24,6 @@ fields:
   -
     type: "fixed"
     name: "count"
-    order: -2
     value: 1
   -
     type: "float"

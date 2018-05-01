@@ -40,7 +40,16 @@ public class RecordGenerator {
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(String.class)
-                .required(true)
+                .required(false)
+                .build();
+
+        Option dOutput = Option.builder("d")
+                .argName("directory")
+                .desc("Output Directory")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(String.class)
+                .required(false)
                 .build();
 
         Option oConfig = Option.builder("cfg")
@@ -70,6 +79,7 @@ public class RecordGenerator {
 
         options.addOption(oHelp);
         options.addOption(oOutput);
+        options.addOption(dOutput);
         options.addOption(oConfig);
         options.addOption(oCount);
         options.addOption(oTimestamp);

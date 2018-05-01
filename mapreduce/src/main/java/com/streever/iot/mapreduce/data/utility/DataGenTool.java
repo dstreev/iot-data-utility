@@ -42,7 +42,7 @@ public class DataGenTool extends Configured implements Tool {
 
     private Options options;
     private Path outputPath;
-//        private Sink sink;
+    //        private Sink sink;
     public static final int DEFAULT_MAPPERS = 2;
     public static final long DEFAULT_COUNT = 100;
 
@@ -56,32 +56,54 @@ public class DataGenTool extends Configured implements Tool {
 
     private void buildOptions() {
         options = new Options();
-        Option help = OptionBuilder
-                .withDescription("This help")
-                .create("help");
-        Option mappers = OptionBuilder.withArgName("mappers")
-                .hasArg()
-                .withDescription("parallelism")
-                .create("mappers");
-//        Option sink = OptionBuilder.withArgName("sink")
-//                .hasArg()
-//                .withDescription("Target Sink: (HDFS|KAFKA) default-HDFS")
-//                .create("sink");
-        Option outputDir = OptionBuilder.withArgName("output")
-                .hasArg()
-                .withDescription("Sink output information. HDFS-Output Directory.")
-                .create("output");
-        Option config = OptionBuilder.withArgName("config")
-                .hasArg()
-                .withDescription("control file (hdfs location)")
-                .create("cfg");
-        Option count = OptionBuilder.withArgName("count")
-                .hasArg()
-                .withDescription("total record count")
-                .create("count");
+
+        Option help = Option.builder("h")
+                .argName("help")
+                .desc("This Help")
+                .hasArg(false)
+                .required(false)
+                .build();
+
+        Option outputDir = Option.builder("d")
+                .argName("directory")
+                .desc("Output Directory")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(String.class)
+                .required(true)
+                .build();
+
+        Option mappers = Option.builder("m")
+                .argName("mappers")
+                .desc("Parallelism")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(Integer.class)
+                .required(true)
+                .build();
+
+        Option config = Option.builder("cfg")
+                .argName("config")
+                .desc("Configuration Filename")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(String.class)
+                .required(true)
+                .build();
+
+        Option count = Option.builder("c")
+                .argName("count")
+                .desc("Record Count")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(Long.class)
+                .required(true)
+                .build();
+
+
         options.addOption(help);
         options.addOption(mappers);
-//        options.addOption(sink);
+
         options.addOption(outputDir);
         options.addOption(config);
         options.addOption(count);
@@ -96,7 +118,8 @@ public class DataGenTool extends Configured implements Tool {
         boolean rtn = true;
         Configuration configuration = job.getConfiguration();
 
-        CommandLineParser clParser = new GnuParser();
+        CommandLineParser clParser = new DefaultParser();
+
         CommandLine line = null;
         try {
             line = clParser.parse(options, args);
@@ -104,19 +127,19 @@ public class DataGenTool extends Configured implements Tool {
             printUsage();
         }
 
-        if (line.hasOption("help")) {
+        if (line.hasOption("h")) {
             return false;
         }
 
         job.setInputFormatClass(DataGenInputFormat.class);
 
-        if (line.hasOption("count")) {
+        if (line.hasOption("c")) {
             DataGenInputFormat.setNumberOfRows(job, Long.parseLong(line.getOptionValue("count")));
         } else {
             DataGenInputFormat.setNumberOfRows(job, DEFAULT_COUNT);
         }
 
-        if (line.hasOption("mappers")) {
+        if (line.hasOption("m")) {
             configuration.set(MRJobConfig.NUM_MAPS, line.getOptionValue("mappers"));
         } else {
             // Default
@@ -165,25 +188,17 @@ public class DataGenTool extends Configured implements Tool {
 //            }
 //        } else {
         // Default HDFS.
-        LOG.info("No SINK specified, using DEFAULT (HDFS)");
+//        LOG.info("No SINK specified, using DEFAULT (HDFS)");
         job.setInputFormatClass(DataGenInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         job.setMapperClass(DataGenMapper.class);
         job.setMapOutputKeyClass(NullWritable.class);
         job.setMapOutputValueClass(Text.class);
-        if (line.hasOption("output")) {
-            outputPath = new Path(line.getOptionValue("output"));
-            FileOutputFormat.setOutputPath(job, outputPath);
-        } else {
-            return false;
-        }
-//        }
 
-        if (line.hasOption("jsonCfg")) {
-            configuration.set(DataGenMapper.CONFIG_FILE, line.getOptionValue("jsonCfg"));
-        } else {
-            configuration.set(DataGenMapper.CONFIG_FILE, "DEFAULT");
-        }
+        outputPath = new Path(line.getOptionValue("d"));
+        FileOutputFormat.setOutputPath(job, outputPath);
+
+        configuration.set(DataGenMapper.CONFIG_FILE, line.getOptionValue("cfg"));
 
         return rtn;
     }
@@ -194,7 +209,7 @@ public class DataGenTool extends Configured implements Tool {
 
         Job job = Job.getInstance(getConf()); // new Job(conf, this.getClass().getCanonicalName());
 
-        System.out.println("Check Usage");
+        System.out.println("Checking Input");
         if (!checkUsage(args, job)) {
             printUsage();
             return -1;
