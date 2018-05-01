@@ -124,7 +124,7 @@ public class DataGenTool extends Configured implements Tool {
         try {
             line = clParser.parse(options, args);
         } catch (ParseException pe) {
-            printUsage();
+            return false;
         }
 
         if (line.hasOption("h")) {
