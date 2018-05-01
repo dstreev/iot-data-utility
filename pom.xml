@@ -138,6 +138,10 @@
                                     <pattern>com.fasterxml.jackson.core</pattern>
                                     <shadedPattern>com.shaded.jackson.core</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson.databind</pattern>
+                                    <shadedPattern>com.shaded.jackson.databind</shadedPattern>
+                                </relocation>
                             </relocations>
                             <artifactSet>
                                 <excludes>
