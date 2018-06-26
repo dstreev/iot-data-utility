@@ -45,7 +45,7 @@
         <!--<apache.commons.codec.version>1.8</apache.commons.codec.version>-->
 
         <!--<kafka.artifact>kafka_2.9.2</kafka.artifact>-->
-        <!--<kafka.version>0.8.1.1</kafka.version>-->
+        <kafka.version>1.0.0.2.6.5.8-7</kafka.version>
         <!--<kafka.hadoop.producer.version>0.8.0</kafka.hadoop.producer.version>-->
     </properties>
 
@@ -158,7 +158,7 @@
         <!-- Kafka Support -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>${kafka.artifact}</artifactId>
+            <artifactId>kafka-clients</artifactId>
             <version>${kafka.version}</version>
             <scope>provided</scope>
         </dependency>
