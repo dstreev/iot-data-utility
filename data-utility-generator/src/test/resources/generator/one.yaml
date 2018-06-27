@@ -5,6 +5,7 @@ output:
 order:
   - active.start
   - active.stop
+  - output
   - amount
   - coordinate
   - type
@@ -83,6 +84,14 @@ fields:
         - CHARGE
         - RETURN
         - CHALLENGE
+  -
+    type: "string"
+    name: "output"
+    range:
+      min: 2
+      max: 19
+    pool:
+      size: 100
   -
     type: "location"
     name: "coordinate"

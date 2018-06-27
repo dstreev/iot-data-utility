@@ -37,7 +37,7 @@ public class StringField extends FieldBase<String> {
     // Get a random Length from the Range.
     protected Integer getCharacterLength() {
         if (range != null) {
-            if (range.getMin() > range.getMax()) {
+            if (range.getMin() < range.getMax()) {
                 Long value = new RandomDataGenerator().nextLong(range.getMin(), range.getMax());
                 return value.intValue();
             } else {

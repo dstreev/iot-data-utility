@@ -1,10 +1,11 @@
 title: "CDC Records"
-description: "An incrementing time series dataset"
+description: "Test Record Set"
 output:
   delimiter: "\t"
   format: "CSV"
 order:
-  - event_time
+  - id
+  - update_date
   - source_code
   - source_ip
   - direction
@@ -16,13 +17,21 @@ order:
   - interest
 fields:
   -
-    type: "date"
-    name: "event_time"
-    format: "yyyy-MM-dd HH:mm:ss"
-    increment: true
-    diff: 1000
+    type: "string"
+    name: "id"
+    characters: "ABDEF12345"
     range:
-      min: "2010-01-01T07:00:00"
+      min: 10
+      max: 10
+    pool:
+      size: 1000000
+  -
+    type: "date"
+    name: "update_date"
+    format: "yyyy-MM-dd HH:mm:ss"
+    range:
+      min: "2010-01-01"
+      max: "2013-04-01"
   -
     type: "int"
     name: "source_code"
