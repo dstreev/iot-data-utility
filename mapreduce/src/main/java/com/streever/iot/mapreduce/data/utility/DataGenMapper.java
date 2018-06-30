@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.RecordGenerator;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,7 +43,9 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     public static final String CONFIG_FILE = "app.config.file";
     public static final String DEFAULT_CONFIG_RESOURCE_FILE = "/validation-generator.json";
-    
+
+    private Boolean earlyTermination = Boolean.FALSE;
+
     private RecordGenerator recordGenerator;
 
     protected void setup(Context context) {
@@ -98,7 +101,16 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     public void map(LongWritable key, NullWritable value, Context context) throws IOException, InterruptedException {
         Text record = new Text();
-        record.set(recordGenerator.next());
-        context.write(NullWritable.get(), record);
+        try {
+            // Use this to quickly cycle through the remain counter,
+            // even though we've reach to end because of the termination
+            // event in the generator.
+            if (!earlyTermination) {
+                record.set(recordGenerator.next());
+                context.write(NullWritable.get(), record);
+            }
+        } catch (TerminateException te) {
+            earlyTermination = Boolean.TRUE;
+        }
     }
 }

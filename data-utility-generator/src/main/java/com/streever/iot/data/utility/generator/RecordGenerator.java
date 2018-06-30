@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.streever.iot.data.utility.generator.fields.ControlField;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.fields.support.StartStopState;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputFormat;
@@ -21,6 +23,13 @@ import java.util.*;
 public class RecordGenerator {
     private String title;
     private String description;
+
+    // Used to control if record gen is terminated
+    // because of the control fields state.
+
+    private String controlField;
+    private ControlField controlFieldInt;
+
     private Output output;
     private List<String> order;
     private Map<String, FieldBase> orderedFields;
@@ -28,6 +37,14 @@ public class RecordGenerator {
     private JsonFactory jFactory = new JsonFactory();
 
     private List<FieldBase> fields;
+
+    public String getControlField() {
+        return controlField;
+    }
+
+    public void setControlField(String controlField) {
+        this.controlField = controlField;
+    }
 
     public String getTitle() {
         return title;
@@ -63,6 +80,18 @@ public class RecordGenerator {
         if (this.order != null)
             orderFields();
 
+        // If a Control Field has been identified, assign it.
+        if (controlField != null) {
+            for (FieldBase field: fields) {
+                if (field.getName().equals(controlField)) {
+                    if (field instanceof ControlField) {
+                        ((ControlField) field).setControlField(Boolean.TRUE);
+                        this.controlFieldInt = ((ControlField) field);
+                    }
+                }
+            }
+        }
+
     }
 
     public List<String> getOrder() {
@@ -96,7 +125,7 @@ public class RecordGenerator {
         }
     }
 
-    public String next() {
+    public String next() throws TerminateException {
         StringBuilder sb = new StringBuilder();
         Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
         if (output.getFormat() == OutputFormat.JSON) {
@@ -108,7 +137,7 @@ public class RecordGenerator {
                 FieldBase fb = orderedFields.get(iFieldKey);
                 String[] keyParts = iFieldKey.split("\\.");
                 if (keyParts[keyParts.length-1].equals("start")) {
-                   fb.setStartStopState(StartStopState.START);
+                    fb.setStartStopState(StartStopState.START);
                 } else if (keyParts[keyParts.length-1].equals("stop")) {
                     fb.setStartStopState(StartStopState.STOP);
                 } else {
@@ -163,6 +192,9 @@ public class RecordGenerator {
                     sb.append(output.getDelimiter());
                 }
             }
+        }
+        if (controlFieldInt != null && controlFieldInt.terminate()) {
+            throw new TerminateException("Field " + controlField + " has reached it limit and terminated the record generating process");
         }
         return sb.toString();
     }

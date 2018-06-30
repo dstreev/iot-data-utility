@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
-public class DateField extends FieldBase<String> {
+public class DateField extends FieldBase<String> implements ControlField {
     private Range<Timestamp> range;
     private Long diff = 1000l;
     private Long startStopSpan = 100000l;
@@ -20,6 +20,10 @@ public class DateField extends FieldBase<String> {
     private Boolean current = Boolean.TRUE;
     //private Boolean startStop = Boolean.FALSE;
     private Long lastIssued;
+
+    // Used to control the termination of creating records when this is the control field.
+    private Long lastValue;
+    private Boolean controlField = Boolean.FALSE;
 
     public Range<Timestamp> getRange() {
         return range;
@@ -32,6 +36,10 @@ public class DateField extends FieldBase<String> {
         }
         // When Range is set, don't need current.
         this.current = Boolean.FALSE;
+    }
+
+    public void setControlField(Boolean controlField) {
+        this.controlField = controlField;
     }
 
     public Boolean getCurrent() {
@@ -70,7 +78,9 @@ public class DateField extends FieldBase<String> {
     @Override
     public String getNext() {
         if (current) {
-            return df.format(new Date());
+            Date now = new Date();
+            lastValue = now.getTime();
+            return df.format(now);
         } else if (increment) {
             if (range != null && lastIssued == null) {
                 lastIssued = range.getMin().getTime();
@@ -80,6 +90,7 @@ public class DateField extends FieldBase<String> {
 //                System.out.println("Increment: " + incrementL + "Multiplier: " + multiplierD);
                 lastIssued = lastIssued + incrementL;
             }
+            lastValue = lastIssued;
             return df.format(new Date(lastIssued));
         } else {
             Long dateValue = null;
@@ -95,7 +106,23 @@ public class DateField extends FieldBase<String> {
                 dateValue = range.getMin().getTime() + Math.round((Long) diff * multiplierD);
                 lastIssued = null;
             }
+            lastValue = dateValue;
             return df.format(new Date(dateValue));
         }
+    }
+
+    @Override
+    public boolean terminate() {
+        // If the last value issued exceeds the max range value, then terminate.
+        if (getRange() != null && getRange().getMax() != null && this.isControlField()) {
+            if (getRange().getMax().getTime() <= lastValue)
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isControlField() {
+        return controlField;
     }
 }

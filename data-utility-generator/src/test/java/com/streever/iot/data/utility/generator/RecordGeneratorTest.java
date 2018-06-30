@@ -20,6 +20,7 @@ package com.streever.iot.data.utility.generator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,6 +112,27 @@ public class RecordGeneratorTest {
                 System.out.println(check);
             }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void Test0019() {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try {
+            File file = new File(cl.getResource("generator/date-terminate.yaml").getFile());
+            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+
+            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+
+            System.out.println("Test002-Terminate");
+            while (true) {
+                String check = recGen.next();
+                System.out.println(check);
+            }
+        } catch (TerminateException te) {
+            System.out.println(te.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
