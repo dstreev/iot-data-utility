@@ -21,7 +21,10 @@ import java.util.Random;
         @JsonSubTypes.Type(value = IntegerField.class, name = "int"),
         @JsonSubTypes.Type(value = LongField.class, name = "long"),
         @JsonSubTypes.Type(value = FloatField.class, name = "float"),
-        @JsonSubTypes.Type(value = DoubleField.class, name = "double") })
+        @JsonSubTypes.Type(value = DoubleField.class, name = "double"),
+        @JsonSubTypes.Type(value = ArrayLongField.class, name = "array.long"),
+        @JsonSubTypes.Type(value = ArrayStringField.class, name = "array.string")
+})
 @JsonIgnoreProperties({ "randomizer", "order", "startStopState" })
 public abstract class FieldBase<T> implements Comparable<FieldBase> {
     private Integer order;

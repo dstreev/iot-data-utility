@@ -78,6 +78,26 @@ public class RecordGeneratorTest {
     }
 
     @Test
+    public void Test0016() {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try {
+            File file = new File(cl.getResource("generator/array.yaml").getFile());
+            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+
+            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+
+            System.out.println("Test001");
+            for (int i = 0; i < 10; i++) {
+                String check = recGen.next();
+                System.out.println(check);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void Test0017() {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try {
@@ -137,7 +157,7 @@ public class RecordGeneratorTest {
             e.printStackTrace();
         }
     }
-
+ 
     @Test
     public void Test002() {
         ObjectMapper mapper = new ObjectMapper();
