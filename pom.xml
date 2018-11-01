@@ -12,6 +12,7 @@
         <module>data-utility-generator</module>
         <module>mapreduce</module>
         <module>nifi</module>
+        <module>kafka.integration</module>
     </modules>
 
     <properties>
@@ -24,6 +25,8 @@
 
         <hdp.version>2.7.3.2.6.1.0-129</hdp.version>
         <hbase.version>1.1.2.2.6.1.0-129</hbase.version>
+
+        <kafka.client.version>1.1.0</kafka.client.version>
 
         <storm.version>0.9.1.2.1.2.0-402</storm.version>
 
@@ -50,7 +53,7 @@
 
         <kafka.artifact>kafka-clients</kafka.artifact>
         <kafka.version>0.10.1.2.6.4.9-3</kafka.version>
-        <!--<kafka.hadoop.producer.version>0.8.0</kafka.hadoop.producer.version>-->
+        <!--<spec.hadoop.producer.version>0.8.0</spec.hadoop.producer.version>-->
     </properties>
 
     <repositories>

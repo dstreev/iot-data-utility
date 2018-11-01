@@ -1,7 +1,8 @@
 title: hello
 description: helloDesc
 output:
-  format: "JSON"
+  format: "CSV"
+  delimiter: ","
 order:
   - active.start
   - active.stop

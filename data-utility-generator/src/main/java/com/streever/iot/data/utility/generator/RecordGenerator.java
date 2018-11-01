@@ -29,6 +29,7 @@ public class RecordGenerator {
     // Used to control if record gen is terminated
     // because of the control fields state.
 
+    private List<String> keyFields;
     private String controlField;
     private ControlField controlFieldInt;
 
@@ -37,6 +38,14 @@ public class RecordGenerator {
     private Map<String, FieldBase> orderedFields;
 
     private JsonFactory jFactory = new JsonFactory();
+
+    public List<String> getKeyFields() {
+        return keyFields;
+    }
+
+    public void setKeyField(List<String> keyFields) {
+        this.keyFields = keyFields;
+    }
 
     private List<FieldBase> fields;
 
@@ -76,6 +85,11 @@ public class RecordGenerator {
         return fields;
     }
 
+    private Object key = null;
+    private Object value = null;
+
+    protected ObjectMapper om = new ObjectMapper();
+
     public void setFields(List<FieldBase> fields) {
 
         this.fields = fields;
@@ -84,7 +98,7 @@ public class RecordGenerator {
 
         // If a Control Field has been identified, assign it.
         if (controlField != null) {
-            for (FieldBase field: fields) {
+            for (FieldBase field : fields) {
                 if (field.getName().equals(controlField)) {
                     if (field instanceof ControlField) {
                         ((ControlField) field).setControlField(Boolean.TRUE);
@@ -108,28 +122,44 @@ public class RecordGenerator {
 
     protected void orderFields() {
         if (this.fields != null && this.order != null) {
-            orderedFields = new LinkedHashMap<String,FieldBase>();
+            orderedFields = new LinkedHashMap<String, FieldBase>();
 //            int position = 1;
-            for (String fieldName: order) {
+            for (String fieldName : order) {
                 String[] searchFieldName = fieldName.split("\\.");
                 boolean found = Boolean.FALSE;
-                for (FieldBase field: fields) {
+                for (FieldBase field : fields) {
                     if (field.getName().equals(searchFieldName[0])) {
                         orderedFields.put(fieldName, field);
-                        found=Boolean.TRUE;
+                        found = Boolean.TRUE;
                         break;
                     }
                 }
                 if (!found) {
-                    System.err.println("Field Not Found: "+searchFieldName[0]);
+                    System.err.println("Field Not Found: " + searchFieldName[0]);
                 }
             }
         }
     }
 
-    public String next() throws TerminateException {
+    public Object getKey() {
+        return key;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void next() throws TerminateException {
         StringBuilder sb = new StringBuilder();
         Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
+        // reset the key,value
+        key = null;
+        value = null;
+        Map<String, Object> keys = null;
+        if (keyFields != null) {
+            keys = new TreeMap<String, Object>();
+        }
+
         if (output.getFormat() == OutputFormat.JSON) {
 
             ObjectNode jRoot = JsonNodeFactory.instance.objectNode();
@@ -138,14 +168,17 @@ public class RecordGenerator {
                 String iFieldKey = iFieldKeys.next();
                 FieldBase fb = orderedFields.get(iFieldKey);
                 String[] keyParts = iFieldKey.split("\\.");
-                if (keyParts[keyParts.length-1].equals("start")) {
+                if (keyParts[keyParts.length - 1].equals("start")) {
                     fb.setStartStopState(StartStopState.START);
-                } else if (keyParts[keyParts.length-1].equals("stop")) {
+                } else if (keyParts[keyParts.length - 1].equals("stop")) {
                     fb.setStartStopState(StartStopState.STOP);
                 } else {
                     fb.setStartStopState(StartStopState.NA);
                 }
                 Object value = fb.getNext();
+                if (keyFields != null && keyFields.contains(fb.getName())) {
+                    keys.put(fb.getName(), value);
+                }
                 if (value instanceof Short) {
                     jRoot.put(iFieldKey, (Short) value);
                 } else if (value instanceof Integer) {
@@ -166,12 +199,13 @@ public class RecordGenerator {
                     jRoot.put(iFieldKey, value.toString());
                 } else if (value instanceof ArrayList) {
                     ArrayNode an = jRoot.putArray(iFieldKey);
-                    for (Object item: (List)value) {
+                    for (Object item : (List) value) {
                         if (item instanceof String)
                             an.add(item.toString());
                         else if (item instanceof Long)
                             an.add(((Long) item).longValue());
-                    };
+                    }
+                    ;
                 } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
                     try {
                         for (Field f : value.getClass().getDeclaredFields()) {
@@ -185,7 +219,7 @@ public class RecordGenerator {
                     }
                 }
             }
-            ObjectMapper om = new ObjectMapper();
+//            ObjectMapper om = new ObjectMapper();
             try {
                 sb.append(om.writeValueAsString(jRoot));
             } catch (JsonProcessingException e) {
@@ -197,7 +231,11 @@ public class RecordGenerator {
             while (iFieldKeys.hasNext()) {
                 String iFieldKey = iFieldKeys.next();
                 FieldBase fb = orderedFields.get(iFieldKey);
-                sb.append(fb.getNext());
+                Object value = fb.getNext();
+                if (keyFields != null && keyFields.contains(fb.getName())) {
+                    keys.put(fb.getName(), value);
+                }
+                sb.append(value);
                 if (iFieldKeys.hasNext()) {
                     sb.append(output.getDelimiter());
                 }
@@ -206,7 +244,17 @@ public class RecordGenerator {
         if (controlFieldInt != null && controlFieldInt.terminate()) {
             throw new TerminateException("Field " + controlField + " has reached it limit and terminated the record generating process");
         }
-        return sb.toString();
+
+        // If Key Fields are defined, build them out.
+        if (keyFields != null) {
+            StringBuffer keyBuffer = new StringBuffer();
+            for (String field : keyFields) {
+                keyBuffer.append(keys.get(field));
+            }
+            key = keyBuffer.toString();
+        }
+        value = sb.toString();
     }
+
 
 }

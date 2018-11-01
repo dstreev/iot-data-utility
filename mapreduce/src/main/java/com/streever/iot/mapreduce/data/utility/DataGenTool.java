@@ -18,7 +18,7 @@
 
 package com.streever.iot.mapreduce.data.utility;
 
-//import kafka.bridge.hadoop2.KafkaOutputFormat;
+//import spec.bridge.hadoop2.KafkaOutputFormat;
 
 import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;

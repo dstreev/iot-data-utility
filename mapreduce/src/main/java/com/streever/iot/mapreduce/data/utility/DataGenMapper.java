@@ -44,9 +44,9 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
     public static final String CONFIG_FILE = "app.config.file";
     public static final String DEFAULT_CONFIG_RESOURCE_FILE = "/validation-generator.json";
 
-    private Boolean earlyTermination = Boolean.FALSE;
+    protected Boolean earlyTermination = Boolean.FALSE;
 
-    private RecordGenerator recordGenerator;
+    protected RecordGenerator recordGenerator;
 
     protected void setup(Context context) {
         // Get the conf location from the job conf.

@@ -22,53 +22,33 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.streever.iot.data.utility.generator.RecordGenerator;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
 
-public class KafkaDataGenMapper extends Mapper<LongWritable, NullWritable, Object, Object> {
+public class KafkaDataGenMapper extends DataGenMapper<LongWritable, NullWritable, Object, Object> {
 
-    public static final String CONFIG_FILE = "app.config.file";
-
-    private RecordGenerator recordGenerator;
-
-    protected void setup(Context context) {
-        // Get the conf location from the job conf.
-        String config = context.getConfiguration().get(CONFIG_FILE);
-
-        System.out.println("Config File: " + config);
-
-        // Read the Config from the path.
-        FileSystem FS1 = null;
-        FSDataInputStream fsdis = null;
-        try {
-            FS1 = FileSystem.get(context.getConfiguration());
-
-            Path path = new Path(config);
-
-            fsdis = FS1.open(path);
-
-            ObjectMapper mapper = new ObjectMapper();
-            recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(fsdis.getWrappedStream());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeStream(fsdis);
-        }
-
-
-    }
 
     public void map(LongWritable key, NullWritable value, Context context) throws IOException, InterruptedException {
-        String record = recordGenerator.next();
-        context.write(null, record.getBytes());
+        Text record = new Text();
+        try {
+            // Use this to quickly cycle through the remain counter,
+            // even though we've reach to end because of the termination
+            // event in the generator.
+            if (!earlyTermination) {
+                record.set(recordGenerator.next());
+                context.write(NullWritable.get(), record);
+            }
+        } catch (TerminateException te) {
+            earlyTermination = Boolean.TRUE;
+        }
     }
 }

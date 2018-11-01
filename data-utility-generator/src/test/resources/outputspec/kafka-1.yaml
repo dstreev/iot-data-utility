@@ -1,0 +1,13 @@
+topic:
+  name: "airline-demo"
+  headers:
+type:
+  key: "String"
+  value: "String"
+configs:
+  bootstrap.servers: "os04.streever.local:6667,os05.streever.local:6667"
+  acks: "1"
+  client.id: "my-gen-app-1"
+#  transactional.id: "my-trans-id-1"
+#  batch.size: 3000000
+#  linger.ms: 3000

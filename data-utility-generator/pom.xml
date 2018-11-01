@@ -28,6 +28,19 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.streever.iot.kafka</groupId>
+            <artifactId>kafka.integration</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.client.version}</version>
+        </dependency>
+
         <!-- Format Preserving Encryption -->
         <dependency>
             <groupId>com.idealista</groupId>
@@ -36,24 +49,24 @@
         </dependency>
 
         <!-- Kafka Support -->
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>${kafka.artifact}</artifactId>
-            <version>${kafka.version}</version>
-        </dependency>
         <!--<dependency>-->
-        <!--<groupId>org.apache.kafka</groupId>-->
-        <!--<artifactId>${kafka.artifact}</artifactId>-->
-        <!--<version>${kafka.version}</version>-->
+            <!--<groupId>org.apache.kafka</groupId>-->
+            <!--<artifactId>${kafka.artifact}</artifactId>-->
+            <!--<version>${kafka.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--<groupId>org.apache.spec</groupId>-->
+        <!--<artifactId>${spec.artifact}</artifactId>-->
+        <!--<version>${spec.version}</version>-->
         <!--<scope>provided</scope>-->
         <!--</dependency>-->
         <!--dependency>
-            <groupId>org.apache.kafka</groupId>
+            <groupId>org.apache.spec</groupId>
             <artifactId>hadoop-producer</artifactId>
-            <version>${kafka.hadoop.producer.version}</version>
+            <version>${spec.hadoop.producer.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.kafka</groupId>
+                    <groupId>org.apache.spec</groupId>
                     <artifactId>kafka_2.10</artifactId>
                 </exclusion>
                 <exclusion>

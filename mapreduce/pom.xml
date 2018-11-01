@@ -44,9 +44,9 @@
         <!--<apache.commons.lang3.version>3.1</apache.commons.lang3.version>-->
         <!--<apache.commons.codec.version>1.8</apache.commons.codec.version>-->
 
-        <!--<kafka.artifact>kafka_2.9.2</kafka.artifact>-->
+        <!--<spec.artifact>kafka_2.9.2</spec.artifact>-->
         <kafka.version>1.0.0.2.6.5.8-7</kafka.version>
-        <!--<kafka.hadoop.producer.version>0.8.0</kafka.hadoop.producer.version>-->
+        <!--<spec.hadoop.producer.version>0.8.0</spec.hadoop.producer.version>-->
     </properties>
 
     <dependencies>
@@ -163,12 +163,12 @@
             <scope>provided</scope>
         </dependency>
         <!--dependency>
-            <groupId>org.apache.kafka</groupId>
+            <groupId>org.apache.spec</groupId>
             <artifactId>hadoop-producer</artifactId>
-            <version>${kafka.hadoop.producer.version}</version>
+            <version>${spec.hadoop.producer.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.kafka</groupId>
+                    <groupId>org.apache.spec</groupId>
                     <artifactId>kafka_2.10</artifactId>
                 </exclusion>
                 <exclusion>

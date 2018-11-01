@@ -1,0 +1,119 @@
+title: "entity"
+description: "entity datasource"
+output:
+  format: "JSON"
+order:
+  - cc_trans
+  - ccn
+  - trans_ts
+  - mcc
+  - mrch_id
+  - st
+  - amnt
+keyFields:
+  - ccn
+fields:
+  -
+    type: "string"
+    name: "cc_trans"
+    characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    range:
+      min: 20
+      max: 20
+  -
+    type: "string"
+    name: "ccn"
+    characters: "0123456789"
+    range:
+      min: 15
+      max: 16
+    pool:
+      size: 50000
+  -
+    type: "date"
+    name: "trans_ts"
+  -
+    type: "int"
+    name: "mcc"
+    range:
+      min: 1500
+      max: 5000
+  -
+    type: "string"
+    name: "mrch_id"
+    characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    range:
+      min: 10
+      max: 12
+    pool:
+      size: 500
+  -
+    type: "string"
+    name: "st"
+    pool:
+      items:
+        - AL
+        - AK
+        - AS
+        - AZ
+        - AR
+        - CA
+        - CO
+        - CT
+        - DE
+        - DC
+        - FM
+        - FL
+        - GA
+        - GU
+        - HI
+        - ID
+        - IL
+        - IN
+        - IA
+        - KS
+        - KY
+        - LA
+        - ME
+        - MH
+        - MD
+        - MA
+        - MI
+        - MN
+        - MS
+        - MO
+        - MT
+        - NE
+        - NV
+        - NH
+        - NJ
+        - NM
+        - NY
+        - NC
+        - ND
+        - MP
+        - OH
+        - OK
+        - OR
+        - PW
+        - PA
+        - PR
+        - RI
+        - SC
+        - SD
+        - TN
+        - TX
+        - UT
+        - VT
+        - VI
+        - VA
+        - WA
+        - WV
+        - WI
+        - WY
+  - type: "float"
+    name: "amnt"
+    format: "#.##"
+    range:
+      min: 1
+      max: 1000

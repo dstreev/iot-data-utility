@@ -1,0 +1,10 @@
+topic:
+  name: "airline-demo"
+  headers:
+type:
+  key: "String"
+  value: "String"
+configs:
+  bootstrap.servers: "os04.streever.local:6667,os05.streever.local:6667"
+  acks: "all"
+  client.id: "my-gen-app-1"

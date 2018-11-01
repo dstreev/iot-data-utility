@@ -3,27 +3,45 @@ package com.streever.iot.data.utility.generator.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
+import com.streever.iot.kafka.producer.KafkaProducerConfig;
+import com.streever.iot.kafka.producer.ProducerCreator;
+import com.streever.iot.kafka.spec.ProducerSpec;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 
 public class RecordGenerator {
     public enum FILE_TYPE {
         JSON, YAML;
     }
+
     private Options options;
     private Long count;
-    private String outputFilename;
-    private String configurationFile;
+    private String outputFilename = null;
+    private String configurationFile = null;
+    private String streamConfigurationFile = null;
     private Boolean tsOnFile;
+    Integer transactionCommitCount = 5000;
+    Integer progressIndicatorCount = 5000;
+
+    private com.streever.iot.data.utility.generator.RecordGenerator recordGenerator = null;
+    private ProducerSpec streamingSpec = null;
 
     private void buildOptions() {
         options = new Options();
@@ -62,6 +80,15 @@ public class RecordGenerator {
                 .required(true)
                 .build();
 
+        Option sConfig = Option.builder("scfg")
+                .argName("streamConfig")
+                .desc("Streaming Configuration")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(String.class)
+                .required(false)
+                .build();
+
         Option oCount = Option.builder("c")
                 .argName("count")
                 .desc("Record Count")
@@ -82,6 +109,7 @@ public class RecordGenerator {
         options.addOption(oOutput);
         options.addOption(dOutput);
         options.addOption(oConfig);
+        options.addOption(sConfig);
         options.addOption(oCount);
         options.addOption(oTimestamp);
 
@@ -98,6 +126,7 @@ public class RecordGenerator {
 
         CommandLineParser clParser = new DefaultParser();
         CommandLine line = null;
+
         try {
             line = clParser.parse(options, args, true);
         } catch (ParseException pe) {
@@ -110,8 +139,17 @@ public class RecordGenerator {
 
         count = Long.parseLong(line.getOptionValue("c"));
 
-        outputFilename = line.getOptionValue("o");
+        Map<String, String> outputMap = new TreeMap<String, String>();
+
+        if (line.hasOption("o")) {
+            outputFilename = line.getOptionValue("o");
+        }
+        if (line.hasOption("scfg")) {
+            streamConfigurationFile = line.getOptionValue("scfg");
+        }
+
         configurationFile = line.getOptionValue("cfg");
+
         if (line.hasOption("t")) {
             tsOnFile = true;
         } else {
@@ -143,23 +181,70 @@ public class RecordGenerator {
 
             mapper.enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+            // Build Record Generator
             File file = new File(configurationFile);
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+            String generatorCfg = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
 
-            com.streever.iot.data.utility.generator.RecordGenerator recGen = mapper.reader(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+            recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(generatorCfg);
 
-            buildFile(recGen, count);
+            if (streamConfigurationFile != null) {
+                File streamCfgFile = new File(streamConfigurationFile);
+                String streamCfg = FileUtils.readFileToString(streamCfgFile, Charset.forName("UTF-8"));
+
+                streamingSpec = mapper.readerFor(ProducerSpec.class).readValue(streamCfg);
+            }
+
+            // Determine Output modes.
+            if (outputFilename != null && streamingSpec != null) {
+
+            } else if (outputFilename != null) {
+
+            }
+            build(count);
 
         }
 
         return rtn;
     }
 
-    private void buildFile(com.streever.iot.data.utility.generator.RecordGenerator recGen, long count) {
-        try {
-            String output = null;
+    private void build(long count) {
+        boolean toFile = false;
+        boolean toStream = false;
+        boolean transactional = false;
+        if (outputFilename != null)
+            toFile = true;
+        if (streamingSpec != null) {
+            toStream = true;
+            if (streamingSpec.getConfigs().get(KafkaProducerConfig.TRANSACTIONAL_ID.getConfig()) != null &&
+                    streamingSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()) != null &&
+                    streamingSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()).toString().equals("all")) {
+                transactional = true;
+            } else {
+                transactional = false;
+            }
+        }
 
-            if (tsOnFile) {
+        BufferedWriter writer = null;
+
+        Producer<String, String> producer = null;
+        String topic = null;
+
+        if (toStream) {
+            producer = (Producer<String, String>) ProducerCreator.createProducer(streamingSpec);
+            topic = streamingSpec.getTopic().getName();
+            if (transactional) {
+                producer.initTransactions();
+                producer.beginTransaction();
+            }
+        }
+
+        Date start = new Date();
+        long progressCount = 0;
+
+        Map<Integer, Long> offsets = new TreeMap<Integer, Long>();
+
+        try {
+            if (toFile && tsOnFile) {
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 
                 String extension = FilenameUtils.getExtension(outputFilename);
@@ -167,28 +252,80 @@ public class RecordGenerator {
                 String fullPath = FilenameUtils.getFullPath(outputFilename);
                 String now = df.format(new Date());
 
-                output = fullPath + File.separator + baseName + "_" + now + "." + extension;
-            } else {
-                output = outputFilename;
+                outputFilename = fullPath + File.separator + baseName + "_" + now + "." + extension;
             }
+            
+            if (toFile)
+                writer = new BufferedWriter(new FileWriter(outputFilename));
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(output));
-            for (long i = 0; i < count; i++) {
-                writer.append(recGen.next());
-                writer.append(recGen.getOutput().getNewLine());
-                if (i % 10000 == 0) {
+            for (long i = 1; i < count + 1; i++) {
+                recordGenerator.next();
+                progressCount++;
+                Object key = recordGenerator.getKey();
+                Object value = recordGenerator.getValue();
+
+                if (toFile) {
+                    writer.append(value.toString());
+                    writer.append(recordGenerator.getOutput().getNewLine());
+                }
+
+                if (toStream && transactional && i % transactionCommitCount == 0) {
+                    producer.commitTransaction();
+                    producer.beginTransaction();
+                }
+                if (toStream) {
+                    final ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key.toString(), value.toString());
+
+                    RecordMetadata metadata = producer.send(record).get();
+                    offsets.put(metadata.partition(), metadata.offset());
+                }
+
+                if (i % progressIndicatorCount == 0) {
                     System.out.print(".");
                 }
-                if (i % 800000 == 0) {
+                if (1 % (progressIndicatorCount * 100) == 0) {
                     System.out.println(".");
                 }
+
             }
-            writer.close();
-        } catch (Throwable t) {
-            System.out.println(t.getMessage());
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TerminateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (toFile && writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (toStream && transactional) {
+                producer.commitTransaction();
+            }
+            if (toStream) {
+                producer.close();
+            }
+            Date end = new Date();
+            long diff = end.getTime() - start.getTime();
+            double perSecRate = ((double) progressCount / diff) * 1000;
+            if (toStream) {
+                for (Map.Entry<Integer, Long> entry : offsets.entrySet()) {
+                    System.out.println();
+                    System.out.println("Partition: " + entry.getKey() + " Offset: " + entry.getValue());
+                }
+            }
+            System.out.println("Time: " + diff + " Loops: " + progressCount);
+            System.out.println("Rate (perSec): " + perSecRate);
+
         }
     }
-
 
     public static void main(String[] args) throws Exception {
         int result;
