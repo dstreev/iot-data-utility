@@ -1,11 +1,11 @@
 topic:
-  name: "cc_trans-demo-1"
+  name: "cc_trans_csv"
   headers:
 type:
   key: "String"
   value: "String"
 configs:
-  bootstrap.servers: "os04.streever.local:6667,os05.streever.local:6667"
+  bootstrap.servers: "os10.streever.local:6667,os14.streever.local:6667"
   acks: "0"
   client.id: "my-gen-app-1"
 #  transactional.id: "my-trans-id-1"

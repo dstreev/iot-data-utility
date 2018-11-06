@@ -13,6 +13,7 @@
         <module>mapreduce</module>
         <module>nifi</module>
         <module>kafka.integration</module>
+        <module>testing.spark</module>
     </modules>
 
     <properties>

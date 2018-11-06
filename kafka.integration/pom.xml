@@ -13,6 +13,8 @@
     <artifactId>kafka.integration</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
+    <name>KAFKA :: Integration Specifications</name>
+    
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

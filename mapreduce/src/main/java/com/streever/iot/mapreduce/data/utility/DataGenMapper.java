@@ -18,7 +18,6 @@
 
 package com.streever.iot.mapreduce.data.utility;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -79,9 +78,9 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
                 String ext = FilenameUtils.getExtension(config);
 
                 ObjectMapper mapper = null;
-                if (ext.toUpperCase().equals(com.streever.iot.data.utility.generator.cli.RecordGenerator.FILE_TYPE.JSON.toString())) {
+                if (ext.toUpperCase().equals(com.streever.iot.data.cli.RecordGenerator.FILE_TYPE.JSON.toString())) {
                     mapper = new ObjectMapper();
-                } else if (ext.toUpperCase().equals(com.streever.iot.data.utility.generator.cli.RecordGenerator.FILE_TYPE.YAML.toString())) {
+                } else if (ext.toUpperCase().equals(com.streever.iot.data.cli.RecordGenerator.FILE_TYPE.YAML.toString())) {
                     mapper = new ObjectMapper(new YAMLFactory());
                 } else {
                     throw new RuntimeException("Unknown file extension: " + ext + ".  json or yaml supported.");
@@ -106,7 +105,10 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
             // even though we've reach to end because of the termination
             // event in the generator.
             if (!earlyTermination) {
-                record.set(recordGenerator.next());
+                recordGenerator.next();
+                Object k = recordGenerator.getKey();
+                Object v = recordGenerator.getValue();
+                record.set(v.toString());
                 context.write(NullWritable.get(), record);
             }
         } catch (TerminateException te) {

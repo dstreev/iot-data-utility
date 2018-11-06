@@ -11,6 +11,9 @@ import java.util.Date;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
 public class DateField extends FieldBase<String> implements ControlField {
+    public enum As {
+        STRING, LONG;
+    }
     private Range<Timestamp> range;
     private Long diff = 1000l;
     private Long startStopSpan = 100000l;
@@ -20,6 +23,15 @@ public class DateField extends FieldBase<String> implements ControlField {
     private Boolean current = Boolean.TRUE;
     //private Boolean startStop = Boolean.FALSE;
     private Long lastIssued;
+    private As as = As.STRING;
+
+    public As getAs() {
+        return as;
+    }
+
+    public void setAs(As as) {
+        this.as = as;
+    }
 
     // Used to control the termination of creating records when this is the control field.
     private Long lastValue;
@@ -77,10 +89,12 @@ public class DateField extends FieldBase<String> implements ControlField {
 
     @Override
     public String getNext() {
+        Date rtn = null;
         if (current) {
             Date now = new Date();
             lastValue = now.getTime();
-            return df.format(now);
+            rtn = now;
+//            return df.format(now);
         } else if (increment) {
             if (range != null && lastIssued == null) {
                 lastIssued = range.getMin().getTime();
@@ -91,7 +105,8 @@ public class DateField extends FieldBase<String> implements ControlField {
                 lastIssued = lastIssued + incrementL;
             }
             lastValue = lastIssued;
-            return df.format(new Date(lastIssued));
+            rtn = new Date(lastIssued);
+//            return df.format(new Date(lastIssued));
         } else {
             Long dateValue = null;
             if (getStartStopState().equals(StartStopState.START)) {
@@ -107,7 +122,13 @@ public class DateField extends FieldBase<String> implements ControlField {
                 lastIssued = null;
             }
             lastValue = dateValue;
-            return df.format(new Date(dateValue));
+            rtn = new Date(dateValue);
+//            return df.format(new Date(dateValue));
+        }
+        if (getAs() == As.STRING) {
+            return df.format(rtn);
+        } else {
+            return Long.toString(rtn.getTime());
         }
     }
 

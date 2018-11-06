@@ -1,4 +1,4 @@
-package com.streever.iot.data.utility.generator.cli;
+package com.streever.iot.data.cli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -21,9 +21,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class RecordGenerator {
@@ -32,13 +30,18 @@ public class RecordGenerator {
     }
 
     private Options options;
-    private Long count;
+    private Long count = null;
     private String outputFilename = null;
     private String configurationFile = null;
     private String streamConfigurationFile = null;
     private Boolean tsOnFile;
     Integer transactionCommitCount = 5000;
     Integer progressIndicatorCount = 5000;
+    private Integer burstCount = null;
+    private Integer pauseMax = null;
+    private boolean randomBurst = false;
+    private boolean randomPause = false;
+    private Random random = new Random(new Date().getTime());
 
     private com.streever.iot.data.utility.generator.RecordGenerator recordGenerator = null;
     private ProducerSpec streamingSpec = null;
@@ -95,12 +98,44 @@ public class RecordGenerator {
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(Long.class)
-                .required(true)
+                .required(false)
                 .build();
 
         Option oTimestamp = Option.builder("t")
                 .argName("timestamp")
                 .desc("Add Timestamp to Filename")
+                .hasArg(false)
+                .required(false)
+                .build();
+
+        Option oBurstMax = Option.builder("bm")
+                .argName("burstMax")
+                .desc("Burst Max")
+                .type(Integer.class)
+                .hasArg(true)
+                .required(false)
+                .build();
+
+        Option oPause = Option.builder("p")
+                .argName("pauseMax")
+                .desc("pause max millis")
+                .type(Integer.class)
+                .hasArg(true)
+                .required(false)
+                .build();
+
+        Option oRandomBurst = Option.builder("rb")
+                .argName("randomizeBurst")
+                .desc("randomize burst")
+                .type(Boolean.class)
+                .hasArg(false)
+                .required(false)
+                .build();
+
+        Option oRandomPause = Option.builder("rp")
+                .argName("randomizePause")
+                .desc("randomize pause")
+                .type(Boolean.class)
                 .hasArg(false)
                 .required(false)
                 .build();
@@ -112,6 +147,10 @@ public class RecordGenerator {
         options.addOption(sConfig);
         options.addOption(oCount);
         options.addOption(oTimestamp);
+        options.addOption(oBurstMax);
+        options.addOption(oPause);
+        options.addOption(oRandomBurst);
+        options.addOption(oRandomPause);
 
     }
 
@@ -137,7 +176,9 @@ public class RecordGenerator {
             return false;
         }
 
-        count = Long.parseLong(line.getOptionValue("c"));
+        if (line.hasOption("c")) {
+            count = Long.parseLong(line.getOptionValue("c"));
+        }
 
         Map<String, String> outputMap = new TreeMap<String, String>();
 
@@ -146,6 +187,23 @@ public class RecordGenerator {
         }
         if (line.hasOption("scfg")) {
             streamConfigurationFile = line.getOptionValue("scfg");
+        }
+
+        if (line.hasOption("bm")) {
+            String t = line.getOptionValue("bm");
+            burstCount = Integer.parseInt(t);
+        }
+
+        if (line.hasOption("p")) {
+            String p = line.getOptionValue("p");
+            pauseMax = Integer.parseInt(p);
+        }
+
+        if (line.hasOption("rb")) {
+            randomBurst = true;
+        }
+        if (line.hasOption("rp")) {
+            randomPause = true;
         }
 
         configurationFile = line.getOptionValue("cfg");
@@ -194,20 +252,27 @@ public class RecordGenerator {
                 streamingSpec = mapper.readerFor(ProducerSpec.class).readValue(streamCfg);
             }
 
+            Map<String, String> output = new HashMap<String, String>();
             // Determine Output modes.
-            if (outputFilename != null && streamingSpec != null) {
-
-            } else if (outputFilename != null) {
-
+            if (streamingSpec != null) {
+                output.put("Stream", streamingSpec.getTopic().getName());
             }
-            build(count);
+            if (outputFilename != null) {
+                output.put("File", outputFilename);
+            }
+            if (output.size() > 0) {
+                System.out.println(output.toString());
+            } else {
+                System.out.println("No Output Specified");
+            }
+            build();
 
         }
 
         return rtn;
     }
 
-    private void build(long count) {
+    private void build() {
         boolean toFile = false;
         boolean toStream = false;
         boolean transactional = false;
@@ -258,9 +323,30 @@ public class RecordGenerator {
             if (toFile)
                 writer = new BufferedWriter(new FileWriter(outputFilename));
 
-            for (long i = 1; i < count + 1; i++) {
+            long burstStageCount = 0l;
+            long lclBurstCount = 0;
+            if (burstCount != null)
+                lclBurstCount = burstCount;
+
+            if (randomBurst && burstCount != null) {
+                lclBurstCount = random.nextInt(burstCount);
+            }
+//            long lclCount = 0;
+            boolean go = true;
+            Date tempStart = new Date();
+            while (go) {
+//            for (long i = 1; i < count + 1; i++) {
                 recordGenerator.next();
                 progressCount++;
+//                lclCount++;
+
+                if (count != null && progressCount >= count) {
+                    go = false;
+                }
+
+                if (burstCount != null)
+                    burstStageCount++;
+
                 Object key = recordGenerator.getKey();
                 Object value = recordGenerator.getValue();
 
@@ -269,7 +355,7 @@ public class RecordGenerator {
                     writer.append(recordGenerator.getOutput().getNewLine());
                 }
 
-                if (toStream && transactional && i % transactionCommitCount == 0) {
+                if (toStream && transactional && progressCount % transactionCommitCount == 0) {
                     producer.commitTransaction();
                     producer.beginTransaction();
                 }
@@ -280,13 +366,37 @@ public class RecordGenerator {
                     offsets.put(metadata.partition(), metadata.offset());
                 }
 
-                if (i % progressIndicatorCount == 0) {
+                if (progressCount % progressIndicatorCount == 0) {
                     System.out.print(".");
                 }
-                if (1 % (progressIndicatorCount * 100) == 0) {
+                if (progressCount % (progressIndicatorCount * 100) == 0) {
                     System.out.println(".");
+                    Date tempEnd = new Date();
+                    long tempDiff = tempEnd.getTime() - tempStart.getTime();
+                    double tempPerSecRate = ((double) (progressIndicatorCount * 100) / tempDiff) * 1000;
+                    System.out.println("Interval Time: " + tempDiff + " Loops: " + (progressIndicatorCount * 100));
+                    System.out.println("Interval Rate (perSec): " + tempPerSecRate);
+                    tempStart = new Date();
                 }
 
+                if (count != null && progressCount >= count) {
+                    go = false;
+                }
+                
+                if (pauseMax != null && burstCount != null && burstStageCount > lclBurstCount) {
+                    int realPause = pauseMax;
+                    if (randomPause) {
+                        realPause = random.nextInt(pauseMax);
+                    }
+                    System.out.println("Pause Activated after generating " + burstStageCount + " records.  Sleeping for " + realPause + " ms.");
+                    burstStageCount = 0;
+                    Thread.sleep(realPause);
+                    if (randomBurst) {
+                        lclBurstCount = random.nextInt(burstCount);
+                    }
+
+                }
+//            }
             }
 
 

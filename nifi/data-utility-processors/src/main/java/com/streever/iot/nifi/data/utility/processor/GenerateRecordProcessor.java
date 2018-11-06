@@ -19,6 +19,7 @@ package com.streever.iot.nifi.data.utility.processor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streever.iot.data.utility.generator.RecordGenerator;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
 import org.apache.commons.logging.Log;
 
 import org.apache.commons.logging.LogFactory;
@@ -149,7 +150,14 @@ public class GenerateRecordProcessor extends AbstractProcessor {
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < recordCount; i++) {
-            sb.append(generator.next()).append("\n");
+            try {
+                generator.next();
+            } catch (TerminateException e) {
+                e.printStackTrace();
+            }
+            Object key = generator.getKey();
+            Object value = generator.getValue();
+            sb.append(value.toString()).append("\n");
         }
 
         return sb.toString();

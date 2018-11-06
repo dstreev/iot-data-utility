@@ -49,150 +49,163 @@ public class RecordGeneratorTest {
 
     @Test
     public void Test001() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            File file = new File(cl.getResource("generator/one.json").getFile());
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+        System.out.println("Test001");
+        build("generator/one.json", 10l);
 
-            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
-
-            System.out.println("Test001");
-            for (int i = 0; i < 10; i++) {
-                recGen.next();
-                System.out.println(recGen.getValue());
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println("Test001-Terminate");
     }
 
     @Test
     public void Test0014() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try {
-            File file = new File(cl.getResource("generator/one.yaml").getFile());
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+        System.out.println("Test0014");
+        build("generator/one.yaml", 500000l);
 
-            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
-            Date start = new Date();
-            System.out.println("Test0014 - Perf");
-            Long loops = 500000l;
-            for (int i = 0; i < loops; i++) {
-                recGen.next();
-//                if (loops % 100000l == 0)
-//                    System.out.print(".");
-                Object key = recGen.getKey();
-            }
-            Date end = new Date();
-            Long diff = end.getTime() - start.getTime();
-            Long perSecRate = (loops / diff) * 1000;
-            System.out.println("Rate (perSec): " + perSecRate);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println("Test0014-Terminate");
     }
 
     @Test
     public void Test0015() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try {
-            File file = new File(cl.getResource("generator/one.yaml").getFile());
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+        System.out.println("Test0015");
+        build("generator/one.yaml", 10l);
 
-            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
-
-            System.out.println("Test001");
-            for (int i = 0; i < 10; i++) {
-                recGen.next();
-                Object key = recGen.getKey();
-                System.out.println("Key: " + recGen.getKey() + " Value :" + recGen.getValue());
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println("Test0015-Terminate");
     }
 
     @Test
     public void Test0016() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try {
-            File file = new File(cl.getResource("generator/array.yaml").getFile());
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+        System.out.println("Test0016");
+        build("generator/array.yaml", 10l);
 
-            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+        System.out.println("Test0016-Terminate");
 
-            System.out.println("Test001");
-            for (int i = 0; i < 10; i++) {
-                recGen.next();
-                System.out.println(recGen.getValue());
-            }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
     public void Test0017() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try {
-            File file = new File(cl.getResource("generator/record-definition.yaml").getFile());
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+        System.out.println("Test0017");
+        build("generator/date-increment.yaml", 10l);
 
-            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+        System.out.println("Test0017-Terminate");
 
-            System.out.println("Test001");
-            for (int i = 0; i < 10; i++) {
-                recGen.next();
-                System.out.println(recGen.getValue());
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
     public void Test0018() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try {
-            File file = new File(cl.getResource("generator/date-increment.yaml").getFile());
-            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+        System.out.println("Test0018");
+        build("generator/date-increment.yaml", null);
 
-            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+        System.out.println("Test0018-Terminate");
 
-            System.out.println("Test001");
-            for (int i = 0; i < 1000; i++) {
-                recGen.next();
-                System.out.println(recGen.getValue());
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
     public void Test0019() {
+        System.out.println("Test0019");
+        build("generator/date-terminate.yaml", null);
+
+        System.out.println("Test0018-Terminate");
+
+    }
+
+    @Test
+    public void Test001901() {
+        System.out.println("Test001901");
+        build("generator/date-as.yaml", 10l);
+
+        System.out.println("Test001901-Terminate");
+
+    }
+
+    @Test
+    public void Test00191() {
+        System.out.println("Test00191");
+        runPerfConfig("generator/one.yaml", 1000000l);
+    }
+
+    @Test
+    public void Test00192() {
+        System.out.println("Test00192");
+        runPerfConfig("generator/two.yaml", 1000000l);
+    }
+
+    @Test
+    public void Test0020_0() {
+        System.out.println("Test0020_0");
+        runKafkaLoad("outputspec/kafka-0.yaml", "generator/one.yaml", 200000l);
+    }
+
+    @Test
+    public void Test0020_01() {
+        System.out.println("Test0020_01");
+        runKafkaLoad("outputspec/kafka-ccn_0.yaml", "generator/ccn_trans.yaml", 200000l);
+    }
+
+    @Test
+    public void Test0020_1() {
+        System.out.println("Test0020_1");
+        runKafkaLoad("outputspec/kafka-1.yaml", "generator/one.yaml", 200000l);
+    }
+
+    @Test
+    public void Test0020_2() {
+        System.out.println("Test0020_2");
+        runKafkaLoad("outputspec/kafka-trans.yaml", "generator/one.yaml", 20000l);
+    }
+
+    @Test
+    public void Test0021_0() {
+        System.out.println("Test0021_0");
+        runKafkaLoad("outputspec/kafka-0.yaml", "generator/two.yaml", 200000l);
+    }
+
+    @Test
+    public void Test0021_1() {
+        System.out.println("Test0021_1");
+        runKafkaLoad("outputspec/kafka-1.yaml", "generator/two.yaml", 20000l);
+    }
+
+    @Test
+    public void Test0021_2() {
+        System.out.println("Test0021_2");
+        runKafkaLoad("outputspec/kafka-trans.yaml", "generator/two.yaml", 200000l);
+    }
+
+    protected void build(String configResource, Long count) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Date start = new Date();
+        int i = 0;
+        // Prevent runaway output.
+        boolean print = count != null && count < 101;
         try {
-            File file = new File(cl.getResource("generator/date-terminate.yaml").getFile());
+            File file = new File(cl.getResource(configResource).getFile());
             String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
 
             RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
-
-            System.out.println("Test002-Terminate");
-            while (true) {
+            boolean go = true;
+            while (go) {
                 recGen.next();
-                System.out.println(recGen.getValue());
+                i++;
+                if (count != null && i > count)
+                    go = false;
+                if (print)
+                    System.out.println(recGen.getValue());
             }
+            i--;
         } catch (TerminateException te) {
             System.out.println(te.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            Date end = new Date();
+            long diff = end.getTime() - start.getTime();
+            double perSecRate = ((double) i / diff) * 1000;
+
+            System.out.println("Time: " + diff + " Loops: " + i);
+            System.out.println("Rate (perSec): " + perSecRate);
+
         }
+
     }
 
     protected void runPerfConfig(String genConfig, Long loops) {
@@ -229,17 +242,6 @@ public class RecordGeneratorTest {
 
     }
 
-    @Test
-    public void Test00191() {
-        System.out.println("Test00191");
-        runPerfConfig("generator/one.yaml", 1000000l);
-    }
-
-    @Test
-    public void Test00192() {
-        System.out.println("Test00192");
-        runPerfConfig("generator/two.yaml", 1000000l);
-    }
 
     protected void runKafkaLoad(String kafkaConfig, String genConfig, Long loops) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -251,7 +253,7 @@ public class RecordGeneratorTest {
 
             Boolean transactional = null;
             if (producerSpec.getConfigs().get(KafkaProducerConfig.TRANSACTIONAL_ID.getConfig()) != null &&
-                producerSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()) != null &&
+                    producerSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()) != null &&
                     producerSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()).toString().equals("all")) {
                 transactional = true;
             } else {
@@ -317,48 +319,7 @@ public class RecordGeneratorTest {
 
     }
 
-    @Test
-    public void Test0020_0() {
-        System.out.println("Test0020_0");
-        runKafkaLoad("outputspec/kafka-0.yaml", "generator/one.yaml", 200000l);
-    }
 
-    @Test
-    public void Test0020_01() {
-        System.out.println("Test0020_01");
-        runKafkaLoad("outputspec/kafka-ccn_0.yaml", "generator/ccn_trans.yaml", 200000l);
-    }
-
-    @Test
-    public void Test0020_1() {
-        System.out.println("Test0020_1");
-        runKafkaLoad("outputspec/kafka-1.yaml", "generator/one.yaml", 200000l);
-    }
-
-    @Test
-    public void Test0020_2() {
-        System.out.println("Test0020_2");
-        runKafkaLoad("outputspec/kafka-trans.yaml", "generator/one.yaml", 20000l);
-    }
-
-    @Test
-    public void Test0021_0() {
-        System.out.println("Test0021_0");
-        runKafkaLoad("outputspec/kafka-0.yaml", "generator/two.yaml", 200000l);
-    }
-
-    @Test
-    public void Test0021_1() {
-        System.out.println("Test0021_1");
-        runKafkaLoad("outputspec/kafka-1.yaml", "generator/two.yaml", 20000l);
-    }
-
-    @Test
-    public void Test0021_2() {
-        System.out.println("Test0021_2");
-        runKafkaLoad("outputspec/kafka-trans.yaml", "generator/two.yaml", 200000l);
-    }
-    
     //    private void buildFile(RecordGenerator recGen,long count) {
 //        String fileName = new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss").format(new Date()) + ".txt";
 //        try {
