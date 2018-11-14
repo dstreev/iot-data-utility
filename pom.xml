@@ -11,7 +11,7 @@
     <modules>
         <module>data-utility-generator</module>
         <module>mapreduce</module>
-        <module>nifi</module>
+        <!--<module>nifi</module>-->
         <module>kafka.integration</module>
         <module>testing.spark</module>
     </modules>
@@ -49,7 +49,7 @@
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
         <apache.commons.cli.version>1.4</apache.commons.cli.version>
-        <apache.commons.codec.version>1.8</apache.commons.codec.version>
+        <apache.commons.codec.version>1.11</apache.commons.codec.version>
         <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
 
         <kafka.artifact>kafka-clients</kafka.artifact>

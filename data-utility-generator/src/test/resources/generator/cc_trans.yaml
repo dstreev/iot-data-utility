@@ -6,6 +6,7 @@ order:
   - cc_trans
   - ccn
   - trans_ts
+  - uuid
   - mcc
   - mrch_id
   - st
@@ -23,6 +24,7 @@ fields:
   -
     type: "string"
     name: "ccn"
+    hash: true
     characters: "0123456789"
     range:
       min: 15
@@ -32,6 +34,10 @@ fields:
   -
     type: "date"
     name: "trans_ts"
+    as: "LONG"
+  -
+    type: "uuid"
+    name: "uuid"
   -
     type: "int"
     name: "mcc"

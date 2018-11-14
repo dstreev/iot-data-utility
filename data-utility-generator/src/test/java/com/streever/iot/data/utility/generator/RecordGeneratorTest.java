@@ -130,6 +130,12 @@ public class RecordGeneratorTest {
     }
 
     @Test
+    public void Test00193() {
+        System.out.println("Test00192");
+        runPerfConfig("generator/cc_trans.yaml", 10l);
+    }
+
+    @Test
     public void Test0020_0() {
         System.out.println("Test0020_0");
         runKafkaLoad("outputspec/kafka-0.yaml", "generator/one.yaml", 200000l);
@@ -220,6 +226,9 @@ public class RecordGeneratorTest {
 
             for (int i = 1; i < loops + 1; i++) {
                 recGen.next();
+                if (loops <= 100) {
+                    System.out.println("Key: " + recGen.getKey() + " Value: " + recGen.getValue());
+                }
                 if (i % 200000l == 0)
                     System.out.println(".");
                 else if (i % 2000l == 0) {

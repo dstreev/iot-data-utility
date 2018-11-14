@@ -22,6 +22,7 @@ import java.util.Random;
         @JsonSubTypes.Type(value = LongField.class, name = "long"),
         @JsonSubTypes.Type(value = FloatField.class, name = "float"),
         @JsonSubTypes.Type(value = DoubleField.class, name = "double"),
+        @JsonSubTypes.Type(value = UUIDField.class, name = "uuid"),
         @JsonSubTypes.Type(value = ArrayLongField.class, name = "array.long"),
         @JsonSubTypes.Type(value = ArrayStringField.class, name = "array.string")
 })

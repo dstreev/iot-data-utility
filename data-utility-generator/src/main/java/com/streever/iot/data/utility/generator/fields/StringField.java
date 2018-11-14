@@ -2,14 +2,20 @@ package com.streever.iot.data.utility.generator.fields;
 
 import com.streever.iot.data.utility.generator.fields.support.Pool;
 import com.streever.iot.data.utility.generator.fields.support.Range;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.random.RandomDataGenerator;
+
+import java.security.DigestException;
 
 public class StringField extends FieldBase<String> {
     private Pool<String> pool;
     private String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private Range<Integer> range = new Range<Integer>(10, 10);
-
+    private boolean hash = false;
+    private String messageDigest = null;
+    private DigestUtils dg = null;
+    
     public Pool<String> getPool() {
         return pool;
     }
@@ -24,6 +30,22 @@ public class StringField extends FieldBase<String> {
 
     public void setRange(Range<Integer> range) {
         this.range = range;
+    }
+
+    public boolean isHash() {
+        return hash;
+    }
+
+    public void setHash(boolean hash) {
+        this.hash = hash;
+    }
+
+    public String getMessageDigest() {
+        return messageDigest;
+    }
+
+    public void setMessageDigest(String messageDigest) {
+        this.messageDigest = messageDigest;
     }
 
     public String getCharacters() {
@@ -69,6 +91,21 @@ public class StringField extends FieldBase<String> {
             if (pool != null) {
                 rtn = pool.getItem();
             }
+        }
+        if (hash) {
+            if (dg == null) {
+                if (messageDigest != null) {
+                    try {
+                        dg = new DigestUtils(messageDigest);
+                    } catch (IllegalArgumentException iae) {
+                        System.err.println("Issue with MessageDigest: " + iae.getMessage());
+                        dg = new DigestUtils("MD5");
+                    }
+                } else {
+                    dg = new DigestUtils("MD5");
+                }
+            }
+            rtn = dg.digestAsHex(rtn).toUpperCase();
         }
         return rtn;
     }
