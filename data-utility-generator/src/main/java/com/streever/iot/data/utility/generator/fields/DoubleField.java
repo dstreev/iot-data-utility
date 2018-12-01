@@ -36,7 +36,7 @@ public class DoubleField extends FieldBase<Double> {
     }
 
     protected Double getDiff() {
-        Double rtn = Math.abs(range.getMax()) - Math.abs(range.getMin());
+        Double rtn = range.getMax() - range.getMin();
         return rtn;
     }
 

@@ -24,7 +24,7 @@ public class IntegerField extends FieldBase<Integer> {
     }
 
     protected Integer getDiff() {
-        Integer rtn = Math.abs(range.getMax()) - Math.abs(range.getMin());
+        Integer rtn = range.getMax() - range.getMin();
         return rtn;
     }
 

@@ -36,7 +36,8 @@ public class FloatField extends FieldBase<Float> {
     }
 
     protected Float getDiff() {
-        Float rtn = Math.abs(range.getMax()) - Math.abs(range.getMin());
+//        Float rtn = Math.abs(range.getMax()) - Math.abs(range.getMin());
+        Float rtn = range.getMax() - range.getMin();
         return rtn;
     }
 

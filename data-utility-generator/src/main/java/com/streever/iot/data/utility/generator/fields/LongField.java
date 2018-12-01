@@ -24,7 +24,7 @@ public class LongField extends FieldBase<Long> {
     }
 
     protected Long getDiff() {
-        Long rtn = Math.abs(range.getMax()) - Math.abs(range.getMin());
+        Long rtn = range.getMax() - range.getMin();
         return rtn;
     }
 
