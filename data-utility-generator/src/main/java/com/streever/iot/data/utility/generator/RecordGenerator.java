@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.streever.iot.data.utility.generator.fields.ArrayStringField;
-import com.streever.iot.data.utility.generator.fields.ControlField;
-import com.streever.iot.data.utility.generator.fields.FieldBase;
-import com.streever.iot.data.utility.generator.fields.TerminateException;
+import com.streever.iot.data.utility.generator.fields.*;
 import com.streever.iot.data.utility.generator.fields.support.StartStopState;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputFormat;
@@ -205,7 +202,8 @@ public class RecordGenerator {
                         else if (item instanceof Long)
                             an.add(((Long) item).longValue());
                     }
-                    ;
+                } else if (value instanceof ReferenceField) {
+                    jRoot.put(iFieldKey, value.toString());
                 } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
                     try {
                         for (Field f : value.getClass().getDeclaredFields()) {

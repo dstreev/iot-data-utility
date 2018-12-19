@@ -82,6 +82,16 @@ public class RecordGeneratorTest {
     }
 
     @Test
+    public void Test0016_1() {
+        System.out.println("Test0016_1");
+        build("generator/ref-string.yaml", 10l);
+
+        System.out.println("Test0016_1-Terminate");
+
+
+    }
+
+    @Test
     public void Test0017() {
         System.out.println("Test0017");
         build("generator/date-increment.yaml", 10l);

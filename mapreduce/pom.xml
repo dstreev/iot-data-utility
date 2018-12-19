@@ -45,7 +45,7 @@
         <!--<apache.commons.codec.version>1.8</apache.commons.codec.version>-->
 
         <!--<spec.artifact>kafka_2.9.2</spec.artifact>-->
-        <kafka.version>1.0.0.2.6.5.8-7</kafka.version>
+        <!--<kafka.version>1.0.0.2.6.5.8-7</kafka.version>-->
         <!--<spec.hadoop.producer.version>0.8.0</spec.hadoop.producer.version>-->
     </properties>
 
@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
+            <artifactId>hadoop-hdfs-client</artifactId>
             <version>${hdp.version}</version>
             <exclusions>
                 <exclusion>

@@ -24,10 +24,10 @@
             <!--<jackson.json.version>2.6.1</jackson.json.version>-->
 
 
-        <hdp.version>2.7.3.2.6.1.0-129</hdp.version>
-        <hbase.version>1.1.2.2.6.1.0-129</hbase.version>
+        <hdp.version>3.1.1.3.1.0.0-78</hdp.version>
+        <hbase.version>2.0.2.3.1.0.0-789</hbase.version>
 
-        <kafka.client.version>1.1.0</kafka.client.version>
+        <kafka.client.version>2.0.0</kafka.client.version>
 
         <storm.version>0.9.1.2.1.2.0-402</storm.version>
 
@@ -53,7 +53,7 @@
         <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
 
         <kafka.artifact>kafka-clients</kafka.artifact>
-        <kafka.version>0.10.1.2.6.4.9-3</kafka.version>
+        <kafka.version>2.0.0.3.1.0.0-78</kafka.version>
         <!--<spec.hadoop.producer.version>0.8.0</spec.hadoop.producer.version>-->
     </properties>
 
@@ -112,7 +112,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.0</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -132,31 +132,6 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <!-- necessary to fix NoSuchMethodError: org.apache.commons.cli.Option.builder -->
-                            <relocations>
-                                <relocation>
-                                    <pattern>org.apache.commons.cli</pattern>
-                                    <shadedPattern>org.shaded.commons.cli</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson.core</pattern>
-                                    <shadedPattern>com.shaded.jackson.core</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson.databind</pattern>
-                                    <shadedPattern>com.shaded.jackson.databind</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson.annotation</pattern>
-                                    <shadedPattern>com.shaded.jackson.annotation</shadedPattern>
-                                </relocation>
-                            </relocations>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.apache.kafka:*</exclude>
-                                    <exclude>org.scala-lang:scala-library:*</exclude>
-                                </excludes>
-                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>
