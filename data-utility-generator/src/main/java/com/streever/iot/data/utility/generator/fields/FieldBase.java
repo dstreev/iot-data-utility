@@ -13,6 +13,7 @@ import java.util.Random;
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = StringField.class, name = "string"),
+        @JsonSubTypes.Type(value = RegExField.class, name = "regex"),
         @JsonSubTypes.Type(value = IPV4AddressField.class, name = "ipv4"),
         @JsonSubTypes.Type(value = GeoLocationField.class, name = "location"),
         @JsonSubTypes.Type(value = FixedField.class, name = "fixed"),

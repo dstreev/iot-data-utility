@@ -7,6 +7,7 @@ order:
   - cc_trans
   - ccn
   - trans_ts
+  - uuid
   - mcc
   - mrch_id
   - st
@@ -33,6 +34,9 @@ fields:
   -
     type: "date"
     name: "trans_ts"
+  -
+    type: "uuid"
+    name: "uuid"
   -
     type: "int"
     name: "mcc"
