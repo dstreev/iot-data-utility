@@ -1,19 +1,22 @@
 package com.streever.iot.data.utility.generator.fields;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.streever.iot.data.utility.generator.fields.support.LateArriving;
 import com.streever.iot.data.utility.generator.fields.support.Range;
 import com.streever.iot.data.utility.generator.fields.support.StartStopState;
+import com.streever.iot.data.utility.generator.fields.support.TimeInterval;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
 public class DateField extends FieldBase<String> implements ControlField {
     public enum As {
         STRING, LONG;
     }
+
     private Range<Timestamp> range;
     private Long diff = 1000l;
     private Long startStopSpan = 100000l;
@@ -21,6 +24,9 @@ public class DateField extends FieldBase<String> implements ControlField {
     private DateFormat df = new SimpleDateFormat(format);
     private Boolean increment = Boolean.FALSE;
     private Boolean current = Boolean.TRUE;
+
+    private LateArriving lateArriving = null;
+
     //private Boolean startStop = Boolean.FALSE;
     private Long lastIssued;
     private As as = As.STRING;
@@ -43,11 +49,15 @@ public class DateField extends FieldBase<String> implements ControlField {
 
     public void setRange(Range<Timestamp> range) {
         this.range = range;
-        if (!increment) {
-            this.diff = range.getMax().getTime() - range.getMin().getTime();
+        if (range != null) {
+            if (!increment) {
+                this.diff = range.getMax().getTime() - range.getMin().getTime();
+            }
+            // When Range is set, don't need current.
+            this.current = Boolean.FALSE;
+        } else {
+            this.current = Boolean.TRUE;
         }
-        // When Range is set, don't need current.
-        this.current = Boolean.FALSE;
     }
 
     public void setControlField(Boolean controlField) {
@@ -87,14 +97,25 @@ public class DateField extends FieldBase<String> implements ControlField {
         this.increment = increment;
     }
 
+    public LateArriving getLateArriving() {
+        return lateArriving;
+    }
+
+    public void setLateArriving(LateArriving lateArriving) {
+        this.lateArriving = lateArriving;
+    }
+
     @Override
     public String getNext() {
         Date rtn = null;
         if (current) {
             Date now = new Date();
-            lastValue = now.getTime();
-            rtn = now;
-//            return df.format(now);
+            if (lateArriving != null) {
+                rtn = lateArriving.getValue(now);
+            } else {
+                lastValue = now.getTime();
+                rtn = now;
+            }
         } else if (increment) {
             if (range != null && lastIssued == null) {
                 lastIssued = range.getMin().getTime();
@@ -105,8 +126,11 @@ public class DateField extends FieldBase<String> implements ControlField {
                 lastIssued = lastIssued + incrementL;
             }
             lastValue = lastIssued;
-            rtn = new Date(lastIssued);
-//            return df.format(new Date(lastIssued));
+            if (lateArriving != null) {
+                rtn = lateArriving.getValue(new Date(lastIssued));
+            } else {
+                rtn = new Date(lastIssued);
+            }
         } else {
             Long dateValue = null;
             if (getStartStopState().equals(StartStopState.START)) {
@@ -123,7 +147,6 @@ public class DateField extends FieldBase<String> implements ControlField {
             }
             lastValue = dateValue;
             rtn = new Date(dateValue);
-//            return df.format(new Date(dateValue));
         }
         if (getAs() == As.STRING) {
             return df.format(rtn);

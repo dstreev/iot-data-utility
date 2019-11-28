@@ -49,145 +49,132 @@ public class RecordGeneratorTest {
 
     @Test
     public void Test001() {
-        System.out.println("Test001");
         build("generator/one.json", 10l);
-
-        System.out.println("Test001-Terminate");
     }
 
     @Test
     public void Test0014() {
-        System.out.println("Test0014");
         build("generator/one.yaml", 500000l);
-
-        System.out.println("Test0014-Terminate");
     }
 
     @Test
     public void Test0015() {
-        System.out.println("Test0015");
         build("generator/one.yaml", 10l);
-
-        System.out.println("Test0015-Terminate");
     }
 
     @Test
     public void Test0016() {
-        System.out.println("Test0016");
         build("generator/array.yaml", 10l);
-
-        System.out.println("Test0016-Terminate");
-
-
     }
 
     @Test
     public void Test0016_1() {
-        System.out.println("Test0016_1");
         build("generator/ref-string.yaml", 10l);
-
-        System.out.println("Test0016_1-Terminate");
-
-
     }
 
     @Test
     public void Test0017() {
-        System.out.println("Test0017");
         build("generator/date-increment.yaml", 10l);
-
-        System.out.println("Test0017-Terminate");
-
     }
 
     @Test
     public void Test0018() {
-        System.out.println("Test0018");
         build("generator/date-increment.yaml", null);
-
-        System.out.println("Test0018-Terminate");
-
     }
 
     @Test
     public void Test0019() {
-        System.out.println("Test0019");
         build("generator/date-terminate.yaml", null);
-
-        System.out.println("Test0018-Terminate");
-
     }
 
     @Test
     public void Test001901() {
-        System.out.println("Test001901");
         build("generator/date-as.yaml", 10l);
-
-        System.out.println("Test001901-Terminate");
-
     }
 
     @Test
     public void Test00191() {
-        System.out.println("Test00191");
         runPerfConfig("generator/one.yaml", 1000000l);
     }
 
     @Test
     public void Test00192() {
-        System.out.println("Test00192");
         runPerfConfig("generator/two.yaml", 1000000l);
     }
 
     @Test
     public void Test00193() {
-        System.out.println("Test00192");
         runPerfConfig("generator/cc_trans.yaml", 10l);
     }
 
     @Test
+    public void Test00194() {
+        runPerfConfig("generator/date-late-arriving_minute.yaml", 10l);
+    }
+
+    @Test
+    public void Test00195() {
+        runPerfConfig("generator/date-late-arriving_hour.yaml", 10l);
+    }
+
+    @Test
+    public void Test00196() {
+        runPerfConfig("generator/date-late-arriving_day.yaml", 10l);
+    }
+
+    @Test
+    public void Test00197() {
+        runPerfConfig("generator/date-late-arriving_month.yaml", 10l);
+    }
+
+    @Test
+    public void Test00198() {
+        runPerfConfig("generator/date-late-arriving_year.yaml", 10l);
+    }
+
+    @Test
     public void Test0020_0() {
-        System.out.println("Test0020_0");
         runKafkaLoad("outputspec/kafka-0.yaml", "generator/one.yaml", 200000l);
     }
 
     @Test
     public void Test0020_01() {
-        System.out.println("Test0020_01");
         runKafkaLoad("outputspec/kafka-ccn_0.yaml", "generator/ccn_trans.yaml", 200000l);
     }
 
     @Test
     public void Test0020_1() {
-        System.out.println("Test0020_1");
         runKafkaLoad("outputspec/kafka-1.yaml", "generator/one.yaml", 200000l);
     }
 
     @Test
     public void Test0020_2() {
-        System.out.println("Test0020_2");
         runKafkaLoad("outputspec/kafka-trans.yaml", "generator/one.yaml", 20000l);
     }
 
     @Test
     public void Test0021_0() {
-        System.out.println("Test0021_0");
         runKafkaLoad("outputspec/kafka-0.yaml", "generator/two.yaml", 200000l);
     }
 
     @Test
     public void Test0021_1() {
-        System.out.println("Test0021_1");
         runKafkaLoad("outputspec/kafka-1.yaml", "generator/two.yaml", 20000l);
     }
 
     @Test
     public void Test0021_2() {
-        System.out.println("Test0021_2");
         runKafkaLoad("outputspec/kafka-trans.yaml", "generator/two.yaml", 200000l);
     }
 
     protected void build(String configResource, Long count) {
+        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
+        String methodName = et.getMethodName();
+        System.out.println("=========================");
+        System.out.println("Build Method: " + methodName);
+        System.out.println("-------------------------");
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Date start = new Date();
         int i = 0;
@@ -225,6 +212,13 @@ public class RecordGeneratorTest {
     }
 
     protected void runPerfConfig(String genConfig, Long loops) {
+        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
+        String methodName = et.getMethodName();
+        System.out.println("=========================");
+        System.out.println("Perf Method: " + methodName);
+        System.out.println("-------------------------");
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try {
             File file = new File(cl.getResource(genConfig).getFile());
@@ -252,7 +246,6 @@ public class RecordGeneratorTest {
 
             System.out.println("Time: " + diff + " Loops: " + loops);
             System.out.println("Rate (perSec): " + perSecRate);
-
         } catch (TerminateException te) {
             System.out.println(te.getMessage());
         } catch (Exception e) {
@@ -263,6 +256,13 @@ public class RecordGeneratorTest {
 
 
     protected void runKafkaLoad(String kafkaConfig, String genConfig, Long loops) {
+        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
+        String methodName = et.getMethodName();
+        System.out.println("=========================");
+        System.out.println("Kafka Load Method: " + methodName);
+        System.out.println("-------------------------");
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try {
             File kfile = new File(cl.getResource(kafkaConfig).getFile());

@@ -2,10 +2,6 @@ package com.streever.iot.data.utility.generator.fields;
 
 import com.mifmif.common.regex.Generex;
 import com.streever.iot.data.utility.generator.fields.support.Pool;
-import com.streever.iot.data.utility.generator.fields.support.Range;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.math3.random.RandomDataGenerator;
 
 public class RegExField extends FieldBase<String> {
     private Pool<String> pool;
@@ -30,7 +26,7 @@ public class RegExField extends FieldBase<String> {
 
         this.regex = regex;
     }
-    
+
     protected void buildPool() {
         if (pool != null) {
             for (int i = 0; i < pool.getSize(); i++) {
