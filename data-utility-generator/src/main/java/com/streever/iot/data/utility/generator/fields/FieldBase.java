@@ -18,6 +18,8 @@ import java.util.Random;
         @JsonSubTypes.Type(value = GeoLocationField.class, name = "location"),
         @JsonSubTypes.Type(value = FixedField.class, name = "fixed"),
         @JsonSubTypes.Type(value = SequenceField.class, name = "sequence"),
+        @JsonSubTypes.Type(value = SeededSequenceField.class, name = "seeded.sequence"),
+        @JsonSubTypes.Type(value = SeededLongField.class, name = "seeded.long"),
         @JsonSubTypes.Type(value = DateField.class, name = "date"),
         @JsonSubTypes.Type(value = IntegerField.class, name = "int"),
         @JsonSubTypes.Type(value = LongField.class, name = "long"),
