@@ -18,6 +18,9 @@
 
     <url>http://www.streever.com</url>
 
+    <properties>
+        <jar.finalName>${project.artifactId}</jar.finalName>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -184,17 +187,6 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
-            <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-jar-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<archive>-->
-                        <!--<manifest>-->
-                            <!--<mainClass>com.streever.iot.data.cli.RecordGenerator</mainClass>-->
-                        <!--</manifest>-->
-                    <!--</archive>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

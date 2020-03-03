@@ -16,9 +16,6 @@
 
     <name>MapReduce :: Data Utility</name>
 
-    <properties>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.streever.iot.data.utility</groupId>
