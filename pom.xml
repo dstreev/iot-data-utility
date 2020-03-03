@@ -9,8 +9,8 @@
     <name>HDP :: IOT Data Utilities</name>
 
     <modules>
+        <module>kafka.integration</module>
         <module>data-utility-generator</module>
-<!--        <module>kafka.integration</module>-->
         <module>mapreduce</module>
         <module>testing.spark</module>
     </modules>
@@ -18,7 +18,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
-        <jar.finalName>${project.name}</jar.finalName>
+
         <hadoop.version>3.1.1</hadoop.version>
         <hbase.version>2.0.2</hbase.version>
 
@@ -81,7 +81,10 @@
 <!--                    <encoding>UTF-8</encoding>-->
 <!--                </configuration>-->
 <!--            </plugin>-->
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

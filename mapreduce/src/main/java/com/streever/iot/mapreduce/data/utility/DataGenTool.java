@@ -46,9 +46,7 @@ public class DataGenTool extends Configured implements Tool {
     public static final int DEFAULT_MAPPERS = 2;
     public static final long DEFAULT_COUNT = 100;
 
-    public enum Sink {HDFS, KAFKA}
-
-    ;
+    public enum Sink {HDFS, KAFKA};
 
     public DataGenTool() {
         buildOptions();
@@ -204,7 +202,6 @@ public class DataGenTool extends Configured implements Tool {
     }
 
 
-    @Override
     public int run(String[] args) throws Exception {
 
         Job job = Job.getInstance(getConf()); // new Job(conf, this.getClass().getCanonicalName());
