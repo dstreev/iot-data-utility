@@ -34,6 +34,7 @@ import java.util.Random;
 public abstract class FieldBase<T> implements Comparable<FieldBase> {
     private Integer order;
     private String name;
+    private Integer repeat = 1;
     private Boolean random = Boolean.TRUE;
     protected Random randomizer = new Random(new Date().getTime());
     private StartStopState startStopState = StartStopState.NA;
@@ -60,6 +61,15 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
 
     public void setRandom(Boolean random) {
         this.random = random;
+    }
+
+
+    public Integer getRepeat() {
+        return repeat;
+    }
+
+    public void setRepeat(Integer repeat) {
+        this.repeat = repeat;
     }
 
     public Integer getOrder() {

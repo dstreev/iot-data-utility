@@ -93,6 +93,11 @@ public class RecordGeneratorTest {
     }
 
     @Test
+    public void Test001902() {
+        build("generator/date-as-repeat.yaml", 10l);
+    }
+
+    @Test
     public void Test00191() {
         runPerfConfig("generator/one.yaml", 1000000l);
     }

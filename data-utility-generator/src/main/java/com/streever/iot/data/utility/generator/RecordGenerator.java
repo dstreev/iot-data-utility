@@ -164,56 +164,62 @@ public class RecordGenerator {
             while (iFieldKeys.hasNext()) {
                 String iFieldKey = iFieldKeys.next();
                 FieldBase fb = orderedFields.get(iFieldKey);
-                String[] keyParts = iFieldKey.split("\\.");
-                if (keyParts[keyParts.length - 1].equals("start")) {
-                    fb.setStartStopState(StartStopState.START);
-                } else if (keyParts[keyParts.length - 1].equals("stop")) {
-                    fb.setStartStopState(StartStopState.STOP);
-                } else {
-                    fb.setStartStopState(StartStopState.NA);
-                }
-                Object value = fb.getNext();
-                if (keyFields != null && keyFields.contains(fb.getName())) {
-                    keys.put(fb.getName(), value);
-                }
-                if (value instanceof Short) {
-                    jRoot.put(iFieldKey, (Short) value);
-                } else if (value instanceof Integer) {
-                    jRoot.put(iFieldKey, (Integer) value);
-                } else if (value instanceof Long) {
-                    jRoot.put(iFieldKey, (Long) value);
-                } else if (value instanceof Float) {
-                    jRoot.put(iFieldKey, (Float) value);
-                } else if (value instanceof Double) {
-                    jRoot.put(iFieldKey, (Double) value);
-                } else if (value instanceof BigDecimal) {
-                    jRoot.put(iFieldKey, (BigDecimal) value);
-                } else if (value instanceof BigInteger) {
-                    jRoot.put(iFieldKey, (BigInteger) value);
-                } else if (value instanceof Boolean) {
-                    jRoot.put(iFieldKey, (Boolean) value);
-                } else if (value instanceof String) {
-                    jRoot.put(iFieldKey, value.toString());
-                } else if (value instanceof ArrayList) {
-                    ArrayNode an = jRoot.putArray(iFieldKey);
-                    for (Object item : (List) value) {
-                        if (item instanceof String)
-                            an.add(item.toString());
-                        else if (item instanceof Long)
-                            an.add(((Long) item).longValue());
+                for (int i = 0; i < fb.getRepeat(); i++) {
+                    String[] keyParts = iFieldKey.split("\\.");
+                    if (keyParts[keyParts.length - 1].equals("start")) {
+                        fb.setStartStopState(StartStopState.START);
+                    } else if (keyParts[keyParts.length - 1].equals("stop")) {
+                        fb.setStartStopState(StartStopState.STOP);
+                    } else {
+                        fb.setStartStopState(StartStopState.NA);
                     }
-                } else if (value instanceof ReferenceField) {
-                    jRoot.put(iFieldKey, value.toString());
-                } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
-                    try {
-                        for (Field f : value.getClass().getDeclaredFields()) {
-                            String fName = f.getName();
-                            Object fValue = PropertyUtils.getProperty(value, fName);
-                            jRoot.put(iFieldKey + "." + fName, fValue.toString());
+                    Object value = fb.getNext();
+                    String keyFieldName = iFieldKey;
+                    if (fb.getRepeat() > 1) {
+                        keyFieldName = keyFieldName + "_" + i;
+                    }
+                    if (keyFields != null && keyFields.contains(fb.getName())) {
+                        keys.put(fb.getName(), value);
+                    }
+                    if (value instanceof Short) {
+                        jRoot.put(keyFieldName, (Short) value);
+                    } else if (value instanceof Integer) {
+                        jRoot.put(keyFieldName, (Integer) value);
+                    } else if (value instanceof Long) {
+                        jRoot.put(keyFieldName, (Long) value);
+                    } else if (value instanceof Float) {
+                        jRoot.put(keyFieldName, (Float) value);
+                    } else if (value instanceof Double) {
+                        jRoot.put(keyFieldName, (Double) value);
+                    } else if (value instanceof BigDecimal) {
+                        jRoot.put(keyFieldName, (BigDecimal) value);
+                    } else if (value instanceof BigInteger) {
+                        jRoot.put(keyFieldName, (BigInteger) value);
+                    } else if (value instanceof Boolean) {
+                        jRoot.put(keyFieldName, (Boolean) value);
+                    } else if (value instanceof String) {
+                        jRoot.put(keyFieldName, value.toString());
+                    } else if (value instanceof ArrayList) {
+                        ArrayNode an = jRoot.putArray(iFieldKey);
+                        for (Object item : (List) value) {
+                            if (item instanceof String)
+                                an.add(item.toString());
+                            else if (item instanceof Long)
+                                an.add(((Long) item).longValue());
                         }
-                    } catch (Exception e) {
-                        // TODO: Handle Error
-                        e.printStackTrace();
+                    } else if (value instanceof ReferenceField) {
+                        jRoot.put(keyFieldName, value.toString());
+                    } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
+                        try {
+                            for (Field f : value.getClass().getDeclaredFields()) {
+                                String fName = f.getName();
+                                Object fValue = PropertyUtils.getProperty(value, fName);
+                                jRoot.put(keyFieldName + "." + fName, fValue.toString());
+                            }
+                        } catch (Exception e) {
+                            // TODO: Handle Error
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -229,13 +235,16 @@ public class RecordGenerator {
             while (iFieldKeys.hasNext()) {
                 String iFieldKey = iFieldKeys.next();
                 FieldBase fb = orderedFields.get(iFieldKey);
-                Object value = fb.getNext();
-                if (keyFields != null && keyFields.contains(fb.getName())) {
-                    keys.put(fb.getName(), value);
-                }
-                sb.append(value);
-                if (iFieldKeys.hasNext()) {
-                    sb.append(output.getDelimiter());
+                for (int i = 0; i < fb.getRepeat(); i++) {
+
+                    Object value = fb.getNext();
+                    if (keyFields != null && keyFields.contains(fb.getName())) {
+                        keys.put(fb.getName(), value);
+                    }
+                    sb.append(value);
+                    if (iFieldKeys.hasNext()) {
+                        sb.append(output.getDelimiter());
+                    }
                 }
             }
         }
