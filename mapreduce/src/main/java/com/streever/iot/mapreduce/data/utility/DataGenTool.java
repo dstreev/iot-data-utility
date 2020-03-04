@@ -55,48 +55,60 @@ public class DataGenTool extends Configured implements Tool {
     private void buildOptions() {
         options = new Options();
 
-        Option help = Option.builder("h")
-                .argName("help")
-                .desc("This Help")
-                .hasArg(false)
-                .required(false)
-                .build();
+        Option help = new Option("h", "help", false, "Help");
+        help.setRequired(false);
 
-        Option outputDir = Option.builder("d")
-                .argName("directory")
-                .desc("Output Directory")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(true)
-                .build();
+//        Option help = Option.builder("h")
+//                .argName("help")
+//                .desc("This Help")
+//                .hasArg(false)
+//                .required(false)
+//                .build();
 
-        Option mappers = Option.builder("m")
-                .argName("mappers")
-                .desc("Parallelism")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(Integer.class)
-                .required(true)
-                .build();
+        Option outputDir = new Option("d", "directory", true, "Output Directory");
+        outputDir.setRequired(true);
+//        Option outputDir = Option.builder("d")
+//                .argName("directory")
+//                .desc("Output Directory")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(String.class)
+//                .required(true)
+//                .build();
 
-        Option config = Option.builder("cfg")
-                .argName("config")
-                .desc("Configuration Filename (in HDFS)")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(true)
-                .build();
+        Option mappers = new Option("m", "mappers", true, "Parallelism");
+        mappers.setRequired(true);
+//        Option mappers = Option.builder("m")
+//                .argName("mappers")
+//                .desc("Parallelism")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(Integer.class)
+//                .required(true)
+//                .build();
 
-        Option count = Option.builder("c")
-                .argName("count")
-                .desc("Record Count")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(Long.class)
-                .required(true)
-                .build();
+
+        Option config = new Option("cfg", "config", true, "Config File in HDFS");
+        config.setRequired(true);
+//        Option config = Option.builder("cfg")
+//                .argName("config")
+//                .desc("Configuration Filename (in HDFS)")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(String.class)
+//                .required(true)
+//                .build();
+
+        Option count = new Option("c", "count", true, "Record Count");
+        count.setRequired(true);
+//        Option count = Option.builder("c")
+//                .argName("count")
+//                .desc("Record Count")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(Long.class)
+//                .required(true)
+//                .build();
 
 
         options.addOption(help);
