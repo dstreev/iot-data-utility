@@ -34,6 +34,7 @@ public class RecordGenerator {
     private String outputFilename = null;
     private String configurationFile = null;
     private String streamConfigurationFile = null;
+    private Boolean genHiveTable = Boolean.FALSE;
     private Boolean tsOnFile;
     Integer transactionCommitCount = 5000;
     Integer progressIndicatorCount = 5000;
@@ -140,6 +141,12 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
+        Option hiveTableGen = Option.builder("hive")
+                .argName("hive-table")
+                .desc("Generate Hive Table")
+                .required(false)
+                .build();
+
         options.addOption(oHelp);
         options.addOption(oOutput);
         options.addOption(dOutput);
@@ -151,6 +158,7 @@ public class RecordGenerator {
         options.addOption(oPause);
         options.addOption(oRandomBurst);
         options.addOption(oRandomPause);
+        options.addOption(hiveTableGen);
 
     }
 
@@ -214,6 +222,10 @@ public class RecordGenerator {
             tsOnFile = false;
         }
 
+        if (line.hasOption("hive")) {
+            genHiveTable = Boolean.TRUE;
+        }
+
         return rtn;
     }
 
@@ -244,6 +256,11 @@ public class RecordGenerator {
             String generatorCfg = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
 
             recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(generatorCfg);
+
+            if (genHiveTable) {
+                System.out.print(recordGenerator.hiveTableLayout());
+                return 0;
+            }
 
             if (streamConfigurationFile != null) {
                 File streamCfgFile = new File(streamConfigurationFile);

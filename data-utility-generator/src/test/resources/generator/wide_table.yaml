@@ -7,9 +7,6 @@ order:
   - active.stop
   - output
   - amount
-  - coordinate
-  - longs
-  - types
   - report_date
   - count
   - now
@@ -35,15 +32,6 @@ fields:
       min: 1
       max: 1000
   -
-    type: "array.string"
-    name: "types"
-  -
-    type: "array.long"
-    name: "longs"
-    range:
-      min: 1
-      max: 29999999
-  -
     type: "string"
     name: "output"
     range:
@@ -51,14 +39,6 @@ fields:
       max: 19
     pool:
       size: 100
-  -
-    type: "location"
-    name: "coordinate"
-    pool:
-      items:
-        -
-          longitude: 33.5
-          latitude: -63.5
   -
     type: "date"
     name: "report_date"

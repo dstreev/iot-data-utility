@@ -146,6 +146,34 @@ public class RecordGenerator {
         return value;
     }
 
+    public String hiveTableLayout() {
+        Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
+
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("CREATE EXTERNAL TABLE <my_gen_table> (\n");
+        while (iFieldKeys.hasNext()) {
+            String iFieldKey = iFieldKeys.next();
+            FieldBase fb = orderedFields.get(iFieldKey);
+            for (int i = 1; i <= fb.getRepeat(); i++) {
+                String keyFieldName = iFieldKey;
+                if (fb.getRepeat() > 1) {
+                    keyFieldName = keyFieldName + "_" + i;
+                }
+                sb.append("\t" + keyFieldName + " STRING");
+                if (i < fb.getRepeat()) {
+                    sb.append(",\n");
+                }
+            }
+            if (iFieldKeys.hasNext()) {
+                sb.append(",\n");
+            } else {
+                sb.append(")\n");
+            }
+        }
+        return sb.toString();
+    }
+
     public void next() throws TerminateException {
         StringBuilder sb = new StringBuilder();
         Iterator<String> iFieldKeys = orderedFields.keySet().iterator();

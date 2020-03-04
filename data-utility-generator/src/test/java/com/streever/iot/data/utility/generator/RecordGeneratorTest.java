@@ -98,6 +98,11 @@ public class RecordGeneratorTest {
     }
 
     @Test
+    public void Test001903() {
+        build("generator/wide_table.yaml", 10l);
+    }
+
+    @Test
     public void Test00191() {
         runPerfConfig("generator/one.yaml", 1000000l);
     }
