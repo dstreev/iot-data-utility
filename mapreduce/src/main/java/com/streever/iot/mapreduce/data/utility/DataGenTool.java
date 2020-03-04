@@ -128,7 +128,7 @@ public class DataGenTool extends Configured implements Tool {
         boolean rtn = true;
         Configuration configuration = job.getConfiguration();
 
-        CommandLineParser clParser = new DefaultParser();
+        CommandLineParser clParser = new PosixParser();
 
         CommandLine line = null;
         try {
