@@ -5,8 +5,6 @@ import com.streever.iot.kafka.producer.KafkaProducerConfig;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.streever.iot.kafka.producer.KafkaProducerConfig.CLIENT_ID;
-
 public class ProducerSpec {
     private Topic topic;
     private Type type;

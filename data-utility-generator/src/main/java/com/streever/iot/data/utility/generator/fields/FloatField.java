@@ -45,6 +45,7 @@ public class FloatField extends FieldBase<Float> {
     public Float getNext() {
         float multiplierF = randomizer.nextFloat();
         Float valF = (Float) range.getMin() + ((Float) getDiff() * multiplierF);
-        return Float.valueOf(format.format(valF));
+        setLast(Float.valueOf(format.format(valF)));
+        return getLast();
     }
 }

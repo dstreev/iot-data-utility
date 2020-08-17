@@ -1,0 +1,5 @@
+output:
+  baseDirectory:
+  format: CSV
+  delimiter: "\t"
+  newLine: "\n"

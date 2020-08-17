@@ -4,28 +4,25 @@
 
 cd `dirname $0`
 
-mkdir -p /usr/local/hadoop-cli/bin
-mkdir -p /usr/local/hadoop-cli/lib
+mkdir -p /usr/local/datagen/bin
+mkdir -p /usr/local/datagen/lib
 
-cp -f hadoopcli /usr/local/hadoop-cli/bin
-cp -f JCECheck /usr/local/hadoop-cli/bin
+cp -f datagen /usr/local/datagen/bin
 
 # Cleanup previous installation
-rm -f /usr/local/hadoop-cli/lib/*.jar
+rm -f /usr/local/datagen/lib/*.jar
 
-if [ -f ../target/hadoop-cli-full-bin.jar ]; then
-    cp -f ../target/hadoop-cli-full-bin.jar /usr/local/hadoop-cli/lib
+if [ -f ../target/datagen-full-bin.jar ]; then
+    cp -f ../target/datagen-full-bin.jar /usr/local/datagen/lib
 fi
 
-if [ -f hadoop-cli-full-bin.jar ]; then
-    cp -f hadoop-cli-full-bin.jar /usr/local/hadoop-cli/lib
+if [ -f datagen-full-bin.jar ]; then
+    cp -f datagen-full-bin.jar /usr/local/datagen/lib
 fi
 
-chmod -R +r /usr/local/hadoop-cli
-chmod +x /usr/local/hadoop-cli/bin/hadoopcli
-chmod +x /usr/local/hadoop-cli/bin/JCECheck
+chmod -R +r /usr/local/datagen
+chmod +x /usr/local/datagen/bin/datagen
 
-ln -sf /usr/local/hadoop-cli/bin/JCECheck /usr/local/bin/JCECheck
-ln -sf /usr/local/hadoop-cli/bin/hadoopcli /usr/local/bin/hadoopcli
+ln -sf /usr/local/datagen/bin/datagen /usr/local/bin/datagen
 
 

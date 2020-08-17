@@ -22,7 +22,6 @@
   -->
 
 <assembly>
-    <id>${hadoop.major}</id>
     <formats>
         <format>tar.gz</format>
     </formats>
@@ -37,11 +36,10 @@
         <fileSet>
             <directory>${project.basedir}/bin</directory>
             <includes>
-                <include>hadoopcli</include>
-                <include>JCECheck</include>
+                <include>datagen</include>
                 <include>setup.sh</include>
             </includes>
-            <outputDirectory>hadoop-cli-${hadoop.major}</outputDirectory>
+            <outputDirectory>datagen</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>
         </fileSet>
 
@@ -50,7 +48,7 @@
             <includes>
                 <include>*full-bin.jar</include>
             </includes>
-            <outputDirectory>hadoop-cli-${hadoop.major}</outputDirectory>
+            <outputDirectory>datagen</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>
         </fileSet>
     </fileSets>

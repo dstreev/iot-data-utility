@@ -28,12 +28,14 @@ import java.util.Random;
         @JsonSubTypes.Type(value = UUIDField.class, name = "uuid"),
         @JsonSubTypes.Type(value = ReferenceStringField.class, name = "reference.string"),
         @JsonSubTypes.Type(value = ArrayLongField.class, name = "array.long"),
-        @JsonSubTypes.Type(value = ArrayStringField.class, name = "array.string")
+        @JsonSubTypes.Type(value = ArrayStringField.class, name = "array.string"),
+        @JsonSubTypes.Type(value = ChildField.class, name = "child")
 })
-@JsonIgnoreProperties({ "randomizer", "order", "startStopState" })
+@JsonIgnoreProperties({ "randomizer", "order", "startStopState", "key", "last" })
 public abstract class FieldBase<T> implements Comparable<FieldBase> {
     private Integer order;
     private String name;
+    private boolean key = false;
     private Integer repeat = 1;
     private Boolean random = Boolean.TRUE;
     protected Random randomizer = new Random(new Date().getTime());
@@ -45,6 +47,14 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isKey() {
+        return key;
+    }
+
+    public void setKey(boolean key) {
+        this.key = key;
     }
 
     public StartStopState getStartStopState() {
@@ -62,7 +72,6 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
     public void setRandom(Boolean random) {
         this.random = random;
     }
-
 
     public Integer getRepeat() {
         return repeat;
@@ -90,5 +99,20 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
             return 1;
         else
             return -1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FieldBase<?> fieldBase = (FieldBase<?>) o;
+
+        return name.equals(fieldBase.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

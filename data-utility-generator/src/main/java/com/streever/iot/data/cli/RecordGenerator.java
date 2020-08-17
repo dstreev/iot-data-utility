@@ -3,7 +3,10 @@ package com.streever.iot.data.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.streever.iot.data.utility.generator.Child;
+import com.streever.iot.data.utility.generator.Record;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
+import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.kafka.producer.KafkaProducerConfig;
 import com.streever.iot.kafka.producer.ProducerCreator;
 import com.streever.iot.kafka.spec.ProducerSpec;
@@ -11,8 +14,6 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,7 +23,6 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 public class RecordGenerator {
     public enum FILE_TYPE {
@@ -31,13 +31,14 @@ public class RecordGenerator {
 
     private Options options;
     private Long count = null;
-    private String outputFilename = null;
-    private String configurationFile = null;
-    private String streamConfigurationFile = null;
+    private String outputDirectory = null;
+    private String generatorConfigurationFile = null;
+    private String outputConfigurationFile = null;
     private Boolean genHiveTable = Boolean.FALSE;
     private Boolean tsOnFile;
     Integer transactionCommitCount = 5000;
     Integer progressIndicatorCount = 5000;
+    private Integer streamingDuration = null;
     private Integer burstCount = null;
     private Integer pauseMax = null;
     private boolean randomBurst = false;
@@ -45,126 +46,154 @@ public class RecordGenerator {
     private Random random = new Random(new Date().getTime());
 
     private com.streever.iot.data.utility.generator.RecordGenerator recordGenerator = null;
+    private Output outputSpec = null;
+
     private ProducerSpec streamingSpec = null;
 
     private void buildOptions() {
         options = new Options();
 
-        Option oHelp = Option.builder("h")
+        Option HELP_OPTION = Option.builder("h")
                 .argName("help")
                 .desc("This Help")
+                .longOpt("help")
                 .hasArg(false)
                 .required(false)
                 .build();
 
-        Option oOutput = Option.builder("o")
-                .argName("output")
-                .desc("Output Filename")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(false)
-                .build();
-
-        Option dOutput = Option.builder("d")
-                .argName("directory")
+        Option OUTPUT_OPTION = Option.builder("d")
+                .argName("OUTPUT_DIR")
                 .desc("Output Directory")
+                .longOpt("output-directory")
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(String.class)
                 .required(false)
                 .build();
 
-        Option oConfig = Option.builder("cfg")
-                .argName("config")
-                .desc("Configuration Filename")
+//        Option dOutput = Option.builder("d")
+//                .argName("directory")
+//                .desc("Output Directory")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(String.class)
+//                .required(false)
+//                .build();
+
+        Option GENERATOR_CONFIG_OPTION = Option.builder("gc")
+                .argName("GENERATOR_CONFIG_FILE")
+                .desc("Generator Configuration Filename")
+                .longOpt("generator-config")
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(String.class)
                 .required(true)
                 .build();
 
-        Option sConfig = Option.builder("scfg")
-                .argName("streamConfig")
-                .desc("Streaming Configuration")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(false)
-                .build();
-
-        Option oCount = Option.builder("c")
-                .argName("count")
+        Option COUNT_OPTION = Option.builder("c")
+                .argName("COUNT")
                 .desc("Record Count")
+                .longOpt("count")
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(Long.class)
                 .required(false)
                 .build();
 
-        Option oTimestamp = Option.builder("t")
-                .argName("timestamp")
-                .desc("Add Timestamp to Filename")
+        Option TIMESTAMP_OPTION = Option.builder("t")
+                .argName("TIMESTAMP")
+                .desc("Add Timestamp to Filename (requires '-d' option)")
+                .longOpt("timestamp")
                 .hasArg(false)
                 .required(false)
                 .build();
 
-        Option oBurstMax = Option.builder("bm")
-                .argName("burstMax")
-                .desc("Burst Max")
+        Option OUTPUT_CONFIG_OPTION = Option.builder("oc")
+                .argName("OUTPUT_CONFIG_FILE")
+                .longOpt("output-config")
+                .desc("Output Configuration")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(String.class)
+                .required(false)
+                .build();
+
+        Option STREAMING_DURATION_OPTION = Option.builder("sd")
+                .argName("STREAMING_DURATION")
+                .desc("Streaming Duration (default -1) (requires '-scfg' option)")
                 .type(Integer.class)
                 .hasArg(true)
                 .required(false)
                 .build();
 
-        Option oPause = Option.builder("p")
-                .argName("pauseMax")
-                .desc("pause max millis")
+        Option BURST_MAX_OPTION = Option.builder("bm")
+                .argName("BURST_MAX")
+                .desc("Burst Max (requires '-scfg' option)")
                 .type(Integer.class)
                 .hasArg(true)
                 .required(false)
                 .build();
 
-        Option oRandomBurst = Option.builder("rb")
-                .argName("randomizeBurst")
-                .desc("randomize burst")
+        Option PAUSE_OPTION = Option.builder("p")
+                .argName("PAUSE_MAX")
+                .desc("pause max millis (requires '-scfg' option)")
+                .type(Integer.class)
+                .hasArg(true)
+                .required(false)
+                .build();
+
+        Option RANDOMIZE_BURST_OPTION = Option.builder("rb")
+                .argName("RANDOMIZE_BURST")
+                .desc("randomize burst (requires '-scfg' option)")
                 .type(Boolean.class)
                 .hasArg(false)
                 .required(false)
                 .build();
 
-        Option oRandomPause = Option.builder("rp")
-                .argName("randomizePause")
-                .desc("randomize pause")
+        Option RANDOMIZE_PAUSE_OPTION = Option.builder("rp")
+                .argName("RANDOMIZE_PAUSE")
+                .desc("randomize pause (requires '-scfg' option)")
                 .type(Boolean.class)
                 .hasArg(false)
                 .required(false)
                 .build();
 
-        Option hiveTableGen = Option.builder("hive")
-                .argName("hive-table")
+        Option GEN_HIVE_SCHEMA_OPTION = Option.builder("hive")
+                .argName("HIVE_TABLE")
                 .desc("Generate Hive Table")
+                .longOpt("gen-hive-schema")
                 .required(false)
                 .build();
 
-        options.addOption(oHelp);
-        options.addOption(oOutput);
-        options.addOption(dOutput);
-        options.addOption(oConfig);
-        options.addOption(sConfig);
-        options.addOption(oCount);
-        options.addOption(oTimestamp);
-        options.addOption(oBurstMax);
-        options.addOption(oPause);
-        options.addOption(oRandomBurst);
-        options.addOption(oRandomPause);
-        options.addOption(hiveTableGen);
+        OptionGroup outputGroup = new OptionGroup();
+        outputGroup.setRequired(true);
+
+        outputGroup.addOption(HELP_OPTION);
+        outputGroup.addOption(OUTPUT_OPTION);
+        outputGroup.addOption(OUTPUT_CONFIG_OPTION);
+        outputGroup.addOption(GEN_HIVE_SCHEMA_OPTION);
+
+        options.addOptionGroup(outputGroup);
+
+        options.addOption(GENERATOR_CONFIG_OPTION);
+
+        options.addOption(TIMESTAMP_OPTION);
+
+        options.addOption(COUNT_OPTION);
+
+        options.addOption(BURST_MAX_OPTION);
+        options.addOption(STREAMING_DURATION_OPTION);
+        options.addOption(PAUSE_OPTION);
+        options.addOption(RANDOMIZE_BURST_OPTION);
+        options.addOption(RANDOMIZE_PAUSE_OPTION);
+
 
     }
 
-    private void printUsage() {
+    private void printUsage(String statement) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("java " + this.getClass().getCanonicalName(), options);
+        String footer = "TBD";
+        formatter.printHelp("java " + this.getClass().getCanonicalName(), statement, options, footer, true);
     }
 
     private boolean checkUsage(String[] args) {
@@ -177,24 +206,42 @@ public class RecordGenerator {
         try {
             line = clParser.parse(options, args, true);
         } catch (ParseException pe) {
+            printUsage("Missing Required Elements");
             return false;
         }
 
         if (line.hasOption("h")) {
+            printUsage("HELP");
             return false;
         }
 
         if (line.hasOption("c")) {
-            count = Long.parseLong(line.getOptionValue("c"));
+            if (line.hasOption("cfg") || line.hasOption("scfg")) {
+                count = Long.parseLong(line.getOptionValue("c"));
+            } else {
+                printUsage("Count option only valid with '-cfg'");
+                return false;
+            }
         }
 
         Map<String, String> outputMap = new TreeMap<String, String>();
 
-        if (line.hasOption("o")) {
-            outputFilename = line.getOptionValue("o");
+        if (line.hasOption("d")) {
+            if (!line.hasOption("c") || !line.hasOption("cfg")) {
+                printUsage("-d option requires the config (-cfg) and count (-c) options.");
+                return false;
+            }
+            outputDirectory = line.getOptionValue("o");
         }
+
         if (line.hasOption("scfg")) {
-            streamConfigurationFile = line.getOptionValue("scfg");
+            if (!line.hasOption("c") && !line.hasOption("sd")) {
+                System.out.println("Streaming configuration will run until manually terminated.");
+            }
+            if (line.hasOption("sd")) {
+                streamingDuration = Integer.valueOf(line.getOptionValue("sd"));
+            }
+            outputConfigurationFile = line.getOptionValue("scfg");
         }
 
         if (line.hasOption("bm")) {
@@ -214,7 +261,7 @@ public class RecordGenerator {
             randomPause = true;
         }
 
-        configurationFile = line.getOptionValue("cfg");
+        generatorConfigurationFile = line.getOptionValue("cfg");
 
         if (line.hasOption("t")) {
             tsOnFile = true;
@@ -234,11 +281,11 @@ public class RecordGenerator {
         int rtn = 0;
 
         if (!checkUsage(args)) {
-            System.out.println("Check Usage:");
-            printUsage();
+//            System.out.println("Check Usage:");
+//            printUsage();
             rtn = -1;
         } else {
-            String ext = FilenameUtils.getExtension(configurationFile);
+            String ext = FilenameUtils.getExtension(generatorConfigurationFile);
 
             ObjectMapper mapper = null;
             if (ext.toUpperCase().equals(FILE_TYPE.JSON.toString())) {
@@ -252,21 +299,26 @@ public class RecordGenerator {
             mapper.enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
             // Build Record Generator
-            File file = new File(configurationFile);
-            String generatorCfg = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+            File gfile = new File(generatorConfigurationFile);
+            String generatorCfg = FileUtils.readFileToString(gfile, Charset.forName("UTF-8"));
 
             recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(generatorCfg);
+
 
             if (genHiveTable) {
                 System.out.print(recordGenerator.hiveTableLayout());
                 return 0;
             }
 
-            if (streamConfigurationFile != null) {
-                File streamCfgFile = new File(streamConfigurationFile);
-                String streamCfg = FileUtils.readFileToString(streamCfgFile, Charset.forName("UTF-8"));
+            if (outputConfigurationFile != null) {
+                File ofile = new File(outputConfigurationFile);
+                String outputCfg = FileUtils.readFileToString(ofile, Charset.forName("UTF-8"));
 
-                streamingSpec = mapper.readerFor(ProducerSpec.class).readValue(streamCfg);
+                outputSpec = mapper.readerFor(Output.class).readValue(outputCfg);
+
+                if (outputDirectory != null) {
+                    outputSpec.setBaseDirectory(outputDirectory);
+                }
             }
 
             Map<String, String> output = new HashMap<String, String>();
@@ -274,8 +326,8 @@ public class RecordGenerator {
             if (streamingSpec != null) {
                 output.put("Stream", streamingSpec.getTopic().getName());
             }
-            if (outputFilename != null) {
-                output.put("File", outputFilename);
+            if (outputDirectory != null) {
+                output.put("File", outputDirectory);
             }
             if (output.size() > 0) {
                 System.out.println(output.toString());
@@ -293,7 +345,7 @@ public class RecordGenerator {
         boolean toFile = false;
         boolean toStream = false;
         boolean transactional = false;
-        if (outputFilename != null)
+        if (outputDirectory != null)
             toFile = true;
         if (streamingSpec != null) {
             toStream = true;
@@ -305,8 +357,6 @@ public class RecordGenerator {
                 transactional = false;
             }
         }
-
-        BufferedWriter writer = null;
 
         Producer<String, String> producer = null;
         String topic = null;
@@ -325,20 +375,30 @@ public class RecordGenerator {
 
         Map<Integer, Long> offsets = new TreeMap<Integer, Long>();
 
+
+
         try {
             if (toFile && tsOnFile) {
+                // Go through the record and it's children to build a list of fileOutputs.
+                Record parentRecord = recordGenerator.getRecord();
+
+                for (Child child: parentRecord.getChildren()) {
+
+                }
+
+
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 
-                String extension = FilenameUtils.getExtension(outputFilename);
-                String baseName = FilenameUtils.getBaseName(outputFilename);
-                String fullPath = FilenameUtils.getFullPath(outputFilename);
+                String extension = FilenameUtils.getExtension(outputDirectory);
+                String baseName = FilenameUtils.getBaseName(outputDirectory);
+                String fullPath = FilenameUtils.getFullPath(outputDirectory);
                 String now = df.format(new Date());
 
-                outputFilename = fullPath + File.separator + baseName + "_" + now + "." + extension;
+                outputDirectory = fullPath + File.separator + baseName + "_" + now + "." + extension;
             }
             
             if (toFile)
-                writer = new BufferedWriter(new FileWriter(outputFilename));
+                writer = new BufferedWriter(new FileWriter(outputDirectory));
 
             long burstStageCount = 0l;
             long lclBurstCount = 0;
@@ -364,12 +424,12 @@ public class RecordGenerator {
                 if (burstCount != null)
                     burstStageCount++;
 
-                Object key = recordGenerator.getKey();
-                Object value = recordGenerator.getValue();
+//                Object key = recordGenerator.getKey();
+//                Object value = recordGenerator.getValue();
 
                 if (toFile) {
-                    writer.append(value.toString());
-                    writer.append(recordGenerator.getOutput().getNewLine());
+//                    writer.append(value.toString());
+//                    writer.append(recordGenerator.getOutput().getNewLine());
                 }
 
                 if (toStream && transactional && progressCount % transactionCommitCount == 0) {
@@ -377,10 +437,10 @@ public class RecordGenerator {
                     producer.beginTransaction();
                 }
                 if (toStream) {
-                    final ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key.toString(), value.toString());
+//                    final ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key.toString(), value.toString());
 
-                    RecordMetadata metadata = producer.send(record).get();
-                    offsets.put(metadata.partition(), metadata.offset());
+//                    RecordMetadata metadata = producer.send(record).get();
+//                    offsets.put(metadata.partition(), metadata.offset());
                 }
 
                 if (progressCount % progressIndicatorCount == 0) {
@@ -419,8 +479,8 @@ public class RecordGenerator {
 
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
         } catch (TerminateException e) {
             e.printStackTrace();
         } catch (IOException e) {

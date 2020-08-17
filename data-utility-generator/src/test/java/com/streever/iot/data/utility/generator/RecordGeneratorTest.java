@@ -177,6 +177,17 @@ public class RecordGeneratorTest {
         runKafkaLoad("outputspec/kafka-trans.yaml", "generator/two.yaml", 200000l);
     }
 
+    @Test
+    public void Test0100_1() {
+        runPerfConfig("generator/cc_account.yaml",  10l);
+    }
+
+    @Test
+    public void Test0200_01() {
+        build("generator/one_h.yaml", 10l);
+    }
+
+
     protected void build(String configResource, Long count) {
         StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
         StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
@@ -201,8 +212,8 @@ public class RecordGeneratorTest {
                 i++;
                 if (count != null && i > count)
                     go = false;
-                if (print)
-                    System.out.println(recGen.getValue());
+//                if (print)
+//                    System.out.println(recGen.getValue());
             }
             i--;
         } catch (TerminateException te) {
@@ -241,7 +252,7 @@ public class RecordGeneratorTest {
             for (int i = 1; i < loops + 1; i++) {
                 recGen.next();
                 if (loops <= 100) {
-                    System.out.println("Key: " + recGen.getKey() + " Value: " + recGen.getValue());
+//                    System.out.println("Key: " + recGen.getKey() + " Value: " + recGen.getValue());
                 }
                 if (i % 200000l == 0)
                     System.out.println(".");
@@ -305,29 +316,29 @@ public class RecordGeneratorTest {
             Map<Integer, Long> offsets = new TreeMap<Integer, Long>();
             for (int i = 1; i < loops + 1; i++) {
                 recGen.next();
-                Object key = recGen.getKey();
-                Object value = recGen.getValue();
+//                Object key = recGen.getKey();
+//                Object value = recGen.getValue();
                 if (i % 5000l == 0) {
                     if (transactional) {
                         producer.commitTransaction();
                         producer.beginTransaction();
                     }
-                    System.out.println("Key: " + key + " Value: " + value);
+//                    System.out.println("Key: " + key + " Value: " + value);
                 }
 
-                final ProducerRecord<String, String> record = new ProducerRecord<String, String>(producerSpec.getTopic().getName(), key.toString(), value.toString());
-                try {
-                    RecordMetadata metadata = producer.send(record).get();
-                    offsets.put(metadata.partition(), metadata.offset());
+//                final ProducerRecord<String, String> record = new ProducerRecord<String, String>(producerSpec.getTopic().getName(), key.toString(), value.toString());
+//                try {
+//                    RecordMetadata metadata = producer.send(record).get();
+//                    offsets.put(metadata.partition(), metadata.offset());
 //                    System.out.println("Record sent with key " + key.toString() + " to partition " + metadata.partition()
 //                            + " with offset " + metadata.offset());
-                } catch (ExecutionException e) {
-                    System.out.println("Error in sending record");
-                    System.out.println(e);
-                } catch (InterruptedException e) {
-                    System.out.println("Error in sending record");
-                    System.out.println(e);
-                }
+//                } catch (ExecutionException e) {
+//                    System.out.println("Error in sending record");
+//                    System.out.println(e);
+//                } catch (InterruptedException e) {
+//                    System.out.println("Error in sending record");
+//                    System.out.println(e);
+//                }
 
             }
             if (transactional) {

@@ -180,3 +180,30 @@ record:
           - "172.2.3.5"
           - "172.2.3.6"
           - "172.2.3.7"
+  children:
+    -
+      name: child1
+      cardinality: ONE_TO_MANY
+      record:
+        order:
+          - rtest
+          - amount
+          - count
+        keyFields:
+          - rtest
+        fields:
+          -
+            type: "fixed"
+            name: "count"
+            value: 1
+          -
+            type: "float"
+            name: "amount"
+            format: "#.##"
+            range:
+              min: -1000
+              max: 1000
+          -
+            type: "regex"
+            name: "rtest"
+            regex: "[a-d]{0,2}\\d{4,6}\\.\\d{2}"
