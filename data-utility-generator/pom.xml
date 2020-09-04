@@ -26,18 +26,18 @@
             <scope>test</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.streever.iot</groupId>-->
-<!--            <artifactId>kafka.integration</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.streever.iot</groupId>
+            <artifactId>kafka.integration</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kafka</groupId>-->
-<!--            <artifactId>kafka-clients</artifactId>-->
-<!--            <version>${kafka.client.version}</version>-->
-<!--        </dependency>-->
+        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.client.version}</version>
+        </dependency>
 
         <!-- Format Preserving Encryption -->
         <dependency>
@@ -215,7 +215,7 @@
                         </goals>
                         <configuration>
                             <createSourcesJar>false</createSourcesJar>
-                            <finalName>datagen-full-bin</finalName>
+                            <finalName>${project.artifactId}-shaded</finalName>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <filters>
                                 <filter>

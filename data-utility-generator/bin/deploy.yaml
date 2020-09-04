@@ -1,0 +1,35 @@
+- hosts: sdlc
+  become: true
+
+  vars:
+    base_name: datagen
+    base_name_long: data-utility-generator
+
+  tasks:
+    - name: Check Directories
+      file:
+        path: /usr/local/{{ base_name }}/bin
+        state: directory
+
+    - name: Check Directories
+      file:
+        path: /usr/local/{{ base_name }}/lib
+        state: directory
+
+    - name: Copy bin
+      copy:
+        src: "{{ base_name }}"
+        dest: /usr/local/{{ base_name }}/bin
+        mode: 0755
+
+    - name: Copy lib
+      copy:
+        src: ../target/{{ base_name_long }}-shaded.jar
+        dest: /usr/local/{{ base_name }}/lib
+        mode: 0755
+
+    - name: Link executable
+      file:
+        src: /usr/local/{{ base_name }}/bin/{{ base_name }}
+        dest: /usr/local/bin/{{ base_name }}
+        mode: 0755

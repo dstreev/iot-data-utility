@@ -37,6 +37,8 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
     private String name;
     private boolean key = false;
     private Integer repeat = 1;
+    private String desc;
+//    private boolean number = false;
     private Boolean random = Boolean.TRUE;
     protected Random randomizer = new Random(new Date().getTime());
     private StartStopState startStopState = StartStopState.NA;
@@ -81,12 +83,24 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
         this.repeat = repeat;
     }
 
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
     public Integer getOrder() {
         return order;
     }
 
     public void setOrder(Integer order) {
         this.order = order;
+    }
+
+    public boolean isNumber() {
+        return false;
     }
 
     public abstract T getNext();

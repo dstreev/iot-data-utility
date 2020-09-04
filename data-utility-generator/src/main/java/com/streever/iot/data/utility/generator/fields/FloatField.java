@@ -42,6 +42,11 @@ public class FloatField extends FieldBase<Float> {
     }
 
     @Override
+    public boolean isNumber() {
+        return true;
+    }
+
+    @Override
     public Float getNext() {
         float multiplierF = randomizer.nextFloat();
         Float valF = (Float) range.getMin() + ((Float) getDiff() * multiplierF);

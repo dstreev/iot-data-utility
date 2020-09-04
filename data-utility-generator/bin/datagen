@@ -14,28 +14,28 @@ fi
 PRG_ARGS=
 CMD_CP=
 
-if [[ -f ./datagen-full-bin.jar ]]; then
+if [[ -f ./data-utility-generator-shaded.jar ]]; then
     # Look in Current Directory
-    CMD_CP=$APP_DIR/datagen-full-bin.jar
+    CMD_CP=$APP_DIR/data-utility-generator-shaded.jar
     #echo "Using bin from same directory"
-elif [[ -f $APP_DIR/../target/datagen-full-bin.jar ]]; then
+elif [[ -f $APP_DIR/../target/data-utility-generator-shaded.jar ]]; then
     # Look in ../target
-    CMD_CP=$APP_DIR/../target/datagen-full-bin.jar
+    CMD_CP=$APP_DIR/../target/data-utility-generator-shaded.jar
     #echo "Using bin from build directory"
 else
     # Look in /usr/local/datagen/lib
-    if [[ -f /usr/local/datagen/lib/datagen-full-bin.jar ]]; then
-        CMD_CP=/usr/local/datagen/lib/datagen-full-bin.jar
+    if [[ -f /usr/local/datagen/lib/data-utility-generator-shaded.jar ]]; then
+        CMD_CP=/usr/local/datagen/lib/data-utility-generator-shaded.jar
         #echo "Using bin from installation directory"
     else
-        #echo "Couldn't locate Hadoop Cli Library"
+        echo "Couldn't locate Hadoop Cli Library"
         exit 1
     fi
 fi
 
 # Set the default.
-export HADOOP_CONF_DIR="/etc/hadoop/conf"
-
+#export HADOOP_CONF_DIR="/etc/hadoop/conf"
+export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-/etc/hadoop/conf}
 AUX_LIBS_DIR=${HADOOP_CLI_AUX_LIBS:-${HOME}/.datagen/aux_libs}
 
 SHOW_CP=
@@ -49,43 +49,6 @@ fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-#    -i|--init)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -i \"${1}\""
-#      shift
-#      ;;
-#    -f|--file)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -f \"${1}\""
-#      shift
-#      ;;
-#    -d|--debug)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -d"
-#      ;;
-#    -t|--template)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -t \"${1}\""
-#      shift
-#      ;;
-#    -td|--template-delimiter)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -td \"${1}\""
-#      shift
-#      ;;
-#    -stdin)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -stdin"
-#      ;;
-#    -h|--help)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -h"
-#      ;;
-#    --config)
-#      shift
-#      export HADOOP_CONF_DIR=$1
-#      shift
-#      ;;
     --aux-libs)
       shift
       export AUX_LIBS_DIR=$1
@@ -95,20 +58,6 @@ while [[ $# -gt 0 ]]; do
       shift
       SHOW_CP="true"
       ;;
-#    -s|--silent)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -s"
-#      ;;
-#    -v|--verbose)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -v"
-#      VERBOSE="true"
-#      ;;
-#    -e|--execute)
-#      shift
-#      PRG_ARGS="${PRG_ARGS} -e \"${1}\""
-#      shift
-#      ;;
     *)
       PRG_ARGS="${PRG_ARGS} $@"
       break;

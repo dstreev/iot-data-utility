@@ -29,6 +29,11 @@ public class LongField extends FieldBase<Long> {
     }
 
     @Override
+    public boolean isNumber() {
+        return true;
+    }
+
+    @Override
     public Long getNext() {
         double multiplierD = randomizer.nextDouble();
         return (Long)range.getMin() + Math.round((Long)getDiff() * multiplierD);
