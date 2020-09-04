@@ -269,9 +269,15 @@ public class RecordGenerator {
                     if (keyFields != null && keyFields.contains(fb.getName())) {
                         keys.put(fb.getName(), value);
                     }
+                    if (!fb.isNumber()) {
+                        sb.append(output.getQuoteChar());
+                    }
                     sb.append(value);
+                    if (!fb.isNumber()) {
+                        sb.append(output.getQuoteChar());
+                    }
                     if (iFieldKeys.hasNext()) {
-                        sb.append(output.getDelimiter());
+                        sb.append(output.getSeparator());
                     }
                 }
             }

@@ -29,6 +29,12 @@ public class IntegerField extends FieldBase<Integer> {
     }
 
     @Override
+    public boolean isNumber() {
+        return true;
+    }
+
+
+    @Override
     public Integer getNext() {
         return (Integer)range.getMin() + randomizer.nextInt((Integer)getDiff());
     }

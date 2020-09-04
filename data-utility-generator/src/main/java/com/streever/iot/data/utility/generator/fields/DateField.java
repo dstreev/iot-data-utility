@@ -106,6 +106,15 @@ public class DateField extends FieldBase<String> implements ControlField {
     }
 
     @Override
+    public boolean isNumber() {
+        if (getAs() == As.STRING) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
     public String getNext() {
         Date rtn = null;
         if (current) {
@@ -151,7 +160,7 @@ public class DateField extends FieldBase<String> implements ControlField {
         if (getAs() == As.STRING) {
             return df.format(rtn);
         } else {
-            return Long.toString(rtn.getTime());
+            return Long.toString(rtn.getTime()/1000);
         }
     }
 

@@ -1,0 +1,89 @@
+#!/usr/bin/env sh
+
+APP_DIR=`dirname $0`
+CURR_DIR=`pwd`
+
+if [[ -f ./datagen && "${APP_DIR}" != "${CURR_DIR}" && "${APP_DIR}" != "." ]]; then
+  echo "Appears you are referencing a previously installed 'datagen' while "
+  echo "  in the installation directory of 'datagen'."
+  echo "Change directories and run 'datagen' to run installed version OR "
+  echo "Run current directories 'datagen' via './datagen'"
+  exit -1
+fi
+
+PRG_ARGS=
+CMD_CP=
+
+if [[ -f ./data-utility-generator-shaded.jar ]]; then
+    # Look in Current Directory
+    CMD_CP=$APP_DIR/data-utility-generator-shaded.jar
+    #echo "Using bin from same directory"
+elif [[ -f $APP_DIR/../target/data-utility-generator-shaded.jar ]]; then
+    # Look in ../target
+    CMD_CP=$APP_DIR/../target/data-utility-generator-shaded.jar
+    #echo "Using bin from build directory"
+else
+    # Look in /usr/local/datagen/lib
+    if [[ -f /usr/local/datagen/lib/data-utility-generator-shaded.jar ]]; then
+        CMD_CP=/usr/local/datagen/lib/data-utility-generator-shaded.jar
+        #echo "Using bin from installation directory"
+    else
+        echo "Couldn't locate Hadoop Cli Library"
+        exit 1
+    fi
+fi
+
+# Set the default.
+#export HADOOP_CONF_DIR="/etc/hadoop/conf"
+export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-/etc/hadoop/conf}
+AUX_LIBS_DIR=${HADOOP_CLI_AUX_LIBS:-${HOME}/.datagen/aux_libs}
+
+SHOW_CP=
+CMD_DIRECTIVE=
+CMD_ARGS=
+VERBOSE=
+
+if [[ ! -d ${AUX_LIBS_DIR} ]]; then
+    mkdir -p ${AUX_LIBS_DIR}
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --aux-libs)
+      shift
+      export AUX_LIBS_DIR=$1
+      shift
+      ;;
+    --show-cp)
+      shift
+      SHOW_CP="true"
+      ;;
+    *)
+      PRG_ARGS="${PRG_ARGS} $@"
+      break;
+  esac
+done
+
+#echo "Program Args: ${PRG_ARGS}"
+
+if [[ ! -d ${AUX_LIBS_DIR} ]]; then
+    mkdir -p ${AUX_LIBS_DIR}
+fi
+
+for jarFile in `ls -d ${AUX_LIBS_DIR}/*.jar 2> /dev/null`; do
+    CMD_CP=${CMD_CP}:$jarFile
+done
+
+CLI_CMD=""
+
+if [[ "${VERBOSE}x" != "x" ]]; then
+    echo "Passing app Params: ${PRG_ARGS}"
+fi
+
+if [[ "${SHOW_CP}x" != "x" ]]; then
+    echo "Classpath: ${CMD_CP}"
+fi
+
+CLI_CMD="${CLI_CMD}java -cp ${CMD_CP} com.streever.iot.data.cli.RecordGenerator ${PRG_ARGS}"
+
+eval "${CLI_CMD}"

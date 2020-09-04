@@ -41,6 +41,11 @@ public class DoubleField extends FieldBase<Double> {
     }
 
     @Override
+    public boolean isNumber() {
+        return true;
+    }
+
+    @Override
     public Double getNext() {
         double multiplierD2 = randomizer.nextDouble();
         Double valD = (Double)range.getMin() + ((Double)getDiff() * multiplierD2);
