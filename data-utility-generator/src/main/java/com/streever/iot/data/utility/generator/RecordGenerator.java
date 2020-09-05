@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.streever.iot.data.utility.generator.fields.*;
 import com.streever.iot.data.utility.generator.fields.support.StartStopState;
-import com.streever.iot.data.utility.generator.output.Output;
-import com.streever.iot.data.utility.generator.output.OutputFormat;
+import com.streever.iot.data.utility.generator.output.CSVOutput;
+//import com.streever.iot.data.utility.generator.output.OutputFormat;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.ClassUtils;
 
@@ -30,7 +30,7 @@ public class RecordGenerator {
     private String controlField;
     private ControlField controlFieldInt;
 
-    private Output output;
+    private CSVOutput output;
     private List<String> order;
     private Map<String, FieldBase> orderedFields;
 
@@ -70,11 +70,11 @@ public class RecordGenerator {
         this.description = description;
     }
 
-    public Output getOutput() {
+    public CSVOutput getOutput() {
         return output;
     }
 
-    public void setOutput(Output output) {
+    public void setOutput(CSVOutput output) {
         this.output = output;
     }
 
@@ -185,103 +185,105 @@ public class RecordGenerator {
             keys = new TreeMap<String, Object>();
         }
 
-        if (output.getFormat() == OutputFormat.JSON) {
+        // TODO: Fix after refactor
+//        if (output.getFormat() == OutputFormat.JSON) {
+//
+//            ObjectNode jRoot = JsonNodeFactory.instance.objectNode();
+//
+//            while (iFieldKeys.hasNext()) {
+//                String iFieldKey = iFieldKeys.next();
+//                FieldBase fb = orderedFields.get(iFieldKey);
+//                for (int i = 0; i < fb.getRepeat(); i++) {
+//                    String[] keyParts = iFieldKey.split("\\.");
+//                    if (keyParts[keyParts.length - 1].equals("start")) {
+//                        fb.setStartStopState(StartStopState.START);
+//                    } else if (keyParts[keyParts.length - 1].equals("stop")) {
+//                        fb.setStartStopState(StartStopState.STOP);
+//                    } else {
+//                        fb.setStartStopState(StartStopState.NA);
+//                    }
+//                    Object value = fb.getNext();
+//                    String keyFieldName = iFieldKey;
+//                    if (fb.getRepeat() > 1) {
+//                        keyFieldName = keyFieldName + "_" + i;
+//                    }
+//                    if (keyFields != null && keyFields.contains(fb.getName())) {
+//                        keys.put(fb.getName(), value);
+//                    }
+//                    if (value instanceof Short) {
+//                        jRoot.put(keyFieldName, (Short) value);
+//                    } else if (value instanceof Integer) {
+//                        jRoot.put(keyFieldName, (Integer) value);
+//                    } else if (value instanceof Long) {
+//                        jRoot.put(keyFieldName, (Long) value);
+//                    } else if (value instanceof Float) {
+//                        jRoot.put(keyFieldName, (Float) value);
+//                    } else if (value instanceof Double) {
+//                        jRoot.put(keyFieldName, (Double) value);
+//                    } else if (value instanceof BigDecimal) {
+//                        jRoot.put(keyFieldName, (BigDecimal) value);
+//                    } else if (value instanceof BigInteger) {
+//                        jRoot.put(keyFieldName, (BigInteger) value);
+//                    } else if (value instanceof Boolean) {
+//                        jRoot.put(keyFieldName, (Boolean) value);
+//                    } else if (value instanceof String) {
+//                        jRoot.put(keyFieldName, value.toString());
+//                    } else if (value instanceof ArrayList) {
+//                        ArrayNode an = jRoot.putArray(iFieldKey);
+//                        for (Object item : (List) value) {
+//                            if (item instanceof String)
+//                                an.add(item.toString());
+//                            else if (item instanceof Long)
+//                                an.add(((Long) item).longValue());
+//                        }
+//                    } else if (value instanceof ReferenceField) {
+//                        jRoot.put(keyFieldName, value.toString());
+//                    } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
+//                        try {
+//                            for (Field f : value.getClass().getDeclaredFields()) {
+//                                String fName = f.getName();
+//                                Object fValue = PropertyUtils.getProperty(value, fName);
+//                                jRoot.put(keyFieldName + "." + fName, fValue.toString());
+//                            }
+//                        } catch (Exception e) {
+//                            // TODO: Handle Error
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//            }
+////            ObjectMapper om = new ObjectMapper();
+//            try {
+//                sb.append(om.writeValueAsString(jRoot));
+//            } catch (JsonProcessingException e) {
+//                e.printStackTrace();
+//            }
+//
+//        } else {
+//
+//            while (iFieldKeys.hasNext()) {
+//                String iFieldKey = iFieldKeys.next();
+//                FieldBase fb = orderedFields.get(iFieldKey);
+//                for (int i = 0; i < fb.getRepeat(); i++) {
+//
+//                    Object value = fb.getNext();
+//                    if (keyFields != null && keyFields.contains(fb.getName())) {
+//                        keys.put(fb.getName(), value);
+//                    }
+//                    if (!fb.isNumber()) {
+//                        sb.append(output.getQuoteChar());
+//                    }
+//                    sb.append(value);
+//                    if (!fb.isNumber()) {
+//                        sb.append(output.getQuoteChar());
+//                    }
+//                    if (iFieldKeys.hasNext()) {
+//                        sb.append(output.getSeparator());
+//                    }
+//                }
+//            }
+//        }
 
-            ObjectNode jRoot = JsonNodeFactory.instance.objectNode();
-
-            while (iFieldKeys.hasNext()) {
-                String iFieldKey = iFieldKeys.next();
-                FieldBase fb = orderedFields.get(iFieldKey);
-                for (int i = 0; i < fb.getRepeat(); i++) {
-                    String[] keyParts = iFieldKey.split("\\.");
-                    if (keyParts[keyParts.length - 1].equals("start")) {
-                        fb.setStartStopState(StartStopState.START);
-                    } else if (keyParts[keyParts.length - 1].equals("stop")) {
-                        fb.setStartStopState(StartStopState.STOP);
-                    } else {
-                        fb.setStartStopState(StartStopState.NA);
-                    }
-                    Object value = fb.getNext();
-                    String keyFieldName = iFieldKey;
-                    if (fb.getRepeat() > 1) {
-                        keyFieldName = keyFieldName + "_" + i;
-                    }
-                    if (keyFields != null && keyFields.contains(fb.getName())) {
-                        keys.put(fb.getName(), value);
-                    }
-                    if (value instanceof Short) {
-                        jRoot.put(keyFieldName, (Short) value);
-                    } else if (value instanceof Integer) {
-                        jRoot.put(keyFieldName, (Integer) value);
-                    } else if (value instanceof Long) {
-                        jRoot.put(keyFieldName, (Long) value);
-                    } else if (value instanceof Float) {
-                        jRoot.put(keyFieldName, (Float) value);
-                    } else if (value instanceof Double) {
-                        jRoot.put(keyFieldName, (Double) value);
-                    } else if (value instanceof BigDecimal) {
-                        jRoot.put(keyFieldName, (BigDecimal) value);
-                    } else if (value instanceof BigInteger) {
-                        jRoot.put(keyFieldName, (BigInteger) value);
-                    } else if (value instanceof Boolean) {
-                        jRoot.put(keyFieldName, (Boolean) value);
-                    } else if (value instanceof String) {
-                        jRoot.put(keyFieldName, value.toString());
-                    } else if (value instanceof ArrayList) {
-                        ArrayNode an = jRoot.putArray(iFieldKey);
-                        for (Object item : (List) value) {
-                            if (item instanceof String)
-                                an.add(item.toString());
-                            else if (item instanceof Long)
-                                an.add(((Long) item).longValue());
-                        }
-                    } else if (value instanceof ReferenceField) {
-                        jRoot.put(keyFieldName, value.toString());
-                    } else if (!ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
-                        try {
-                            for (Field f : value.getClass().getDeclaredFields()) {
-                                String fName = f.getName();
-                                Object fValue = PropertyUtils.getProperty(value, fName);
-                                jRoot.put(keyFieldName + "." + fName, fValue.toString());
-                            }
-                        } catch (Exception e) {
-                            // TODO: Handle Error
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-//            ObjectMapper om = new ObjectMapper();
-            try {
-                sb.append(om.writeValueAsString(jRoot));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-
-        } else {
-
-            while (iFieldKeys.hasNext()) {
-                String iFieldKey = iFieldKeys.next();
-                FieldBase fb = orderedFields.get(iFieldKey);
-                for (int i = 0; i < fb.getRepeat(); i++) {
-
-                    Object value = fb.getNext();
-                    if (keyFields != null && keyFields.contains(fb.getName())) {
-                        keys.put(fb.getName(), value);
-                    }
-                    if (!fb.isNumber()) {
-                        sb.append(output.getQuoteChar());
-                    }
-                    sb.append(value);
-                    if (!fb.isNumber()) {
-                        sb.append(output.getQuoteChar());
-                    }
-                    if (iFieldKeys.hasNext()) {
-                        sb.append(output.getSeparator());
-                    }
-                }
-            }
-        }
         if (controlFieldInt != null && controlFieldInt.terminate()) {
             throw new TerminateException("Field " + controlField + " has reached it limit and terminated the record generating process");
         }

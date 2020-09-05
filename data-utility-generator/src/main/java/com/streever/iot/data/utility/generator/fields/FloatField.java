@@ -10,6 +10,7 @@ public class FloatField extends FieldBase<Float> {
     private Range<Float> range = new Range(0, Integer.MAX_VALUE);
     private DecimalFormat format = new DecimalFormat("#.##");
     private Pool<Float> pool;
+    private Float last;
 
     public Range<Float> getRange() {
         return range;
@@ -33,6 +34,14 @@ public class FloatField extends FieldBase<Float> {
 
     public void setFormat(DecimalFormat format) {
         this.format = format;
+    }
+
+    public Float getLast() {
+        return last;
+    }
+
+    public void setLast(Float last) {
+        this.last = last;
     }
 
     protected Float getDiff() {

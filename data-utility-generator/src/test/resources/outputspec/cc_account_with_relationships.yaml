@@ -1,0 +1,8 @@
+default:
+  type: "stdout"
+relationships:
+  acct:
+    type: "stdout"
+  address:
+    type: "stdout"
+#    filename: "addr.json"

@@ -3,10 +3,10 @@ package com.streever.iot.data.cli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.streever.iot.data.utility.generator.Child;
-import com.streever.iot.data.utility.generator.Record;
+//import com.streever.iot.data.utility.generator.Child;
+//import com.streever.iot.data.utility.generator.Record;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import com.streever.iot.data.utility.generator.output.Output;
+import com.streever.iot.data.utility.generator.output.CSVOutput;
 import com.streever.iot.kafka.producer.KafkaProducerConfig;
 import com.streever.iot.kafka.producer.ProducerCreator;
 import com.streever.iot.kafka.spec.ProducerSpec;
@@ -15,10 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.kafka.clients.producer.Producer;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,7 +43,7 @@ public class RecordGenerator {
     private Random random = new Random(new Date().getTime());
 
     private com.streever.iot.data.utility.generator.RecordGenerator recordGenerator = null;
-    private Output outputSpec = null;
+    private CSVOutput outputSpec = null;
 
     private ProducerSpec streamingSpec = null;
 
@@ -314,10 +311,10 @@ public class RecordGenerator {
                 File ofile = new File(outputConfigurationFile);
                 String outputCfg = FileUtils.readFileToString(ofile, Charset.forName("UTF-8"));
 
-                outputSpec = mapper.readerFor(Output.class).readValue(outputCfg);
-
+                outputSpec = mapper.readerFor(CSVOutput.class).readValue(outputCfg);
+                //TODO: Fix after refactoring.
                 if (outputDirectory != null) {
-                    outputSpec.setBaseDirectory(outputDirectory);
+//                     outputSpec.setBaseDirectory(outputDirectory);
                 }
             }
 
@@ -380,11 +377,11 @@ public class RecordGenerator {
         try {
             if (toFile && tsOnFile) {
                 // Go through the record and it's children to build a list of fileOutputs.
-                Record parentRecord = recordGenerator.getRecord();
-
-                for (Child child: parentRecord.getChildren()) {
-
-                }
+//                Record parentRecord = recordGenerator.getRecord();
+//
+//                for (Child child: parentRecord.getChildren()) {
+//
+//                }
 
 
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
@@ -396,9 +393,10 @@ public class RecordGenerator {
 
                 outputDirectory = fullPath + File.separator + baseName + "_" + now + "." + extension;
             }
-            
-            if (toFile)
-                writer = new BufferedWriter(new FileWriter(outputDirectory));
+
+            // TODO: Fix after refactor
+//            if (toFile)
+//                writer = new BufferedWriter(new FileWriter(outputDirectory));
 
             long burstStageCount = 0l;
             long lclBurstCount = 0;
@@ -483,16 +481,17 @@ public class RecordGenerator {
 //            e.printStackTrace();
         } catch (TerminateException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
         } finally {
-            if (toFile && writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            // TODO: Fix after refactor
+//            if (toFile && writer != null) {
+//                try {
+//                    writer.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
             if (toStream && transactional) {
                 producer.commitTransaction();
             }

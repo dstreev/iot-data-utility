@@ -1,0 +1,11 @@
+default:
+  type: "csv"
+relationships:
+  acct:
+    type: "csv"
+    recordId: "acct"
+    filename: "acct.csv"
+  address:
+    type: "json"
+    recordId: "addr"
+    filename: "addr.json"

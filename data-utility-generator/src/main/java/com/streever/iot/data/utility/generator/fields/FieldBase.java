@@ -3,6 +3,7 @@ package com.streever.iot.data.utility.generator.fields;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.streever.iot.data.utility.generator.Relationship;
 import com.streever.iot.data.utility.generator.fields.support.StartStopState;
 
 import java.util.Date;
@@ -29,7 +30,7 @@ import java.util.Random;
         @JsonSubTypes.Type(value = ReferenceStringField.class, name = "reference.string"),
         @JsonSubTypes.Type(value = ArrayLongField.class, name = "array.long"),
         @JsonSubTypes.Type(value = ArrayStringField.class, name = "array.string"),
-        @JsonSubTypes.Type(value = ChildField.class, name = "child")
+        @JsonSubTypes.Type(value = Relationship.class, name = "relationship")
 })
 @JsonIgnoreProperties({ "randomizer", "order", "startStopState", "key", "last" })
 public abstract class FieldBase<T> implements Comparable<FieldBase> {
