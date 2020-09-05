@@ -2,27 +2,21 @@ package com.streever.iot.data.utility.generator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.fields.ControlField;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
-import com.streever.iot.data.utility.generator.fields.ReferenceField;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import com.streever.iot.data.utility.generator.fields.support.StartStopState;
 import com.streever.iot.data.utility.generator.output.CSVOutput;
-//import com.streever.iot.data.utility.generator.output.OutputFormat;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.io.IOUtils;
 
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-@JsonIgnoreProperties({"orderedFields", "parent", "id"})
+@JsonIgnoreProperties({"orderedFields", "parent", "id", "keyMap", "valueMap"})
 public class Record implements Comparable<Record> {
     private String id;
     private String title;
@@ -114,8 +108,8 @@ public class Record implements Comparable<Record> {
         this.relationships = relationships;
     }
 
-    private Map<String, Object> keyMap = new LinkedHashMap<String, Object>();
-    private Map<String, Object> valueMap = new LinkedHashMap<String, Object>();
+    private Map<FieldBase, Object> keyMap = new LinkedHashMap<FieldBase, Object>();
+    private Map<FieldBase, Object> valueMap = new LinkedHashMap<FieldBase, Object>();
 
     protected ObjectMapper om = new ObjectMapper();
 
@@ -170,11 +164,11 @@ public class Record implements Comparable<Record> {
         }
     }
 
-    public Map<String, Object> getKeyMap() {
+    public Map<FieldBase, Object> getKeyMap() {
         return keyMap;
     }
 
-    public Map<String, Object> getValueMap() {
+    public Map<FieldBase, Object> getValueMap() {
         return valueMap;
     }
 
@@ -206,7 +200,7 @@ public class Record implements Comparable<Record> {
         return sb.toString();
     }
 
-    public void next(Map<String, Object> parentKeys) throws TerminateException {
+    public void next(Map<FieldBase, Object> parentKeys) throws TerminateException {
         // Clear Maps holding previous record.
         keyMap.clear();
         valueMap.clear();
@@ -226,9 +220,9 @@ public class Record implements Comparable<Record> {
             if (fb.getRepeat() == 1) {
                 Object value = fb.getNext();
                 if (keyFields != null && keyFields.contains(fb.getName())) {
-                    keyMap.put(fb.getName(), value);
+                    keyMap.put(fb, value);
                 }
-                valueMap.put(fb.getName(), value);
+                valueMap.put(fb, value);
             } else {
                 for (int i = 0; i < fb.getRepeat(); i++) {
 
@@ -237,11 +231,13 @@ public class Record implements Comparable<Record> {
                     if (fb.getRepeat() > 1) {
                         keyFieldName = keyFieldName + "_" + i;
                     }
-
+                    // TODO: Need to fix repeat...
                     if (keyFields != null && keyFields.contains(fb.getName())) {
-                        keyMap.put(keyFieldName, value);
+                        keyMap.put(fb, value);
+//                        keyMap.put(keyFieldName, value);
                     }
-                    valueMap.put(keyFieldName, value);
+                    valueMap.put(fb, value);
+//                    valueMap.put(keyFieldName, value);
                 }
             }
         }
@@ -270,4 +266,31 @@ public class Record implements Comparable<Record> {
     public int compareTo(Record o) {
         return this.getId().compareTo(o.getId());
     }
+
+    public static Record deserialize(String configResource) {
+        Record recDef = null;
+//        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+//        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
+//        String methodName = et.getMethodName();
+//        System.out.println("=========================");
+//        System.out.println("Build Method: " + methodName);
+//        System.out.println("-------------------------");
+
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+        try {
+            URL configURL = mapper.getClass().getResource(configResource);
+            if (configURL != null) {
+                // Convert to String.
+                String yamlConfigDefinition = IOUtils.toString(configURL,"UTF-8");
+                recDef = mapper.readerFor(Record.class).readValue(yamlConfigDefinition);
+            } else {
+                throw new RuntimeException("Couldn't locate 'Serialized Record File': " + configResource);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return recDef;
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.streever.iot.data.utility.generator;
 
+import com.streever.iot.data.utility.generator.fields.FieldBase;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.FileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
@@ -15,6 +16,8 @@ import java.util.TreeMap;
 public class Builder {
     private int count = 10; // default if not specified.
     private Record record;
+    // Added to the Output when it's opened.
+    private String outputPrefix;
 
     private OutputSpec outputSpec;
 
@@ -36,7 +39,19 @@ public class Builder {
         this.record = record;
     }
 
+    public String getOutputPrefix() {
+        return outputPrefix;
+    }
+
+    public void setOutputPrefix(String outputPrefix) {
+        this.outputPrefix = outputPrefix;
+    }
+
     public OutputSpec getOutputSpec() {
+        if (outputSpec == null) {
+            // Load Default.
+            outputSpec = OutputSpec.deserialize("/default_out.yaml");
+        }
         return outputSpec;
     }
 
@@ -56,9 +71,11 @@ public class Builder {
                 // When filename in output spec if not set, use the 'record.id'
                 // TODO: file extension
                 if (getOutputSpec().getDefault() instanceof FileOutput && ((FileOutput) getOutputSpec().getDefault()).getFilename() == null) {
+                    // The id is set in the linking process and is not a serialized element
                     ((FileOutput) getOutputSpec().getDefault()).setFilename(getRecord().getId());
                 }
                 if (getRecord().getRelationships() != null) {
+                    // Start processing relationships
                     rtn = mapOutputSpecRelationships(getRecord().getRelationships(), getOutputSpec().getRelationships());
                 }
             } else {
@@ -79,10 +96,14 @@ public class Builder {
             OutputBase output = outputRelationships.get(key);
             if (output == null) {
                 // Output Spec matching name not found.
-                // TODO: Clone Default and assign.  Reset output (filename)
-                //   or throw exception.
-                System.out.println("Missing output spec for: " + key);
-                rtn = Boolean.FALSE;
+                try {
+                    OutputBase spec = (OutputBase)getOutputSpec().getDefault().clone();
+                    outputMap.put(record, spec);
+                    spec.link(record);
+                    System.out.println("Cloned 'default' spec for record: " + key);
+                } catch (CloneNotSupportedException cnse) {
+                    cnse.printStackTrace();
+                }
             } else {
                 if (!output.isUsed()) {
                     // When filename in output spec if not set, use the 'record.id'
@@ -93,7 +114,8 @@ public class Builder {
                     outputMap.put(record, output);
                     output.setUsed(Boolean.TRUE);
                 } else {
-                    System.out.println("Output has been previous used");
+                    System.out.println("Output has been previous used, define a separate output for:" +
+                            record.getId());
                     rtn = Boolean.FALSE;
                 }
             }
@@ -137,13 +159,28 @@ public class Builder {
         return true;
     }
 
-    protected void write(Record record, Map<String, Object> parentKeys) {
+    protected void write(Record record, Map<FieldBase, Object> parentKeys) {
         Output output = this.outputMap.get(record);
         // The last generated recordset
         output.write(record.getValueMap());
     }
 
+    protected void openOutput() {
+        Set<Record> outputKeys = outputMap.keySet();
+        for (Record record: outputKeys) {
+            outputMap.get(record).open(outputPrefix);
+        }
+    }
+
+    protected void closeOutput() {
+        Set<Record> outputKeys = outputMap.keySet();
+        for (Record record: outputKeys) {
+            outputMap.get(record).close();
+        }
+    }
+
     public void run() {
+        openOutput();
         try {
             while (count > 0) {
                 getRecord().next(null);
@@ -154,10 +191,12 @@ public class Builder {
             }
         } catch (TerminateException te) {
 
+        } finally {
+            closeOutput();
         }
     }
 
-    protected void writeRelationships(Map<String, Relationship> relationships, Map<String, Object> parentKeys) {
+    protected void writeRelationships(Map<String, Relationship> relationships, Map<FieldBase, Object> parentKeys) {
         if (relationships != null) {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {
