@@ -1,182 +1,179 @@
 title: hello
 description: helloDesc
-output:
-  format: "JSON"
-record:
-  order:
-    - active.start
-    - active.stop
-    - rtest
-    - output
-    - amount
-    - coordinate
-    - type
-    - report_date
-    - count
-    - now
-    - seq
-    - field1
-    - field2
-    - field3
-    - field4
-    - field5
-    - field6
-    - field7
-    - field8
-  keyFields:
-    - type
-    - seq
-    - report_date
-  fields:
-    -
-      type: "fixed"
-      name: "count"
-      value: 1
-    -
-      type: "float"
-      name: "amount"
-      format: "#.##"
-      range:
-        min: -1000
-        max: 1000
-    -
-      type: "regex"
-      name: "rtest"
-      regex: "[a-d]{0,2}\\d{4,6}\\.\\d{2}"
-    -
-      type: "string"
-      name: "type"
-      pool:
-        items:
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - CHARGE
-          - RETURN
-          - CHALLENGE
-    -
-      type: "string"
-      name: "output"
-      range:
-        min: 2
-        max: 19
-      pool:
-        size: 100
-    -
-      type: "location"
-      name: "coordinate"
-      pool:
-        items:
-          -
-            longitude: 33.5
-            latitude: -63.5
-    -
-      type: "date"
-      name: "report_date"
-      range:
-        min: "2017-10-01"
-        max: "2017-11-30"
-    -
-      type: "date"
-      name: "active"
-      range:
-        min: "2017-10-01"
-        max: "2017-11-30"
-    -
-      type: "date"
-      name: "now"
-      current: true
-    -
-      type: "sequence"
-      name: "seq"
-      start: 200
-    -
-      type: "string"
-      name: "field1"
-      range:
-        min: 5
-        max: 5
-      characters: "ABCDEFGHI"
-      pool:
-        size: 100
-    -
-      type: "string"
-      name: "field2"
-      pool:
-        items:
-          - hello
-          - world
-          - let's
-          - party
-    -
-      type: "string"
-      name: "field3"
-    -
-      type: "int"
-      name: "field4"
-    -
-      type: "ipv4"
-      name: "field5"
-      range:
-        min: "10.23.1.23"
-        max: "10.23.4.200"
-    -
-      type: "ipv4"
-      name: "field6"
-      range:
-        min: "10.23.1.23"
-        max: "10.23.4.200"
-      pool:
-        size: 10
-    -
-      type: "ipv4"
-      name: "field7"
-    -
-      type: "ipv4"
-      name: "field8"
-      pool:
-        items:
-          - "172.2.3.4"
-          - "172.2.3.5"
-          - "172.2.3.6"
-          - "172.2.3.7"
+order:
+  - active.start
+  - active.stop
+  - rtest
+  - output
+  - amount
+  - coordinate
+  - type
+  - report_date
+  - count
+  - now
+  - seq
+  - field1
+  - field2
+  - field3
+  - field4
+  - field5
+  - field6
+  - field7
+  - field8
+keyFields:
+  - type
+  - seq
+  - report_date
+fields:
+  -
+    type: "fixed"
+    name: "count"
+    value: 1
+  -
+    type: "float"
+    name: "amount"
+    format: "#.##"
+    range:
+      min: -1000
+      max: 1000
+  -
+    type: "regex"
+    name: "rtest"
+    regex: "[a-d]{0,2}\\d{4,6}\\.\\d{2}"
+  -
+    type: "string"
+    name: "type"
+    pool:
+      items:
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - CHARGE
+        - RETURN
+        - CHALLENGE
+  -
+    type: "string"
+    name: "output"
+    range:
+      min: 2
+      max: 19
+    pool:
+      size: 100
+  -
+    type: "location"
+    name: "coordinate"
+    pool:
+      items:
+        -
+          longitude: 33.5
+          latitude: -63.5
+  -
+    type: "date"
+    name: "report_date"
+    range:
+      min: "2017-10-01"
+      max: "2017-11-30"
+  -
+    type: "date"
+    name: "active"
+    range:
+      min: "2017-10-01"
+      max: "2017-11-30"
+  -
+    type: "date"
+    name: "now"
+    current: true
+  -
+    type: "sequence"
+    name: "seq"
+    start: 200
+  -
+    type: "string"
+    name: "field1"
+    range:
+      min: 5
+      max: 5
+    characters: "ABCDEFGHI"
+    pool:
+      size: 100
+  -
+    type: "string"
+    name: "field2"
+    pool:
+      items:
+        - hello
+        - world
+        - let's
+        - party
+  -
+    type: "string"
+    name: "field3"
+  -
+    type: "int"
+    name: "field4"
+  -
+    type: "ipv4"
+    name: "field5"
+    range:
+      min: "10.23.1.23"
+      max: "10.23.4.200"
+  -
+    type: "ipv4"
+    name: "field6"
+    range:
+      min: "10.23.1.23"
+      max: "10.23.4.200"
+    pool:
+      size: 10
+  -
+    type: "ipv4"
+    name: "field7"
+  -
+    type: "ipv4"
+    name: "field8"
+    pool:
+      items:
+        - "172.2.3.4"
+        - "172.2.3.5"
+        - "172.2.3.6"
+        - "172.2.3.7"

@@ -2,14 +2,19 @@ package com.streever.iot.data.utility.generator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.fields.ControlField;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.CSVOutput;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -108,8 +113,8 @@ public class Record implements Comparable<Record> {
         this.relationships = relationships;
     }
 
-    private Map<FieldBase, Object> keyMap = new LinkedHashMap<FieldBase, Object>();
-    private Map<FieldBase, Object> valueMap = new LinkedHashMap<FieldBase, Object>();
+    private Map<FieldProperties, Object> keyMap = new LinkedHashMap<FieldProperties, Object>();
+    private Map<FieldProperties, Object> valueMap = new LinkedHashMap<FieldProperties, Object>();
 
     protected ObjectMapper om = new ObjectMapper();
 
@@ -164,11 +169,11 @@ public class Record implements Comparable<Record> {
         }
     }
 
-    public Map<FieldBase, Object> getKeyMap() {
+    public Map<FieldProperties, Object> getKeyMap() {
         return keyMap;
     }
 
-    public Map<FieldBase, Object> getValueMap() {
+    public Map<FieldProperties, Object> getValueMap() {
         return valueMap;
     }
 
@@ -200,7 +205,7 @@ public class Record implements Comparable<Record> {
         return sb.toString();
     }
 
-    public void next(Map<FieldBase, Object> parentKeys) throws TerminateException {
+    public void next(Map<FieldProperties, Object> parentKeys) throws TerminateException {
         // Clear Maps holding previous record.
         keyMap.clear();
         valueMap.clear();
@@ -216,28 +221,27 @@ public class Record implements Comparable<Record> {
 
         while (iFieldKeys.hasNext()) {
             String iFieldKey = iFieldKeys.next();
-            FieldBase fb = orderedFields.get(iFieldKey);
-            if (fb.getRepeat() == 1) {
-                Object value = fb.getNext();
-                if (keyFields != null && keyFields.contains(fb.getName())) {
-                    keyMap.put(fb, value);
+            FieldBase fbase = orderedFields.get(iFieldKey);
+            if (fbase.getRepeat() == 1) {
+                Object value = fbase.getNext();
+                if (keyFields != null && keyFields.contains(fbase.getName())) {
+                    keyMap.put(fbase.getFieldProperties(null), value);
                 }
-                valueMap.put(fb, value);
+                valueMap.put(fbase.getFieldProperties(null), value);
             } else {
-                for (int i = 0; i < fb.getRepeat(); i++) {
+                for (int i = 0; i < fbase.getRepeat(); i++) {
 
-                    Object value = fb.getNext();
-                    String keyFieldName = iFieldKey;
-                    if (fb.getRepeat() > 1) {
-                        keyFieldName = keyFieldName + "_" + i;
+                    Object value = fbase.getNext();
+                    String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
+//                    if (fbase.getRepeat() > 1) {
+//                        keyFieldName = keyFieldName + "_" + i;
+//                    }
+                    // TODO: Would like to pad number with zeros
+                    // IE: 012 vs. 12, also means repeat should not be greater than 1000
+                    if (keyFields != null && keyFields.contains(fbase.getName())) {
+                        keyMap.put(fbase.getFieldProperties(repeater), value);
                     }
-                    // TODO: Need to fix repeat...
-                    if (keyFields != null && keyFields.contains(fb.getName())) {
-                        keyMap.put(fb, value);
-//                        keyMap.put(keyFieldName, value);
-                    }
-                    valueMap.put(fb, value);
-//                    valueMap.put(keyFieldName, value);
+                    valueMap.put(fbase.getFieldProperties(repeater), value);
                 }
             }
         }
@@ -267,7 +271,7 @@ public class Record implements Comparable<Record> {
         return this.getId().compareTo(o.getId());
     }
 
-    public static Record deserialize(String configResource) {
+    public static Record deserialize(String configResource) throws IOException, JsonMappingException {
         Record recDef = null;
 //        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
 //        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
@@ -275,21 +279,33 @@ public class Record implements Comparable<Record> {
 //        System.out.println("=========================");
 //        System.out.println("Build Method: " + methodName);
 //        System.out.println("-------------------------");
+        String extension = FilenameUtils.getExtension(configResource);
+        ObjectMapper mapper = null;
+        if ("yaml".equals(extension.toLowerCase()) || "yml".equals(extension.toLowerCase())) {
+            mapper = new ObjectMapper(new YAMLFactory());
+        } else if ("json".equals(extension.toLowerCase()) || "jsn".equals(extension.toLowerCase())) {
+            mapper = new ObjectMapper(new JsonFactory());
+        } else {
+            throw new RuntimeException(configResource + ": can't determine type by extension.  Require one of: ['yaml',yml,'json','jsn']");
+        }
 
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-        try {
-            URL configURL = mapper.getClass().getResource(configResource);
+        // Try as a Resource (in classpath)
+        URL configURL = mapper.getClass().getResource(configResource);
+        if (configURL != null) {
+            // Convert to String.
+            String configDefinition = IOUtils.toString(configURL, "UTF-8");
+            recDef = mapper.readerFor(Record.class).readValue(configDefinition);
+        } else {
+            // Try on Local FileSystem.
+            configURL = new URL("file", null, configResource);
             if (configURL != null) {
-                // Convert to String.
-                String yamlConfigDefinition = IOUtils.toString(configURL,"UTF-8");
-                recDef = mapper.readerFor(Record.class).readValue(yamlConfigDefinition);
+                String configDefinition = IOUtils.toString(configURL, "UTF-8");
+                recDef = mapper.readerFor(Record.class).readValue(configDefinition);
             } else {
                 throw new RuntimeException("Couldn't locate 'Serialized Record File': " + configResource);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
         return recDef;
     }
 

@@ -5,6 +5,7 @@ order:
   - source_code
   - source_ip
   - source_ip_long
+  - source_ip_long_mixed
   - direction
   - target_ip
   - offset
@@ -41,6 +42,13 @@ fields:
     range:
       min: "10.0.14.0"
       max: "10.121.32.254"
+  -
+    type: "ipv4"
+    name: "source_ip_long_mixed"
+    as: "LONG"
+    range:
+      min: 10000000
+      max: 20000000
   -
     type: "string"
     name: "direction"

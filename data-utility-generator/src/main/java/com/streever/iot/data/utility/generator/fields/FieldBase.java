@@ -81,6 +81,9 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
     }
 
     public void setRepeat(Integer repeat) {
+        if (repeat > 1000) {
+            throw new RuntimeException("Repeat Value can't exceed 1000. FieldBase: " + this.name);
+        }
         this.repeat = repeat;
     }
 

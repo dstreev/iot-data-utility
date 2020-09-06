@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.streever.iot.data.utility.generator.Record;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.ReferenceField;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.ClassUtils;
@@ -26,12 +27,12 @@ public class JSONOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldBase, Object> record) {
+    public void write(Map<FieldProperties, Object> record) {
         if (isOpen()) {
             ObjectNode jRoot = JsonNodeFactory.instance.objectNode();
             Map<String, Object> outMap = new LinkedHashMap<String, Object>();
-            Set<Map.Entry<FieldBase, Object>> entries = record.entrySet();
-            for (Map.Entry<FieldBase, Object> entry : entries) {
+            Set<Map.Entry<FieldProperties, Object>> entries = record.entrySet();
+            for (Map.Entry<FieldProperties, Object> entry : entries) {
                 if (entry.getValue() instanceof Short) {
                     jRoot.put(entry.getKey().getName(), (Short) entry.getValue());
                 } else if (entry.getValue() instanceof Integer) {

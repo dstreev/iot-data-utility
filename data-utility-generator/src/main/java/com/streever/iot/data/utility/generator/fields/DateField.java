@@ -12,10 +12,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
-public class DateField extends FieldBase<String> implements ControlField {
-    public enum As {
-        STRING, LONG;
-    }
+public class DateField extends FieldBase<Object> implements ControlField {
+//    public enum As {
+//        STRING, LONG;
+//    }
 
     private Range<Timestamp> range;
     private Long diff = 1000l;
@@ -115,7 +115,7 @@ public class DateField extends FieldBase<String> implements ControlField {
     }
 
     @Override
-    public String getNext() {
+    public Object getNext() {
         Date rtn = null;
         if (current) {
             Date now = new Date();
@@ -160,7 +160,7 @@ public class DateField extends FieldBase<String> implements ControlField {
         if (getAs() == As.STRING) {
             return df.format(rtn);
         } else {
-            return Long.toString(rtn.getTime()/1000);
+            return rtn.getTime()/1000;
         }
     }
 

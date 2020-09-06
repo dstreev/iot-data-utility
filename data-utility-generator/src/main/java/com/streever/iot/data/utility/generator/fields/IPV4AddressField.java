@@ -23,30 +23,77 @@ import com.streever.iot.data.utility.generator.fields.support.Pool;
 import com.streever.iot.data.utility.generator.fields.support.Range;
 
 @JsonIgnoreProperties({"minIp", "maxIp", "ipDiff"})
-public class IPV4AddressField extends FieldBase<String> {
+public class IPV4AddressField extends FieldBase<Object> {
 
-    private Range<String> range = new Range("10.0.0.1", "10.0.0.255");
-    private Pool<String> pool;
-    private Long minIp = ipToLong(range.getMin());
-    private Long maxIp = ipToLong(range.getMax());
+    private Range<Object> range = new Range("10.0.0.1", "10.0.0.255");
+    private Pool<Object> pool;
+    private Long minIp = ipToLong((String)range.getMin());
+    private Long maxIp = ipToLong((String)range.getMax());
     private Long ipDiff = maxIp - minIp;
 
-    public Range<String> getRange() {
+    private As as = As.STRING;
+
+    public As getAs() {
+        return as;
+    }
+
+    public void setAs(As as) {
+        this.as = as;
+    }
+
+    @Override
+    public boolean isNumber() {
+        boolean rtn = false;
+        switch (as) {
+            case STRING:
+                rtn = false;
+                break;
+            case LONG:
+                rtn = true;
+                break;
+        }
+        return rtn;
+    }
+
+    public Range<Object> getRange() {
         return range;
     }
 
-    public void setRange(Range<String> range) {
+    /*
+    Range Limits for IPV4:
+    0 - 4294967295
+     */
+    private static Long IP_MIN = 0l;
+    private static Long IP_MAX = 4294967295l;
+
+    public void setRange(Range<Object> range) {
         this.range = range;
-        minIp = ipToLong(range.getMin());
-        maxIp = ipToLong(range.getMax());
+        if (range.getMin() instanceof java.lang.Number) {
+            if (((java.lang.Number) range.getMin()).longValue() < IP_MIN ||
+                    ((java.lang.Number) range.getMin()).longValue() > IP_MAX) {
+                throw new RuntimeException("Min IP: " + range.getMin() + " Out of Range. Valid Range: " + IP_MIN + "->" + IP_MAX + " in field: " + this.getName());
+            }
+            minIp = ((java.lang.Number) range.getMin()).longValue();
+        } else {
+            minIp = ipToLong((String)range.getMin());
+        }
+        if (range.getMax() instanceof java.lang.Number) {
+            if (((java.lang.Number) range.getMax()).longValue() < IP_MIN ||
+                    ((java.lang.Number) range.getMax()).longValue() > IP_MAX) {
+                throw new RuntimeException("Max IP: " + range.getMax() + " Out of Range. Valid Range: " + IP_MIN + "->" + IP_MAX + " in field: " + this.getName());
+            }
+            maxIp = ((java.lang.Number) range.getMax()).longValue();
+        } else {
+            maxIp = ipToLong((String)range.getMax());
+        }
         ipDiff = maxIp - minIp;
     }
 
-    public Pool<String> getPool() {
+    public Pool<Object> getPool() {
         return pool;
     }
 
-    public void setPool(Pool<String> pool) {
+    public void setPool(Pool<Object> pool) {
         this.pool = pool;
     }
 
@@ -59,28 +106,50 @@ public class IPV4AddressField extends FieldBase<String> {
         }
     }
 
-    protected String newValue() {
+    protected Long newValue() {
         double multiplierD = randomizer.nextDouble();
         long ipLong = (Long) minIp + Math.round((Long) ipDiff * multiplierD);
-        return longToIp(ipLong);
+        return ipLong;
     }
 
-//    public String getPoolValue() {
-//        int ran = (int) Math.round((pool.getItems().size() - 1) * randomizer.nextFloat());
-//        return pool.getItems().get(ran);
-//    }
-
     @Override
-    public String getNext() {
-        String rtn = null;
+    public Object getNext() {
+        Object rtn = null;
         if (pool == null) {
-            rtn = newValue();
+            Long newValue = newValue();
+            switch (getAs()) {
+                case STRING:
+                    rtn = longToIp(newValue);
+                    break;
+                case LONG:
+                    rtn = newValue;
+                    break;
+            }
         } else {
             if (pool != null && pool.getInitialized() == Boolean.FALSE) {
                 buildPool();
             }
             if (pool != null) {
-                rtn = pool.getItem();
+                Object poolRtn = pool.getItem();
+                if (poolRtn instanceof java.lang.Number) {
+                    switch (getAs()) {
+                        case STRING:
+                            rtn = longToIp((Long)poolRtn);
+                            break;
+                        case LONG:
+                            rtn = (String)poolRtn;
+                            break;
+                    }
+                } else {
+                    switch (getAs()) {
+                        case STRING:
+                            rtn = (String) poolRtn;
+                            break;
+                        case LONG:
+                            rtn = ipToLong((String) poolRtn);
+                            break;
+                    }
+                }
             }
         }
         return rtn;
@@ -93,7 +162,10 @@ public class IPV4AddressField extends FieldBase<String> {
         for (int i = 3; i >= 0; i--) {
             result |= (Long.parseLong(atoms[3 - i]) << (i * 8));
         }
-
+        result = result & 0xFFFFFFFF;
+        if (result < IP_MIN | result > IP_MAX) {
+            throw new RuntimeException(ipAddress + " is not a valid IPV4 address");
+        }
         return result & 0xFFFFFFFF;
     }
 

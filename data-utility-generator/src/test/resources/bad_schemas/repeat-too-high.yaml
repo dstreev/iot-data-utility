@@ -1,10 +1,9 @@
 title: "CDC Records"
-description: "An incrementing time series dataset"
+description: "Throws exception because the repeat entry is above 1000 (which is the max)"
 order:
   - event_time
   - source_code
   - source_ip
-  - source_ip_long
   - direction
   - target_ip
   - offset
@@ -25,19 +24,13 @@ fields:
   -
     type: "int"
     name: "source_code"
+    repeat: 1001
     range:
       min: 100
       max: 1000
   -
     type: "ipv4"
     name: "source_ip"
-    range:
-      min: "10.0.14.0"
-      max: "10.121.32.254"
-  -
-    type: "ipv4"
-    name: "source_ip_long"
-    as: "LONG"
     range:
       min: "10.0.14.0"
       max: "10.121.32.254"

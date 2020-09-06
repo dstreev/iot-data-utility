@@ -2,6 +2,7 @@ package com.streever.iot.data.utility.generator.output;
 
 import com.streever.iot.data.utility.generator.Record;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -44,11 +45,11 @@ public class CSVOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldBase, Object> record) {
+    public void write(Map<FieldProperties, Object> record) {
         if (isOpen()) {
             List<String> values = new ArrayList<String>();
-            Set<Map.Entry<FieldBase, Object>> entries = record.entrySet();
-            for (Map.Entry<FieldBase, Object> entry: entries) {
+            Set<Map.Entry<FieldProperties, Object>> entries = record.entrySet();
+            for (Map.Entry<FieldProperties, Object> entry: entries) {
                 if (entry.getKey().isNumber()) {
                     values.add(entry.getValue().toString());
                 } else {

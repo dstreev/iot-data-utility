@@ -1,6 +1,7 @@
 package com.streever.iot.data.utility.generator;
 
 import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.FileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
@@ -159,7 +160,7 @@ public class Builder {
         return true;
     }
 
-    protected void write(Record record, Map<FieldBase, Object> parentKeys) {
+    protected void write(Record record, Map<FieldProperties, Object> parentKeys) {
         Output output = this.outputMap.get(record);
         // The last generated recordset
         output.write(record.getValueMap());
@@ -196,7 +197,7 @@ public class Builder {
         }
     }
 
-    protected void writeRelationships(Map<String, Relationship> relationships, Map<FieldBase, Object> parentKeys) {
+    protected void writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
         if (relationships != null) {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {

@@ -1,9 +1,6 @@
 {
   "title": "hello",
   "description": "helloDesc",
-  "output": {
-    "format": "JSON"
-  },
   "order": [
     "active.start",
     "active.stop",

@@ -1,10 +1,11 @@
 title: "CDC Records"
-description: "An incrementing time series dataset"
+description: "Throw exception due to invalid ip address in range"
 order:
   - event_time
   - source_code
   - source_ip
   - source_ip_long
+  - source_ip_long_mixed
   - direction
   - target_ip
   - offset
@@ -41,6 +42,13 @@ fields:
     range:
       min: "10.0.14.0"
       max: "10.121.32.254"
+  -
+    type: "ipv4"
+    name: "source_ip_long_mixed"
+    as: "LONG"
+    range:
+      min: 429496729
+      max: 5294967295
   -
     type: "string"
     name: "direction"
