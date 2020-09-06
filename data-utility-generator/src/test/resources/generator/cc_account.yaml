@@ -1,7 +1,5 @@
 title: "Account"
 description: "entity datasource"
-output:
-  format: "CSV"
 order:
   - acct_num
   - phone_num

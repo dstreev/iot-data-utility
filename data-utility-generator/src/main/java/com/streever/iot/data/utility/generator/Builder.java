@@ -60,9 +60,9 @@ public class Builder {
     }
 
     /*
-                Using the record and output specs, build and assign the writers for each
-                record.
-                 */
+    Using the record and output specs, build and assign the writers for each
+    record.
+    */
     protected boolean mapOutputSpecs() {
         boolean rtn = Boolean.TRUE;
         if (getOutputSpec() != null) {
@@ -97,7 +97,7 @@ public class Builder {
             if (output == null) {
                 // Output Spec matching name not found.
                 try {
-                    OutputBase spec = (OutputBase)getOutputSpec().getDefault().clone();
+                    OutputBase spec = (OutputBase) getOutputSpec().getDefault().clone();
                     outputMap.put(record, spec);
                     spec.link(record);
                     System.out.println("Cloned 'default' spec for record: " + key);
@@ -167,14 +167,14 @@ public class Builder {
 
     protected void openOutput() {
         Set<Record> outputKeys = outputMap.keySet();
-        for (Record record: outputKeys) {
+        for (Record record : outputKeys) {
             outputMap.get(record).open(outputPrefix);
         }
     }
 
     protected void closeOutput() {
         Set<Record> outputKeys = outputMap.keySet();
-        for (Record record: outputKeys) {
+        for (Record record : outputKeys) {
             outputMap.get(record).close();
         }
     }

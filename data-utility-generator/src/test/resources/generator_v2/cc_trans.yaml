@@ -1,9 +1,7 @@
 title: "entity"
 description: "entity datasource"
-output:
-  format: "CSV"
-  delimiter: ","
 order:
+  - seeded_hash
   - cc_trans
   - ccn
   - trans_ts
@@ -16,6 +14,12 @@ keyFields:
   - ccn
 fields:
   -
+    type: "seeded.sequence"
+    name: "seeded_hash"
+    start: 1000
+    hash: true
+    seed: "helloworld"
+  -
     type: "string"
     name: "cc_trans"
     characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -25,6 +29,7 @@ fields:
   -
     type: "string"
     name: "ccn"
+    hash: true
     characters: "0123456789"
     range:
       min: 15
@@ -34,6 +39,7 @@ fields:
   -
     type: "date"
     name: "trans_ts"
+    as: "LONG"
   -
     type: "uuid"
     name: "uuid"

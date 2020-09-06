@@ -1,7 +1,5 @@
 title: "entity"
 description: "entity datasource"
-output:
-  format: "JSON"
 order:
   - seeded_hash
   - cc_trans

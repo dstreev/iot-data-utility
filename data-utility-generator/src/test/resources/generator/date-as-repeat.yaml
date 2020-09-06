@@ -1,8 +1,5 @@
 title: "CDC Records"
 description: "An incrementing time series dataset"
-output:
-  delimiter: "\t"
-  format: "JSON"
 order:
   - event_time
   - source_code

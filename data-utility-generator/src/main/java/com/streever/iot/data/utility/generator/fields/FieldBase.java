@@ -106,6 +106,21 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
 
     public abstract T getNext();
 
+    /*
+    Used as a light container for properties of the Field that are
+    specific to the resulting value instance.
+     */
+    public FieldProperties getFieldProperties(String repeat) {
+        FieldProperties fp = new FieldProperties();
+        if (repeat != null) {
+            fp.setName(this.getName() + "_" + repeat);
+        } else {
+            fp.setName(this.getName());
+        }
+        fp.setNumber(this.isNumber());
+        return fp;
+    }
+
     @Override
     public int compareTo(FieldBase o) {
         if (this.order == o.order)
