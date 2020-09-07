@@ -10,12 +10,13 @@ import com.streever.iot.data.utility.generator.output.OutputBase;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This class will bring together the Record and Output Spec's and generator the desired output
  */
 public class Builder {
-    private int count = 10; // default if not specified.
+    private long count = 10; // default if not specified.
     private Record record;
     // Added to the Output when it's opened.
     private String outputPrefix;
@@ -24,11 +25,11 @@ public class Builder {
 
     private Map<Record, Output> outputMap = new TreeMap<Record, Output>();
 
-    public int getCount() {
+    public long getCount() {
         return count;
     }
 
-    public void setCount(int count) {
+    public void setCount(long count) {
         this.count = count;
     }
 
@@ -180,24 +181,33 @@ public class Builder {
         }
     }
 
-    public void run() {
+    /*
+    Return the number of records output. This count reflect the parent
+    record count, not the cumulative children records (if defined).
+     */
+    public long[] run() {
         openOutput();
+        long lclCount[] = new long[2];
+        lclCount[0] = count;
         try {
-            while (count > 0) {
+            while (lclCount[0] > 0) {
                 getRecord().next(null);
                 write(getRecord(), null);
-                writeRelationships(getRecord().getRelationships(), getRecord().getKeyMap());
+                lclCount[1] += writeRelationships(getRecord().getRelationships(), getRecord().getKeyMap());
 
-                count--;
+                lclCount[0]--;
             }
         } catch (TerminateException te) {
-
+            System.out.println("Terminate Exception Raised after " + (count - lclCount[0]) + " records");
         } finally {
             closeOutput();
         }
+        lclCount[0] = count - lclCount[0];
+        return lclCount;
     }
 
-    protected void writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
+    protected long writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
+        long count = 0;
         if (relationships != null) {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {
@@ -206,15 +216,31 @@ public class Builder {
                 try {
                     // TODO: Address Cardinality HERE!!
                     // For now, just do 1-1.
-                    rRecord.next(parentKeys);
-                    write(rRecord, parentKeys);
-                    // Recurse into hierarchy
-                    writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                    int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
+                    if (range <= 0) {
+                        // Assume 1-1 relationship.
+                        rRecord.next(parentKeys);
+                        write(rRecord, parentKeys);
+                        count++;
+                        // Recurse into hierarchy
+                        count += writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                    } else {
+                        // Assume min to max relationship.
+                        int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
+                        for (int i=relationship.getCardinality().getMin();i<rNum;i++) {
+                            rRecord.next(parentKeys);
+                            write(rRecord, parentKeys);
+                            count++;
+                            // Recurse into hierarchy
+                            count += writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                        }
+                    }
                 } catch (TerminateException te) {
 
                 }
             }
         }
+        return count;
     }
 
 }

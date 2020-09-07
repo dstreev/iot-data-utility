@@ -230,14 +230,10 @@ public class Record implements Comparable<Record> {
                 valueMap.put(fbase.getFieldProperties(null), value);
             } else {
                 for (int i = 0; i < fbase.getRepeat(); i++) {
-
                     Object value = fbase.getNext();
+                    // Pad field number
                     String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
-//                    if (fbase.getRepeat() > 1) {
-//                        keyFieldName = keyFieldName + "_" + i;
-//                    }
-                    // TODO: Would like to pad number with zeros
-                    // IE: 012 vs. 12, also means repeat should not be greater than 1000
+                    // If it's a key field, add it to the keymap
                     if (keyFields != null && keyFields.contains(fbase.getName())) {
                         keyMap.put(fbase.getFieldProperties(repeater), value);
                     }

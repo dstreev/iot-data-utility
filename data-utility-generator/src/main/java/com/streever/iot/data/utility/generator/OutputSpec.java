@@ -32,6 +32,9 @@ public class OutputSpec {
     }
 
     public static OutputSpec deserialize(String configResource) {
+        if (configResource == null) {
+            return null;
+        }
         OutputSpec outputSpec = null;
 //        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
 //        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected

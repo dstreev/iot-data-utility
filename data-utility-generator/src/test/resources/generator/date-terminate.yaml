@@ -1,8 +1,5 @@
 title: "CDC Records"
 description: "An incrementing time series dataset"
-output:
-  delimiter: "\t"
-  format: "CSV"
 controlField: "event_time"
 order:
   - event_time
@@ -24,7 +21,7 @@ fields:
     diff: 1000
     range:
       min: "2010-01-01T07:00:00"
-      max: "2010-01-02T07:00:00"
+      max: "2010-01-01T07:01:00"
   -
     type: "int"
     name: "source_code"

@@ -54,8 +54,8 @@ fields:
 relationships:
   address:
     cardinality:
-      min: 1
-      max: 2
+      min: 0
+      max: 5
 #      referenceFields:
 #        - acct_num
     record:

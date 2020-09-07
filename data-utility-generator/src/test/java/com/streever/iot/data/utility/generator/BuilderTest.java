@@ -14,218 +14,43 @@ public class BuilderTest {
 
     @Test
     public void init_01() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_with_relationships.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        OutputSpec outputSpec = OutputSpec.deserialize("/outputspec/default.yaml");
-        builder.setRecord(record);
-        builder.setOutputSpec(outputSpec);
-        builder.init();
-        System.out.println("Hello");
+        runResource("/generator_v2/cc_account_with_relationships.yaml", 10, "/outputspec/default.yaml");
     }
 
     @Test
     public void init_02() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_with_relationships.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        OutputSpec outputSpec = OutputSpec.deserialize("/outputspec/cc_account_with_relationships.yaml");
-        builder.setRecord(record);
-        builder.setOutputSpec(outputSpec);
-        builder.init();
-        builder.run();
+        runResource("/generator_v2/cc_account_with_relationships.yaml", 10, "/outputspec/cc_account_with_relationships.yaml");
     }
 
     @Test
     public void init_no_outspec_03() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_with_relationships.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        builder.init();
-        builder.run();
+        runResource("/generator_v2/cc_account_with_relationships.yaml", 10, null);
     }
 
-    @Test
-    public void init_csv_03() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_with_relationships.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
-        builder.setOutputSpec(outputSpec);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + "/csv_03");
-        builder.init();
-        builder.run();
-    }
-
-    @Test
-    public void init_csv_04() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_v2.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
-        builder.setOutputSpec(outputSpec);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + "/csv_04");
-        builder.init();
-        builder.run();
-    }
-
-    @Test
-    public void init_json_05() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_v2.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/json_out.yaml");
-        builder.setOutputSpec(outputSpec);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + "/json_05");
-        builder.init();
-        builder.run();
-    }
-
-    @Test
-    public void init_json_06() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_v2.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/json_out.yaml");
-        builder.setOutputSpec(outputSpec);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + "/json_06");
-        int count = 100000;
-        builder.setCount(count);
-        builder.init();
-        Date start = new Date();
-        builder.run();
-        Date end = new Date();
-        long diff = end.getTime() - start.getTime();
-        double perSecRate = ((double) count / diff) * 1000;
-
-        System.out.println("Time: " + diff + " Loops: " + count);
-        System.out.println("Rate (perSec): " + perSecRate);
-
-    }
-
-    @Test
-    public void init_csv_06() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/cc_account_v2.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
-        builder.setOutputSpec(outputSpec);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + "/csv_06");
-        int count = 100000;
-        builder.setCount(count);
-        builder.init();
-        Date start = new Date();
-        builder.run();
-        Date end = new Date();
-        long diff = end.getTime() - start.getTime();
-        double perSecRate = ((double) count / diff) * 1000;
-
-        System.out.println("Time: " + diff + " Loops: " + count);
-        System.out.println("Rate (perSec): " + perSecRate);
-
-    }
-
-    // Old Tests
     @Test
     public void init_csv_07() {
-        Builder builder = new Builder();
-        Record record = null;
-        try {
-            record = Record.deserialize("/generator_v2/array.yaml");
-        } catch (IOException e) {
-            assertTrue(false);
-        }
-        builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
-        builder.setOutputSpec(outputSpec);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + "/csv_07");
-        int count = 1000;
-        builder.setCount(count);
-        builder.init();
-        Date start = new Date();
-        builder.run();
-        Date end = new Date();
-        long diff = end.getTime() - start.getTime();
-        double perSecRate = ((double) count / diff) * 1000;
+        runResourceToCSV("/generator_v2/array.yaml", 1000);
+    }
 
-        System.out.println("Time: " + diff + " Loops: " + count);
-        System.out.println("Rate (perSec): " + perSecRate);
-
+    @Test
+    public void init_relationship_one_to_many() {
+        runResourceToCSV("/generator_v2/one-many.yaml", 5);
     }
 
     private String[] cpResources = {"/generator/array.yaml", "/generator/cc_trans.yaml", "/generator/cc_account.yaml",
             "/generator/date-as.yaml", "/generator/ip-as.yaml", "/generator/date-as-repeat.yaml", "/generator/date-increment.yaml",
             "/generator/date-late-arriving_day.yaml", "/generator/date-late-arriving_hour.yaml",
             "/generator/date-late-arriving_minute.yaml", "/generator/date-late-arriving_month.yaml",
-            "/generator/date-late-arriving_year.yaml", "/generator/one.yaml"};
+            "/generator/date-late-arriving_year.yaml", "/generator/date-terminate.yaml", "/generator/one.yaml",
+            "/generator/ip-as.yaml", "/generator/one.json", "/generator/record-definition.yaml",
+            "/generator/ref-string.yaml", "/generator/date-start_stop.yaml", "/generator/wide-table.yaml"};
 
     // Basic Tests
     @Test
     public void init_csv_cpr_all_01() {
         Builder builder = new Builder();
         for (String resource : cpResources) {
-            Record record = null;
-            try {
-                record = Record.deserialize(resource);
-            } catch (IOException e) {
-                System.err.println("Processing: " + resource);
-                e.printStackTrace();
-                assertTrue(false);
-            }
-            builder.setRecord(record);
-            OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
-            builder.setOutputSpec(outputSpec);
-            String filename = FilenameUtils.getName(resource);
-            builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
-            int count = 1000;
-            builder.setCount(count);
-            builder.init();
-            Date start = new Date();
-            builder.run();
-            Date end = new Date();
-            long diff = end.getTime() - start.getTime();
-            double perSecRate = ((double) count / diff) * 1000;
-
-            System.out.println("Time: " + diff + " Loops: " + count);
-            System.out.println("Rate (perSec): " + perSecRate);
+            runResourceToCSV(resource, 1000);
         }
     }
 
@@ -233,29 +58,7 @@ public class BuilderTest {
     public void init_json_cpr_all_01() {
         Builder builder = new Builder();
         for (String resource : cpResources) {
-            Record record = null;
-            try {
-                record = Record.deserialize(resource);
-            } catch (IOException e) {
-                e.printStackTrace();
-                assertTrue(false);
-            }
-            builder.setRecord(record);
-            OutputSpec outputSpec = OutputSpec.deserialize("/json_out.yaml");
-            builder.setOutputSpec(outputSpec);
-            String filename = FilenameUtils.getName(resource);
-            builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
-            int count = 1000;
-            builder.setCount(count);
-            builder.init();
-            Date start = new Date();
-            builder.run();
-            Date end = new Date();
-            long diff = end.getTime() - start.getTime();
-            double perSecRate = ((double) count / diff) * 1000;
-
-            System.out.println("Time: " + diff + " Loops: " + count);
-            System.out.println("Rate (perSec): " + perSecRate);
+            runResourceToJson(resource, 1000);
         }
     }
 
@@ -265,31 +68,7 @@ public class BuilderTest {
     public void init_csv_fr_all_02() {
         Builder builder = new Builder();
         for (String resource : fileResources) {
-            Record record = null;
-            try {
-                record = Record.deserialize(resource);
-            } catch (IOException e) {
-                System.err.println("Processing: " + resource);
-                e.printStackTrace();
-                assertTrue(false);
-            }
-            builder.setRecord(record);
-            OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
-            builder.setOutputSpec(outputSpec);
-            // Strip off path.
-            String filename = FilenameUtils.getName(resource);
-            builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
-            int count = 1000;
-            builder.setCount(count);
-            builder.init();
-            Date start = new Date();
-            builder.run();
-            Date end = new Date();
-            long diff = end.getTime() - start.getTime();
-            double perSecRate = ((double) count / diff) * 1000;
-
-            System.out.println("Time: " + diff + " Loops: " + count);
-            System.out.println("Rate (perSec): " + perSecRate);
+            runResourceToCSV(resource, 1000);
         }
     }
 
@@ -310,6 +89,61 @@ public class BuilderTest {
                 assertTrue(true);
             }
         }
+    }
+
+    @Test
+    public void dateTerminate_01() {
+        long createNumRecords = 1000;
+        long[] recordsCreated = runResourceToCSV("/generator/date-terminate.yaml", createNumRecords);
+        // Schema setup should terminate record creation BEFORE reaching the requested count.
+        assertTrue("Termination Test Failed", recordsCreated[0] < createNumRecords);
+    }
+
+    @Test
+    public void dateStartStop_01() {
+        long createNumRecords = 1000;
+        long[] recordsCreated = runResourceToCSV("/generator/date-start_stop.yaml", createNumRecords);
+        // Schema setup should terminate record creation BEFORE reaching the requested count.
+//        assertTrue("Termination Test Failed", recordsCreated < createNumRecords);
+    }
+
+    protected long[] runResourceToCSV(String resource, long count) {
+        return runResource(resource, count, "/csv_out.yaml");
+    }
+
+    protected long[] runResourceToJson(String resource, long count) {
+        return runResource(resource, count, "/json_out.yaml");
+    }
+
+    protected long[] runResource(String resource, long count, String outputSpecResource) {
+        long recordsCreated[] = {0,0};
+        Builder builder = new Builder();
+        Record record = null;
+        try {
+            record = Record.deserialize(resource);
+        } catch (IOException e) {
+            System.err.println("Processing: " + resource);
+            e.printStackTrace();
+            assertTrue(false);
+        }
+        builder.setRecord(record);
+        OutputSpec outputSpec = OutputSpec.deserialize(outputSpecResource);
+        builder.setOutputSpec(outputSpec);
+        // Strip off path.
+        String filename = FilenameUtils.getName(resource);
+        builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
+        builder.setCount(count);
+        builder.init();
+        Date start = new Date();
+        recordsCreated = builder.run();
+        Date end = new Date();
+        long diff = end.getTime() - start.getTime();
+        double perSecRate = ((double) recordsCreated[0] / diff) * 1000;
+
+        System.out.println("Time: " + diff + " Loops: " + recordsCreated[0]);
+        System.out.println("Rate (perSec): " + perSecRate);
+        System.out.println("Records Created: " + recordsCreated[0] + ":" + recordsCreated[1] );
+        return recordsCreated;
     }
 
 }

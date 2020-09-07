@@ -1,7 +1,5 @@
 title: hello
 description: helloDesc
-output:
-  format: "JSON"
 order:
   - state
   - active.start

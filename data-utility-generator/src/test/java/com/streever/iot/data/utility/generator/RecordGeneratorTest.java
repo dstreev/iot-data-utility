@@ -26,8 +26,6 @@ import com.streever.iot.kafka.producer.ProducerCreator;
 import com.streever.iot.kafka.spec.ProducerSpec;
 import org.apache.commons.io.FileUtils;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +34,6 @@ import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
 
 public class RecordGeneratorTest {
 
@@ -99,7 +96,7 @@ public class RecordGeneratorTest {
 
     @Test
     public void Test001903() {
-        build("generator/wide_table.yaml", 10l);
+        build("generator/wide-table.yaml", 10l);
     }
 
     @Test
@@ -109,7 +106,7 @@ public class RecordGeneratorTest {
 
     @Test
     public void Test00192() {
-        runPerfConfig("generator/two.yaml", 1000000l);
+        runPerfConfig("generator/date-start_stop.yaml", 1000000l);
     }
 
     @Test
@@ -164,17 +161,17 @@ public class RecordGeneratorTest {
 
     @Test
     public void Test0021_0() {
-        runKafkaLoad("outputspec/kafka-0.yaml", "generator/two.yaml", 200000l);
+        runKafkaLoad("outputspec/kafka-0.yaml", "generator/date-start_stop.yaml", 200000l);
     }
 
     @Test
     public void Test0021_1() {
-        runKafkaLoad("outputspec/kafka-1.yaml", "generator/two.yaml", 20000l);
+        runKafkaLoad("outputspec/kafka-1.yaml", "generator/date-start_stop.yaml", 20000l);
     }
 
     @Test
     public void Test0021_2() {
-        runKafkaLoad("outputspec/kafka-trans.yaml", "generator/two.yaml", 200000l);
+        runKafkaLoad("outputspec/kafka-trans.yaml", "generator/date-start_stop.yaml", 200000l);
     }
 
     @Test

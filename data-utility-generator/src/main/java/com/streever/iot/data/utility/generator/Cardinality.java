@@ -4,30 +4,24 @@ import java.util.List;
 
 public class Cardinality {
 
-    private int factor = 1;
-    // Future items.  Something to randomized factors greater than 1.
+    /* The minimum number of records to create in an iteration */
+    private int min = 1;
+    /* The maximum number of records to create in an iteration */
+    private int max = 1;
 
-    /*
-    Field in the parent record that needs to be carried into this relationship.
-
-    HOLD ON THIS.  Let's try picking up the "keyFields" from the parent.
-
-     */
-//    private List<String> referenceFields;
-
-    public int getFactor() {
-        return factor;
+    public int getMin() {
+        return min;
     }
 
-    public void setFactor(int factor) {
-        this.factor = factor;
+    public void setMin(int min) {
+        this.min = min;
     }
 
-//    public List<String> getReferenceFields() {
-//        return referenceFields;
-//    }
-//
-//    public void setReferenceFields(List<String> referenceFields) {
-//        this.referenceFields = referenceFields;
-//    }
+    public int getMax() {
+        return max;
+    }
+
+    public void setMax(int max) {
+        this.max = max;
+    }
 }

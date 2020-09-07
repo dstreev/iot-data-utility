@@ -1,11 +1,7 @@
 package com.streever.iot.data.utility.generator;
 
-//@JsonIgnoreProperties({ "parent" })
 public class Relationship {
-//    Cardinality
-//    Reference Key Field(s)
-//    Record
-    private Cardinality cardinality;
+    private Cardinality cardinality = new Cardinality(); // Will default to a 1-1 relationship.
     private Record record;
 
     public Cardinality getCardinality() {

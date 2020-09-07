@@ -1,15 +1,10 @@
-title: hello
-description: helloDesc
-output:
-  format: "CSV"
-  delimiter: ","
+title: Wide_table
+description: "Wide Table"
 order:
   - active.start
   - active.stop
   - output
   - amount
-  - coordinate
-  - type
   - report_date
   - count
   - now
@@ -22,10 +17,6 @@ order:
   - field6
   - field7
   - field8
-keyFields:
-  - type
-  - seq
-  - report_date
 fields:
   -
     type: "fixed"
@@ -40,71 +31,12 @@ fields:
       max: 1000
   -
     type: "string"
-    name: "type"
-    pool:
-      items:
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - CHARGE
-        - RETURN
-        - CHALLENGE
-  -
-    type: "string"
     name: "output"
     range:
       min: 2
       max: 19
     pool:
       size: 100
-  -
-    type: "location"
-    name: "coordinate"
-    pool:
-      items:
-        -
-          longitude: 33.5
-          latitude: -63.5
   -
     type: "date"
     name: "report_date"
@@ -128,9 +60,10 @@ fields:
   -
     type: "string"
     name: "field1"
+    repeat: 100
     range:
       min: 5
-      max: 5
+      max: 50
     characters: "ABCDEFGHI"
     pool:
       size: 100
@@ -146,6 +79,7 @@ fields:
   -
     type: "string"
     name: "field3"
+    repeat: 100
   -
     type: "int"
     name: "field4"

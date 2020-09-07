@@ -1,8 +1,5 @@
 title: "CDC Records"
 description: "Test Record Set"
-output:
-  delimiter: "\t"
-  format: "CSV"
 order:
   - id
   - update_date
