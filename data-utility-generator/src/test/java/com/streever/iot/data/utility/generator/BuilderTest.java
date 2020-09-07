@@ -37,6 +37,21 @@ public class BuilderTest {
         runResourceToCSV("/generator_v2/one-many.yaml", 5);
     }
 
+    @Test
+    public void init_relationship_one_to_many_unique() {
+        runResource("/generator_v2/one-many.yaml", 5, "/csv_unique_out.yaml");
+    }
+
+    @Test
+    public void init_relationship_one_to_many_unique_alt_ts() {
+        runResource("/generator_v2/one-many.yaml", 5, "/outputspec/csv_unique_alt_tsf_out.yaml");
+    }
+
+    @Test
+    public void init_relationship_one_to_many_unique_uuid() {
+        runResource("/generator_v2/one-many.yaml", 5, "/outputspec/csv_unique_uuid_out.yaml");
+    }
+
     private String[] cpResources = {"/generator/array.yaml", "/generator/cc_trans.yaml", "/generator/cc_account.yaml",
             "/generator/date-as.yaml", "/generator/ip-as.yaml", "/generator/date-as-repeat.yaml", "/generator/date-increment.yaml",
             "/generator/date-late-arriving_day.yaml", "/generator/date-late-arriving_hour.yaml",

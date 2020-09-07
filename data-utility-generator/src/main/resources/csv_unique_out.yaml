@@ -1,3 +1,5 @@
 default:
   type: "csv"
   dirForRelationship: true
+  unique: true
+  uniqueType: TIMESTAMP

@@ -1,2 +1,3 @@
 default:
   type: "json"
+  dirForRelationship: true

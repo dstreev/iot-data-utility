@@ -1,0 +1,5 @@
+default:
+  type: "csv"
+  dirForRelationship: true
+  unique: true
+  uniqueTimestampFormat: "yy-MM-dd"
