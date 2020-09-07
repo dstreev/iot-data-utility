@@ -163,7 +163,9 @@ public class Record implements Comparable<Record> {
                     }
                 }
                 if (!found) {
-                    System.err.println("Field Not Found: " + searchFieldName[0]);
+                    throw new RuntimeException("Ordering Field [" + searchFieldName[0] +
+                            "] not found in record fields list for schema [" +
+                            this.getTitle() + "]");
                 }
             }
         }

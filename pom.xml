@@ -21,6 +21,7 @@
 
         <hadoop.version>3.1.1</hadoop.version>
         <hbase.version>2.0.2</hbase.version>
+        <jcabi.manifests.version>1.1</jcabi.manifests.version>
 
         <kafka.client.version>2.0.0</kafka.client.version>
 
@@ -51,6 +52,13 @@
         <kafka.version>2.0.0</kafka.version>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.jcabi</groupId>
+            <artifactId>jcabi-manifests</artifactId>
+            <version>${jcabi.manifests.version}</version>
+        </dependency>
+    </dependencies>
     <!--repositories>
         <repository>
             <releases>

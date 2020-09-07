@@ -2,6 +2,7 @@ package com.streever.iot.data.utility.generator;
 
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Test;
+import org.junit.experimental.theories.suppliers.TestedOn;
 
 import java.io.IOException;
 import java.util.Date;
@@ -90,7 +91,7 @@ public class BuilderTest {
 
     // Exceptions Test
     private String[] cpExceptionResources = {"/bad_schemas/repeat-too-high.yaml", "/bad_schemas/ip-as.yaml",
-            "/bad_schemas/ip-as_2.yaml"};
+            "/bad_schemas/ip-as_2.yaml", "/bad_schemas/one-many.yaml"};
 
     @Test
     public void init_exception_all_01() {
@@ -120,6 +121,38 @@ public class BuilderTest {
         long[] recordsCreated = runResourceToCSV("/generator/date-start_stop.yaml", createNumRecords);
         // Schema setup should terminate record creation BEFORE reaching the requested count.
 //        assertTrue("Termination Test Failed", recordsCreated < createNumRecords);
+    }
+
+    @Test
+    public void runBuilderWithoutPrefixdir() {
+        long recordsCreated[] = {0,0};
+        Builder builder = new Builder();
+        Record record = null;
+        try {
+            record = Record.deserialize("/generator/one.yaml");
+        } catch (IOException e) {
+            System.err.println("Processing: " + "/generator/one.yaml");
+            e.printStackTrace();
+            assertTrue(false);
+        }
+        builder.setRecord(record);
+        OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
+        builder.setOutputSpec(outputSpec);
+        // Strip off path.
+//        String filename = FilenameUtils.getName(resource);
+//        builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
+        builder.setCount(10);
+        builder.init();
+        Date start = new Date();
+        recordsCreated = builder.run();
+        Date end = new Date();
+        long diff = end.getTime() - start.getTime();
+        double perSecRate = ((double) recordsCreated[0] / diff) * 1000;
+
+        System.out.println("Time: " + diff + " Loops: " + recordsCreated[0]);
+        System.out.println("Rate (perSec): " + perSecRate);
+        System.out.println("Records Created: " + recordsCreated[0] + ":" + recordsCreated[1] );
+
     }
 
     protected long[] runResourceToCSV(String resource, long count) {

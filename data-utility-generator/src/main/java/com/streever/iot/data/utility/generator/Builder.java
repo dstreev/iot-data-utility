@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * This class will bring together the Record and Output Spec's and generator the desired output
  */
 public class Builder {
+    private boolean initialized = false;
     private long count = 10; // default if not specified.
     private Record record;
     // Added to the Output when it's opened.
@@ -53,6 +54,7 @@ public class Builder {
         if (outputSpec == null) {
             // Load Default.
             outputSpec = OutputSpec.deserialize("/default_out.yaml");
+            System.out.println("Loading default output spec (System.out)");
         }
         return outputSpec;
     }
@@ -148,6 +150,7 @@ public class Builder {
         link(getRecord(), "default");
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
+        initialized = true;
     }
 
     /*
@@ -168,6 +171,9 @@ public class Builder {
     }
 
     protected void openOutput() {
+        // Initialize if null;
+        getOutputSpec();
+        // Open specs
         Set<Record> outputKeys = outputMap.keySet();
         for (Record record : outputKeys) {
             outputMap.get(record).open(outputPrefix);
@@ -186,6 +192,9 @@ public class Builder {
     record count, not the cumulative children records (if defined).
      */
     public long[] run() {
+        if (!initialized) {
+            throw new RuntimeException("Builder was not initialized. Call init() before run().");
+        }
         openOutput();
         long lclCount[] = new long[2];
         lclCount[0] = count;

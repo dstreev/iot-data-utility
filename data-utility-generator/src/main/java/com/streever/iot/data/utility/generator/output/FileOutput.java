@@ -104,6 +104,7 @@ public abstract class FileOutput extends OutputBase {
                 File prefixFile = new File(baseDir);
 
                 if (!prefixFile.exists()) {
+                    System.out.println("Creating directory [" + prefixFile + "] for output");
                     prefixFile.mkdirs();
                 }
             } else {
@@ -112,6 +113,13 @@ public abstract class FileOutput extends OutputBase {
                 }
             }
             if (baseDir != null) {
+                File baseDirFile = new File(baseDir);
+
+                if (!baseDirFile.exists()) {
+                    System.out.println("Creating directory [" + baseDirFile + "] for output");
+                    baseDirFile.mkdirs();
+                }
+
                 file = baseDir + System.getProperty("file.separator") + adjustedFilename + "." + getExtension();
             } else {
                 file = adjustedFilename + "." + getExtension();

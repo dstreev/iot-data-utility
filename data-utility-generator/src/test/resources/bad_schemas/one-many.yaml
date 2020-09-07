@@ -60,7 +60,7 @@ relationships:
 #        - acct_num
     record:
       title: "Address"
-      description: "Acct address"
+      description: "Missing 'state' field, as listed in 'order'"
       order:
         - street_num
         - street_name
@@ -85,60 +85,6 @@ relationships:
             min: 5
             max: 15
           characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        - type: "string"
-          name: "state"
-          pool:
-            items:
-              - AL
-              - AK
-              - AZ
-              - AR
-              - CA
-              - CO
-              - CT
-              - DE
-              - FL
-              - GA
-              - HI
-              - ID
-              - IL
-              - IN
-              - IA
-              - KS
-              - KY
-              - LA
-              - ME
-              - MD
-              - MA
-              - MI
-              - MN
-              - MS
-              - MO
-              - MT
-              - NE
-              - NV
-              - NH
-              - NJ
-              - NM
-              - NY
-              - NC
-              - ND
-              - OH
-              - OK
-              - OR
-              - PA
-              - RI
-              - SC
-              - SD
-              - TN
-              - TX
-              - UT
-              - VT
-              - VA
-              - WA
-              - WV
-              - WI
-              - WY
         - type: "string"
           name: "zip_code"
           range:
