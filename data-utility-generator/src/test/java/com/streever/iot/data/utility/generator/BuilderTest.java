@@ -122,6 +122,14 @@ public class BuilderTest {
     }
 
     @Test
+    public void dateTerminate_02() {
+        long createNumRecords = 1000;
+        long[] recordsCreated = runResource("/generator/date-terminate.yaml", createNumRecords, null);
+        // Schema setup should terminate record creation BEFORE reaching the requested count.
+        assertTrue("Termination Test Failed", recordsCreated[0] < createNumRecords);
+    }
+
+    @Test
     public void dateStartStop_01() {
         long createNumRecords = 10;
         long[] recordsCreated = runResourceToCSV("/generator/date-start_stop.yaml", createNumRecords);
@@ -182,8 +190,10 @@ public class BuilderTest {
             assertTrue(false);
         }
         builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize(outputSpecResource);
-        builder.setOutputSpec(outputSpec);
+        if (outputSpecResource != null) {
+            OutputSpec outputSpec = OutputSpec.deserialize(outputSpecResource);
+            builder.setOutputSpec(outputSpec);
+        }
         // Strip off path.
         String filename = FilenameUtils.getName(resource);
         builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);

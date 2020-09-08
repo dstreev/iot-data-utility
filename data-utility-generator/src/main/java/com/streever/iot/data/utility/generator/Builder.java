@@ -72,6 +72,7 @@ public class Builder {
         boolean rtn = Boolean.TRUE;
         if (getOutputSpec() != null) {
             if (getOutputSpec().getDefault() != null) {
+                getOutputSpec().getDefault().setName(getRecord().getId());
                 outputMap.put(getRecord(), getOutputSpec().getDefault());
                 // When filename in output spec if not set, use the 'record.id'
                 // TODO: file extension
@@ -103,6 +104,7 @@ public class Builder {
                 // Output Spec matching name not found.
                 try {
                     OutputBase spec = (OutputBase) getOutputSpec().getDefault().clone();
+                    spec.setName(key);
                     outputMap.put(record, spec);
                     spec.link(record);
                     System.out.println("Cloned 'default' spec for record: " + key);
@@ -111,6 +113,7 @@ public class Builder {
                 }
             } else {
                 if (!output.isUsed()) {
+                    output.setName(key);
                     // When filename in output spec if not set, use the 'record.id'
                     // TODO: file extension
                     if (output instanceof FileOutput && ((FileOutput) output).getFilename() == null) {

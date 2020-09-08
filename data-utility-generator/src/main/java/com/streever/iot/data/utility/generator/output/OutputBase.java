@@ -1,5 +1,6 @@
 package com.streever.iot.data.utility.generator.output;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -9,12 +10,21 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CSVOutput.class, name = "csv")
         , @JsonSubTypes.Type(value = JSONOutput.class, name = "json")
-        , @JsonSubTypes.Type(value = StdOutOutput.class, name = "stdout")
-        , @JsonSubTypes.Type(value = StdErrOutput.class, name = "stderr")
+        , @JsonSubTypes.Type(value = StdOutput.class, name = "std")
 })
+@JsonIgnoreProperties({ "name" })
 public abstract class OutputBase implements Output, Cloneable {
+    private String name = null;
     private boolean used = Boolean.FALSE;
     private boolean open = false;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public boolean isOpen() {
         return open;

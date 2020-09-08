@@ -90,6 +90,31 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
+        Option STD_OPTION = Option.builder("std")
+                .argName("std")
+                .longOpt("std")
+                .desc("STD Output")
+                .hasArg(false)
+                .type(String.class)
+                .required(false)
+                .build();
+        Option CSV_OPTION = Option.builder("csv")
+                .argName("csv")
+                .longOpt("csv")
+                .desc("CSV Output")
+                .hasArg(false)
+                .type(String.class)
+                .required(false)
+                .build();
+        Option JSON_OPTION = Option.builder("json")
+                .argName("json")
+                .longOpt("json")
+                .desc("json Output")
+                .hasArg(false)
+                .type(String.class)
+                .required(false)
+                .build();
+
         /* MOVE ALL THIS TO THE OUTPUT SPEC
         Option STREAMING_DURATION_OPTION = Option.builder("sd")
                 .argName("STREAMING_DURATION")
@@ -144,6 +169,9 @@ public class RecordGenerator {
 
         outputGroup.addOption(OUTPUT_CONFIG_OPTION);
         outputGroup.addOption(GEN_HIVE_SCHEMA_OPTION);
+        outputGroup.addOption(STD_OPTION);
+        outputGroup.addOption(CSV_OPTION);
+        outputGroup.addOption(JSON_OPTION);
 
         options.addOptionGroup(outputGroup);
 
@@ -208,6 +236,19 @@ public class RecordGenerator {
                 OutputSpec outputSpec = OutputSpec.deserialize(line.getOptionValue("o"));
                 builder.setOutputSpec(outputSpec);
             }
+            if (line.hasOption("std")) {
+                OutputSpec outputSpec = OutputSpec.deserialize("/default_out.yaml");
+                builder.setOutputSpec(outputSpec);
+            }
+            if (line.hasOption("csv")) {
+                OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
+                builder.setOutputSpec(outputSpec);
+            }
+            if (line.hasOption("json")) {
+                OutputSpec outputSpec = OutputSpec.deserialize("/json_out.yaml");
+                builder.setOutputSpec(outputSpec);
+            }
+
             if (line.hasOption("p")) {
                 builder.setOutputPrefix(line.getOptionValue("p"));
             }

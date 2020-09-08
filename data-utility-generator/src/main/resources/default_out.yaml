@@ -1,2 +1,2 @@
 default:
-  type: "stdout"
+  type: "std"

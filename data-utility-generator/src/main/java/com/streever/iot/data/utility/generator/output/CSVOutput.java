@@ -45,22 +45,26 @@ public class CSVOutput extends FileOutput {
         this.quoteChar = quoteChar;
     }
 
+    public static String getLine(Map<FieldProperties, Object> record, String quote, String separator) {
+        List<String> values = new ArrayList<String>();
+        Set<Map.Entry<FieldProperties, Object>> entries = record.entrySet();
+        for (Map.Entry<FieldProperties, Object> entry: entries) {
+            if (entry.getKey().isNumber()) {
+                values.add(entry.getValue().toString());
+            } else {
+                // TODO: Need to encode/escape special characters.
+                values.add(quote + entry.getValue().toString() + quote);
+            }
+        }
+        String recLine = StringUtils.join(values, separator);
+        return recLine;
+    }
+
     @Override
     public void write(Map<FieldProperties, Object> record) throws IOException {
         if (isOpen()) {
-            List<String> values = new ArrayList<String>();
-            Set<Map.Entry<FieldProperties, Object>> entries = record.entrySet();
-            for (Map.Entry<FieldProperties, Object> entry: entries) {
-                if (entry.getKey().isNumber()) {
-                    values.add(entry.getValue().toString());
-                } else {
-                    // TODO: Need to encode/escape special characters.
-                    values.add(getQuoteChar() + entry.getValue().toString() + getQuoteChar());
-                }
-            }
-            String recLine = StringUtils.join(values, this.getSeparator());
+            String recLine = getLine(record, getQuoteChar(), getSeparator());
             writeLine(recLine);
-//            getWriteStream().println(recLine);
         } else {
             // TODO: Throw not open exception.
         }

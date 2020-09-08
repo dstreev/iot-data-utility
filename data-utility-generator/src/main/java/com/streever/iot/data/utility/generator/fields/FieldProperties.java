@@ -46,4 +46,9 @@ public class FieldProperties implements Comparable<FieldProperties> {
         int rtn = this.getName().compareTo(o.getName());
         return rtn;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }
