@@ -15,7 +15,8 @@ public class SequenceField extends FieldBase<Long> {
 
     @Override
     public Long getNext() {
-        return (Long)start.incrementAndGet();
-
+        Long rtn = (Long)start.incrementAndGet();
+        setLast(rtn);
+        return rtn;
     }
 }

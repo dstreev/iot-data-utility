@@ -6,7 +6,8 @@ order:
   - rtest
   - output
   - amount
-  - coordinate
+  - coordinate.lat
+  - coordinate.long
   - type
   - report_date
   - count

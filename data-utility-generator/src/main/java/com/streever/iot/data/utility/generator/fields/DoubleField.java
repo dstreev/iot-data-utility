@@ -49,6 +49,8 @@ public class DoubleField extends FieldBase<Double> {
     public Double getNext() {
         double multiplierD2 = randomizer.nextDouble();
         Double valD = (Double)range.getMin() + ((Double)getDiff() * multiplierD2);
-        return Double.valueOf(format.format(valD));
+        Double rtn = Double.valueOf(format.format(valD));
+        setLast(rtn);
+        return rtn;
     }
 }

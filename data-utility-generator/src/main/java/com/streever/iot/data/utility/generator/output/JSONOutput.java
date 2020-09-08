@@ -13,6 +13,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -27,7 +28,7 @@ public class JSONOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldProperties, Object> record) {
+    public void write(Map<FieldProperties, Object> record) throws IOException {
         if (isOpen()) {
             ObjectNode jRoot = JsonNodeFactory.instance.objectNode();
             Map<String, Object> outMap = new LinkedHashMap<String, Object>();
@@ -75,7 +76,8 @@ public class JSONOutput extends FileOutput {
                 }
             }
             try {
-                getWriteStream().println(om.writeValueAsString(jRoot));
+                writeLine(om.writeValueAsString(jRoot));
+//                getWriteStream().println(om.writeValueAsString(jRoot));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }

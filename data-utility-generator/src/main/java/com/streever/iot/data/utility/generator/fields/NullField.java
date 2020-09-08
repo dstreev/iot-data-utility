@@ -13,7 +13,7 @@ public class NullField extends FieldBase<String> {
 
     @Override
     public String getNext() {
+        setLast(nullValue);
         return nullValue;
-
     }
 }

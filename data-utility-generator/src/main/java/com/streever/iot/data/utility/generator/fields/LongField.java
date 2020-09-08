@@ -36,6 +36,8 @@ public class LongField extends FieldBase<Long> {
     @Override
     public Long getNext() {
         double multiplierD = randomizer.nextDouble();
-        return (Long)range.getMin() + Math.round((Long)getDiff() * multiplierD);
+        Long rtn = (Long) range.getMin() + Math.round((Long) getDiff() * multiplierD);
+        setLast(rtn);
+        return rtn;
     }
 }

@@ -54,6 +54,7 @@ public class SeededSequenceField extends FieldBase<String> {
             }
             rtn = dg.digestAsHex(rtn).toUpperCase();
         }
+        setLast(rtn);
         return rtn;
     }
 }

@@ -76,6 +76,7 @@ public abstract class ArrayField<T> extends FieldBase<ArrayList<T>> {
                 }
             }
         }
+        setLast(rtn);
         return rtn;
     }
 }

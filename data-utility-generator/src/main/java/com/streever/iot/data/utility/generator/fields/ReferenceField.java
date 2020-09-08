@@ -85,6 +85,7 @@ public abstract class ReferenceField<T> extends FieldBase<T> {
         if (pool != null) {
             rtn = pool.getItem();
         }
+        setLast(rtn);
         return rtn;
     }
 

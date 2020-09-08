@@ -5,6 +5,7 @@ import com.streever.iot.data.utility.generator.fields.FieldBase;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class CSVOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldProperties, Object> record) {
+    public void write(Map<FieldProperties, Object> record) throws IOException {
         if (isOpen()) {
             List<String> values = new ArrayList<String>();
             Set<Map.Entry<FieldProperties, Object>> entries = record.entrySet();
@@ -58,7 +59,8 @@ public class CSVOutput extends FileOutput {
                 }
             }
             String recLine = StringUtils.join(values, this.getSeparator());
-            getWriteStream().println(recLine);
+            writeLine(recLine);
+//            getWriteStream().println(recLine);
         } else {
             // TODO: Throw not open exception.
         }

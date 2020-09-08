@@ -43,6 +43,7 @@ public class UUIDField extends FieldBase<String> {
                 rtn = pool.getItem();
             }
         }
+        setLast(rtn);
         return rtn;
     }
 }

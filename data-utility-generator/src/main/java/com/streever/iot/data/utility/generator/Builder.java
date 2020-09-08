@@ -7,6 +7,7 @@ import com.streever.iot.data.utility.generator.output.FileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputBase;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -147,7 +148,7 @@ public class Builder {
     }
 
     public void init() {
-        link(getRecord(), "default");
+        link(getRecord(), "main");
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
         initialized = true;
@@ -164,13 +165,13 @@ public class Builder {
         return true;
     }
 
-    protected void write(Record record, Map<FieldProperties, Object> parentKeys) {
+    protected void write(Record record, Map<FieldProperties, Object> parentKeys) throws IOException {
         Output output = this.outputMap.get(record);
         // The last generated recordset
         output.write(record.getValueMap());
     }
 
-    protected void openOutput() {
+    protected void openOutput() throws IOException {
         // Initialize if null;
         getOutputSpec();
         // Open specs
@@ -195,10 +196,10 @@ public class Builder {
         if (!initialized) {
             throw new RuntimeException("Builder was not initialized. Call init() before run().");
         }
-        openOutput();
         long lclCount[] = new long[2];
         lclCount[0] = count;
         try {
+            openOutput();
             while (lclCount[0] > 0) {
                 getRecord().next(null);
                 write(getRecord(), null);
@@ -208,6 +209,9 @@ public class Builder {
             }
         } catch (TerminateException te) {
             System.out.println("Terminate Exception Raised after " + (count - lclCount[0]) + " records");
+        } catch (IOException ioe) {
+            System.err.println("Issue Writing to file");
+            ioe.printStackTrace();
         } finally {
             closeOutput();
         }
@@ -244,7 +248,7 @@ public class Builder {
                             count += writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
                         }
                     }
-                } catch (TerminateException te) {
+                } catch (TerminateException | IOException te) {
 
                 }
             }

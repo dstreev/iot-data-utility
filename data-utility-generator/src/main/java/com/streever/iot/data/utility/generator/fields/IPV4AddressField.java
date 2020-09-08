@@ -152,6 +152,7 @@ public class IPV4AddressField extends FieldBase<Object> {
                 }
             }
         }
+        setLast(rtn);
         return rtn;
     }
 

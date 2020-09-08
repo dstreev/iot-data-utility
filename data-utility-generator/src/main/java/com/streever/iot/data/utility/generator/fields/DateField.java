@@ -13,10 +13,6 @@ import java.util.*;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
 public class DateField extends FieldBase<Object> implements ControlField {
-//    public enum As {
-//        STRING, LONG;
-//    }
-
     private Range<Timestamp> range;
     private Long diff = 1000l;
     private Long startStopSpan = 100000l;
@@ -24,6 +20,11 @@ public class DateField extends FieldBase<Object> implements ControlField {
     private DateFormat df = new SimpleDateFormat(format);
     private Boolean increment = Boolean.FALSE;
     private Boolean current = Boolean.TRUE;
+
+    public String[] getStates() {
+        String[] states = {"start", "stop"};
+        return states;
+    }
 
     private LateArriving lateArriving = null;
 
@@ -105,6 +106,14 @@ public class DateField extends FieldBase<Object> implements ControlField {
         this.lateArriving = lateArriving;
     }
 
+    public Long getStartStopSpan() {
+        return startStopSpan;
+    }
+
+    public void setStartStopSpan(Long startStopSpan) {
+        this.startStopSpan = startStopSpan;
+    }
+
     @Override
     public boolean isNumber() {
         if (getAs() == As.STRING) {
@@ -116,52 +125,67 @@ public class DateField extends FieldBase<Object> implements ControlField {
 
     @Override
     public Object getNext() {
-        Date rtn = null;
-        if (current) {
-            Date now = new Date();
-            if (lateArriving != null) {
-                rtn = lateArriving.getValue(now);
-            } else {
-                lastValue = now.getTime();
-                rtn = now;
-            }
-        } else if (increment) {
-            if (range != null && lastIssued == null) {
-                lastIssued = range.getMin().getTime();
-            } else {
-                double multiplierD = randomizer.nextDouble();
-                long incrementL = Math.round((Long) diff * multiplierD);
+        Date working = null;
+        if (!isMaintainState()) {
+            if (current) {
+                Date now = new Date();
+                if (lateArriving != null) {
+                    working = lateArriving.getValue(now);
+                } else {
+                    lastValue = now.getTime();
+                    working = now;
+                }
+            } else if (increment) {
+                if (range != null && lastIssued == null) {
+                    lastIssued = range.getMin().getTime();
+                } else {
+                    double multiplierD = randomizer.nextDouble();
+                    long incrementL = Math.round((Long) diff * multiplierD);
 //                System.out.println("Increment: " + incrementL + "Multiplier: " + multiplierD);
-                lastIssued = lastIssued + incrementL;
-            }
-            lastValue = lastIssued;
-            if (lateArriving != null) {
-                rtn = lateArriving.getValue(new Date(lastIssued));
+                    lastIssued = lastIssued + incrementL;
+                }
+                lastValue = lastIssued;
+                if (lateArriving != null) {
+                    working = lateArriving.getValue(new Date(lastIssued));
+                } else {
+                    working = new Date(lastIssued);
+                }
             } else {
-                rtn = new Date(lastIssued);
+                System.out.println("What?");
             }
         } else {
-            Long dateValue = null;
-            if (getStartStopState().equals(StartStopState.START)) {
-                double multiplierD = randomizer.nextDouble();
-                dateValue = range.getMin().getTime() + Math.round((Long) diff * multiplierD);
-                lastIssued = dateValue;
-            } else if (getStartStopState().equals(StartStopState.STOP)) {
-                double multiplierD = randomizer.nextDouble();
-                dateValue = lastIssued + Math.round((Long) startStopSpan * multiplierD);
-            } else {
-                double multiplierD = randomizer.nextDouble();
-                dateValue = range.getMin().getTime() + Math.round((Long) diff * multiplierD);
-                lastIssued = null;
-            }
-            lastValue = dateValue;
-            rtn = new Date(dateValue);
+            stateValues.clear();
+            Long startValue, stopValue = null;
+            double multiplierD = randomizer.nextDouble();
+            startValue = range.getMin().getTime() + Math.round((Long) diff * multiplierD);
+            stateValues.put("start", startValue);
+            multiplierD = randomizer.nextDouble();
+            stopValue = startValue + Math.round((Long) startStopSpan * multiplierD);
+            stateValues.put("stop", stopValue);
+            working = new Date(startValue);
         }
+        Object rtn = null;
         if (getAs() == As.STRING) {
-            return df.format(rtn);
+            rtn = df.format(working);
         } else {
-            return rtn.getTime()/1000;
+            rtn = working.getTime() / 1000;
         }
+        setLast(rtn);
+        return rtn;
+    }
+
+    public Object getNextStateValue(String state) {
+        if (stateValues.containsKey(state)) {
+            if (getAs() == As.STRING) {
+                return df.format(new Date((long) stateValues.get(state)));
+            } else {
+                return (long) stateValues.get(state) / 1000;
+            }
+        } else {
+            // TODO: Do more messaging here.
+            throw new RuntimeException("Bad state declaration: " + state);
+        }
+
     }
 
     @Override

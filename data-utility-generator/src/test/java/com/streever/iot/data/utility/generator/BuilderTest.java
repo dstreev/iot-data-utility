@@ -117,8 +117,9 @@ public class BuilderTest {
 
     @Test
     public void dateStartStop_01() {
-        long createNumRecords = 1000;
+        long createNumRecords = 10;
         long[] recordsCreated = runResourceToCSV("/generator/date-start_stop.yaml", createNumRecords);
+        long[] recordsCreated2 = runResourceToJson("/generator/date-start_stop.yaml", createNumRecords);
         // Schema setup should terminate record creation BEFORE reaching the requested count.
 //        assertTrue("Termination Test Failed", recordsCreated < createNumRecords);
     }

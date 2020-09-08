@@ -49,6 +49,7 @@ public class RegExField extends FieldBase<String> {
                 rtn = pool.getItem();
             }
         }
+        setLast(rtn);
         return rtn;
     }
 

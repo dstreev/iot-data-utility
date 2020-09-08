@@ -52,6 +52,7 @@ public class GeoLocationField extends FieldBase<GeoLocation> {
                 rtn = pool.getItem();
             }
         }
+        setLast(rtn);
         return rtn;
     }
 }

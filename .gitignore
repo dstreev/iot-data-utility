@@ -33,4 +33,5 @@ log
 full_data_files
 
 
-
+# Testcase output.
+/main/main.csv

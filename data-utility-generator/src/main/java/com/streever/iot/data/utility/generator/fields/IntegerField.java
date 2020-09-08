@@ -33,9 +33,10 @@ public class IntegerField extends FieldBase<Integer> {
         return true;
     }
 
-
     @Override
     public Integer getNext() {
-        return (Integer)range.getMin() + randomizer.nextInt((Integer)getDiff());
+        Integer rtn = (Integer) range.getMin() + randomizer.nextInt((Integer) getDiff());
+        setLast(rtn);
+        return rtn;
     }
 }

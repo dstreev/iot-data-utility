@@ -16,10 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @JsonIgnoreProperties({"orderedFields", "parent", "id", "keyMap", "valueMap"})
 public class Record implements Comparable<Record> {
@@ -158,6 +155,13 @@ public class Record implements Comparable<Record> {
                 for (FieldBase field : fields) {
                     if (field.getName().equals(searchFieldName[0])) {
                         orderedFields.put(fieldName, field);
+                        if (searchFieldName.length > 1) {
+                            field.setMaintainState(true);
+                            if (field.getRepeat() > 1) {
+                                throw new RuntimeException("Field: " + field.getName() + " with Ordering: " +
+                                        fieldName + " is set for 'repeat' AND with 'state' (like start/stop).  This isn't supported");
+                            }
+                        }
                         found = Boolean.TRUE;
                         break;
                     }
@@ -216,32 +220,55 @@ public class Record implements Comparable<Record> {
             valueMap.putAll(parentKeys);
         }
 
-        StringBuilder sb = new StringBuilder();
+        // TODO: Stuck HERE.  Need to deal with maintained state, order, and repeat.
+        Map<String, FieldProperties> fieldNextValues = new TreeMap<String, FieldProperties>();
+        for (FieldBase field : fields) {
+//            if (field.getRepeat() > 1) {
+//                for (int i=1;i<field.getRepeat();i++) {
+//                    String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
+//                    FieldProperties fp = field.getFieldProperties(repeater);
+//                    fieldNextValues.put(fp, field.getNext());
+//                }
+//            } else {
+            Object value = field.getNext();
+            FieldProperties fp = field.getFieldProperties();
+            fieldNextValues.put(field.getName(), fp);
+//            }
+        }
+
         Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
 
         Map<String, Object> keys = null;
 
         while (iFieldKeys.hasNext()) {
             String iFieldKey = iFieldKeys.next();
-            FieldBase fbase = orderedFields.get(iFieldKey);
-            if (fbase.getRepeat() == 1) {
-                Object value = fbase.getNext();
-                if (keyFields != null && keyFields.contains(fbase.getName())) {
-                    keyMap.put(fbase.getFieldProperties(null), value);
+
+//            FieldBase fbase = orderedFields.get(iFieldKey);
+            String[] fieldNameParts = iFieldKey.split("\\.");
+            String state = (fieldNameParts.length > 1 ? fieldNameParts[1] : null);
+            // Get the FieldProperties from the Map.
+            FieldProperties fp = fieldNextValues.get(fieldNameParts[0]);
+            if (fp.getField().isMaintainState()) {
+                if (state != null) {
+                    // State items shouldn't be keys.
+                    FieldProperties stateFp = new FieldProperties(iFieldKey, fp.getField());
+                    valueMap.put(stateFp, fp.getField().getNextStateValue(state));
+                } else {
+                    // Shouldn't happen.
                 }
-                valueMap.put(fbase.getFieldProperties(null), value);
-            } else {
-                for (int i = 0; i < fbase.getRepeat(); i++) {
-                    Object value = fbase.getNext();
-                    // Pad field number
+            } else if (fp.getField().getRepeat() > 1) {
+                for (int i = 1; i < fp.getField().getRepeat(); i++) {
                     String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
-                    // If it's a key field, add it to the keymap
-                    if (keyFields != null && keyFields.contains(fbase.getName())) {
-                        keyMap.put(fbase.getFieldProperties(repeater), value);
-                    }
-                    valueMap.put(fbase.getFieldProperties(repeater), value);
+                    FieldProperties repeatFp = new FieldProperties(fieldNameParts[0] + "_" + repeater, fp.getField());
+                    valueMap.put(repeatFp, fp.getField().getNext());
                 }
+            } else {
+                if (keyFields != null && keyFields.contains(fp.getName())) {
+                    keyMap.put(fp, fp.getField().getLast());
+                }
+                valueMap.put(fp, fp.getField().getLast());
             }
+
         }
 
         if (controlFieldInt != null && controlFieldInt.terminate()) {

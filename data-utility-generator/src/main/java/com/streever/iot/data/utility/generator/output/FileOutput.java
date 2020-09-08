@@ -2,29 +2,54 @@ package com.streever.iot.data.utility.generator.output;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.streever.iot.data.utility.generator.Record;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 
+//import java.io.*;
 import java.io.*;
 import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
 @JsonIgnoreProperties({"writeStream"})
 public abstract class FileOutput extends OutputBase {
+
+    public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
+    private static final String[] HADOOP_CONF_FILES = {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
+
     private final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
     private DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
-    private enum UniqueType { TIMESTAMP, UUID };
+
+    private enum UniqueType {TIMESTAMP, UUID}
+
+    ;
+
+    private enum TargetFilesystem {
+        /*
+        Local Filesystem
+         */
+        LOCAL,
+        /*
+        Hadoop Compatible File System
+         */
+        HCFS
+    }
+
+    ;
     private String filename;
     // Build sub-directories for the relationships
+    private TargetFilesystem targetFilesystem = TargetFilesystem.LOCAL;
     private boolean dirForRelationship = true;
     // Control if output files are unique.
     private boolean unique = false;
     // Control unique TS format for output files.
     private String uniqueTimestampFormat = DEFAULT_TS_FORMAT;
     private UniqueType uniqueType = UniqueType.TIMESTAMP;
-    private PrintStream writeStream;
+    private OutputStream writeStream;
 
     protected abstract String getExtension();
 
@@ -34,6 +59,14 @@ public abstract class FileOutput extends OutputBase {
 
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public TargetFilesystem getTargetFilesystem() {
+        return targetFilesystem;
+    }
+
+    public void setTargetFilesystem(TargetFilesystem targetFilesystem) {
+        this.targetFilesystem = targetFilesystem;
     }
 
     public boolean isDirForRelationship() {
@@ -69,7 +102,7 @@ public abstract class FileOutput extends OutputBase {
         df = new SimpleDateFormat(this.uniqueTimestampFormat);
     }
 
-    protected PrintStream getWriteStream() {
+    protected OutputStream getWriteStream() {
         return writeStream;
     }
 
@@ -77,10 +110,151 @@ public abstract class FileOutput extends OutputBase {
         filename = record.getId();
     }
 
+    protected boolean createDir(String directory) {
+        switch (targetFilesystem) {
+            case LOCAL:
+                File dirFile = new File(directory);
+                if (!dirFile.exists()) {
+                    System.out.println("LOCAL Filesystem: Creating directory [" + directory + "] for output");
+                    dirFile.mkdirs();
+                }
+                break;
+            case HCFS:
+                // Relative Directories will be calculated from the users hdfs home directory.
+
+                break;
+        }
+        // TODO: handle failures to createdir
+        return true;
+    }
+
+    protected void writeLine(String line) throws IOException {
+        switch (targetFilesystem) {
+            case LOCAL:
+                //            getWriteStream().println(recLine);
+                ((PrintStream) writeStream).println(line);
+                break;
+            case HCFS:
+                byte buffer[] = new byte[256];
+//                try {
+                // Add newline
+                String newLine = line + "\n";
+                int bytesRead = newLine.length();
+
+//                    while ((bytesRead = in.read(buffer)) > 0) {
+                ((FSDataOutputStream) writeStream).write(newLine.getBytes(), 0, bytesRead);
+//                    }
+//                } catch (IOException e) {
+//                    System.out.println("Error while copying file");
+//                } finally {
+//                    in.close();
+//                    out.close();
+//                }
+
+                break;
+        }
+    }
+
+    protected void openStream(String file) throws IOException {
+        switch (targetFilesystem) {
+            case LOCAL:
+                //            getWriteStream().println(recLine);
+                writeStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)), true);
+                break;
+            case HCFS:
+                FileSystem fs = getFileSystem();
+                Path writeFile = new Path(file);
+                if (fs.exists(writeFile)) {
+                    System.out.println("Input file not found");
+                    throw new IOException("Input file not found");
+                }
+                writeStream = fs.create(writeFile);
+                break;
+        }
+                /*
+                 try {
+      FileSystem fs = FileSystem.get(conf);
+      // Hadoop DFS Path - Input & Output file
+      Path inFile = new Path(args[0]);
+      Path outFile = new Path(args[1]);
+      // Verification
+      if (!fs.exists(inFile)) {
+        System.out.println("Input file not found");
+        throw new IOException("Input file not found");
+      }
+      if (fs.exists(outFile)) {
+        System.out.println("Output file already exists");
+        throw new IOException("Output file already exists");
+      }
+
+      // open and read from file
+      FSDataInputStream in = fs.open(inFile);
+      // Create file to write
+      FSDataOutputStream out = fs.create(outFile);
+
+      byte buffer[] = new byte[256];
+      try {
+        int bytesRead = 0;
+        while ((bytesRead = in.read(buffer)) > 0) {
+          out.write(buffer, 0, bytesRead);
+          }
+      } catch (IOException e) {
+        System.out.println("Error while copying file");
+      } finally {
+        in.close();
+        out.close();
+      }
+                 */
+
+    }
+
+    protected FileSystem getFileSystem() {
+        // Get a value that over rides the default, if nothing then use default.
+        String hadoopConfDirProp = System.getenv().getOrDefault(HADOOP_CONF_DIR, "/etc/hadoop/conf");
+
+        // Set a default
+        if (hadoopConfDirProp == null)
+            hadoopConfDirProp = "/etc/hadoop/conf";
+
+        Configuration config = new Configuration(true);
+
+        File hadoopConfDir = new File(hadoopConfDirProp).getAbsoluteFile();
+        for (String file : HADOOP_CONF_FILES) {
+            File f = new File(hadoopConfDir, file);
+            if (f.exists()) {
+                config.addResource(new Path(f.getAbsolutePath()));
+            }
+        }
+
+        // hadoop.security.authentication
+        if (config.get("hadoop.security.authentication", "simple").equalsIgnoreCase("kerberos")) {
+            UserGroupInformation.setConfiguration(config);
+//                env.getProperties().setProperty(CURRENT_USER_PROP, UserGroupInformation.getCurrentUser().getShortUserName());
+//                log(env, UserGroupInformation.getCurrentUser().getUserName());
+//                log(env, UserGroupInformation.getCurrentUser().getShortUserName());
+        }
+
+//            Enumeration e = env.getProperties().propertyNames();
+
+//            while (e.hasMoreElements()) {
+//                String key = (String) e.nextElement();
+//                String value = env.getProperties().getProperty(key);
+//                config.set(key, value);
+//            }
+
+        FileSystem fs = null;
+        try {
+            fs = FileSystem.get(config);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        return fs;
+    }
+
     /*
     Open a file for writing
      */
-    public boolean open(String prefix) {
+    public boolean open(String prefix) throws IOException {
         try {
             String file;
             String baseDir = null;
@@ -101,30 +275,20 @@ public abstract class FileOutput extends OutputBase {
                 } else {
                     baseDir = prefix;
                 }
-                File prefixFile = new File(baseDir);
-
-                if (!prefixFile.exists()) {
-                    System.out.println("Creating directory [" + prefixFile + "] for output");
-                    prefixFile.mkdirs();
-                }
+                createDir(baseDir);
             } else {
                 if (dirForRelationship) {
                     baseDir = getFilename();
                 }
             }
             if (baseDir != null) {
-                File baseDirFile = new File(baseDir);
-
-                if (!baseDirFile.exists()) {
-                    System.out.println("Creating directory [" + baseDirFile + "] for output");
-                    baseDirFile.mkdirs();
-                }
-
+                createDir(baseDir);
                 file = baseDir + System.getProperty("file.separator") + adjustedFilename + "." + getExtension();
             } else {
                 file = adjustedFilename + "." + getExtension();
             }
-            writeStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)), true);
+            openStream(file);
+//            writeStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)), true);
             setOpen(true);
         } catch (FileNotFoundException fnfe) {
             return false;
@@ -133,7 +297,14 @@ public abstract class FileOutput extends OutputBase {
     }
 
     public boolean close() {
-        writeStream.close();
+        switch (targetFilesystem) {
+            case LOCAL:
+                //            getWriteStream().println(recLine);
+                ((PrintStream) writeStream).close();
+                break;
+            case HCFS:
+                break;
+        }
         setOpen(false);
         return true;
     }
