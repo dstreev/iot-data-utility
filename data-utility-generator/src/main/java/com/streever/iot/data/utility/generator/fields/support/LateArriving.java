@@ -102,4 +102,12 @@ public class LateArriving {
         }
     }
 
+    @Override
+    public String toString() {
+        return "LateArriving{" +
+                "lateArrivingLapsePeriod=" + lateArrivingLapsePeriod +
+                ", lateArrivingIntervalType=" + lateArrivingIntervalType +
+                ", lateArrivingPercentage=" + lateArrivingPercentage +
+                '}';
+    }
 }

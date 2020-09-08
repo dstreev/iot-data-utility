@@ -115,6 +115,34 @@ public class Record implements Comparable<Record> {
 
     protected ObjectMapper om = new ObjectMapper();
 
+    /*
+    Use this to loop through the fields and relationships to validate the configurations.
+     */
+    public boolean validate() {
+        return validate(this);
+    }
+
+    protected boolean validate(Record record) {
+        boolean rtn = Boolean.TRUE;
+        for (FieldBase field: record.getFields()) {
+            if (!field.validate()) {
+                rtn = Boolean.FALSE;
+            }
+        }
+        if (record.getRelationships() != null) {
+            Set<String> relationships = record.getRelationships().keySet();
+            for (String relationshipKey: relationships) {
+                Relationship relationship = record.getRelationships().get(relationshipKey);
+                // TODO: Check Cardinality here, if needed...
+                // Recurse into record.
+                if (!validate(relationship.getRecord())) {
+                    rtn = Boolean.FALSE;
+                }
+            }
+        }
+        return rtn;
+    }
+
     public void setFields(List<FieldBase> fields) {
 
         this.fields = fields;

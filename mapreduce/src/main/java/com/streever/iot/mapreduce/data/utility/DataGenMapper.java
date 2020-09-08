@@ -21,6 +21,7 @@ package com.streever.iot.mapreduce.data.utility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.streever.iot.data.utility.generator.Record;
 import com.streever.iot.data.utility.generator.RecordGenerator;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import org.apache.commons.io.FilenameUtils;
@@ -45,7 +46,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     protected Boolean earlyTermination = Boolean.FALSE;
 
-    protected RecordGenerator recordGenerator;
+    protected Record record;
 
     protected void setup(Context context) {
         // Get the conf location from the job conf.
@@ -57,7 +58,8 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
                 InputStream stream = getClass().getResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE);
 
                 ObjectMapper mapper = new ObjectMapper();
-                recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(stream);
+                // TODO: Fix for Record
+                record = Record.deserialize("broken");
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -78,15 +80,17 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
                 String ext = FilenameUtils.getExtension(config);
 
                 ObjectMapper mapper = null;
-                if (ext.toUpperCase().equals(com.streever.iot.data.cli.RecordGenerator.FILE_TYPE.JSON.toString())) {
-                    mapper = new ObjectMapper();
-                } else if (ext.toUpperCase().equals(com.streever.iot.data.cli.RecordGenerator.FILE_TYPE.YAML.toString())) {
-                    mapper = new ObjectMapper(new YAMLFactory());
-                } else {
-                    throw new RuntimeException("Unknown file extension: " + ext + ".  json or yaml supported.");
-                }
+                // TODO: FIX
+                //                if (ext.toUpperCase().equals(com.streever.iot.data.cli.RecordGenerator.FILE_TYPE.JSON.toString())) {
+//                    mapper = new ObjectMapper();
+//                } else if (ext.toUpperCase().equals(com.streever.iot.data.cli.RecordGenerator.FILE_TYPE.YAML.toString())) {
+//                    mapper = new ObjectMapper(new YAMLFactory());
+//                } else {
+//                    throw new RuntimeException("Unknown file extension: " + ext + ".  json or yaml supported.");
+//                }
 
-                recordGenerator = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(fsdis.getWrappedStream());
+                // TODO: Fix for Record
+                record = Record.deserialize("broken");
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -100,19 +104,20 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     public void map(LongWritable key, NullWritable value, Context context) throws IOException, InterruptedException {
         Text record = new Text();
-        try {
+//        try {
             // Use this to quickly cycle through the remain counter,
             // even though we've reach to end because of the termination
             // event in the generator.
             if (!earlyTermination) {
-                recordGenerator.next();
-                Object k = recordGenerator.getKey();
-                Object v = recordGenerator.getValue();
-                record.set(v.toString());
-                context.write(NullWritable.get(), record);
+                // TODO: Fix
+//                recordGenerator.next();
+//                Object k = recordGenerator.getKey();
+//                Object v = recordGenerator.getValue();
+//                record.set(v.toString());
+//                context.write(NullWritable.get(), record);
             }
-        } catch (TerminateException te) {
-            earlyTermination = Boolean.TRUE;
-        }
+//        } catch (TerminateException te) {
+//            earlyTermination = Boolean.TRUE;
+//        }
     }
 }

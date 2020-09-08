@@ -3,6 +3,9 @@ package com.streever.iot.data.utility.generator.fields;
 import com.streever.iot.data.utility.generator.fields.support.GeoCircle;
 import com.streever.iot.data.utility.generator.fields.support.GeoLocation;
 import com.streever.iot.data.utility.generator.fields.support.Pool;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.util.Date;
 
 public class GeoLocationField extends FieldBase<GeoLocation> {
 
@@ -36,21 +39,29 @@ public class GeoLocationField extends FieldBase<GeoLocation> {
 
     // TODO: Build Random GeoLocation from GeoCenter
     protected GeoLocation newValue() {
-        return null;
+        throw new NotImplementedException();
+//        return null;
     }
 
     @Override
     public GeoLocation getNext() {
         GeoLocation rtn = null;
-        if (pool == null) {
-            rtn = newValue();
+        if (!isMaintainState()) {
+            if (pool == null) {
+                rtn = newValue();
+            } else {
+                if (pool != null && pool.getInitialized() == Boolean.FALSE) {
+                    buildPool();
+                }
+                if (pool != null) {
+                    rtn = pool.getItem();
+                }
+            }
         } else {
-            if (pool != null && pool.getInitialized() == Boolean.FALSE) {
-                buildPool();
-            }
-            if (pool != null) {
-                rtn = pool.getItem();
-            }
+            stateValues.clear();
+            rtn = newValue();
+            stateValues.put("lat", rtn.getLatitude());
+            stateValues.put("long", rtn.getLongitude());
         }
         setLast(rtn);
         return rtn;

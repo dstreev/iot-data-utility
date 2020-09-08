@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.streever.iot.data.utility.generator.Relationship;
-import com.streever.iot.data.utility.generator.fields.support.StartStopState;
 
 import java.util.Date;
 import java.util.Map;
@@ -43,7 +42,7 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
     private boolean key = false;
     private Integer repeat = 1;
     private String desc;
-//    private boolean number = false;
+    private boolean number = false;
     private Boolean random = Boolean.TRUE;
     protected Random randomizer = new Random(new Date().getTime());
 //    private StartStopState startStopState = StartStopState.NA;
@@ -82,14 +81,6 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
         return null;
     }
 
-//    public String getExt() {
-//        return ext;
-//    }
-//
-//    public void setExt(String ext) {
-//        this.ext = ext;
-//    }
-
     public boolean isKey() {
         return key;
     }
@@ -98,14 +89,6 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
         this.key = key;
     }
 
-//    public StartStopState getStartStopState() {
-//        return startStopState;
-//    }
-//
-//    public void setStartStopState(StartStopState startStopState) {
-//        this.startStopState = startStopState;
-//    }
-//
     public Boolean getRandom() {
         return random;
     }
@@ -133,16 +116,12 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
         this.desc = desc;
     }
 
-//    public Integer getOrder() {
-//        return order;
-//    }
-//
-//    public void setOrder(Integer order) {
-//        this.order = order;
-//    }
-
     public boolean isNumber() {
-        return false;
+        return number;
+    }
+
+    public boolean validate() {
+        return Boolean.TRUE;
     }
 
     public abstract T getNext();
@@ -170,5 +149,18 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
     @Override
     public int compareTo(FieldBase o) {
         return this.getName().compareTo(o.getName());
+    }
+
+    @Override
+    public String toString() {
+        return "FieldBase{" +
+                "name='" + name + '\'' +
+                ", maintainState=" + maintainState +
+                ", key=" + key +
+                ", repeat=" + repeat +
+                ", desc='" + desc + '\'' +
+                ", random=" + random +
+//                ", randomizer=" + randomizer +
+                '}';
     }
 }

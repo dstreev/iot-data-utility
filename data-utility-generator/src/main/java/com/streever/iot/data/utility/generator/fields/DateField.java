@@ -3,13 +3,11 @@ package com.streever.iot.data.utility.generator.fields;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.streever.iot.data.utility.generator.fields.support.LateArriving;
 import com.streever.iot.data.utility.generator.fields.support.Range;
-import com.streever.iot.data.utility.generator.fields.support.StartStopState;
-import com.streever.iot.data.utility.generator.fields.support.TimeInterval;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
 public class DateField extends FieldBase<Object> implements ControlField {
@@ -115,6 +113,22 @@ public class DateField extends FieldBase<Object> implements ControlField {
     }
 
     @Override
+    public boolean validate() {
+        boolean rtn = Boolean.TRUE;
+        if (!isMaintainState()) {
+            if (current && increment) {
+                System.err.println("'current' and 'increment' can't both be 'true' in " + toString());
+                rtn = Boolean.FALSE;
+            }
+            if (!current && !increment && range == null) {
+                System.err.println("Validation Issue: 'current' and 'increment' are FALSE and 'range' isn't defined. " + toString());
+                rtn = Boolean.FALSE;
+            }
+        }
+        return rtn;
+    }
+
+    @Override
     public boolean isNumber() {
         if (getAs() == As.STRING) {
             return false;
@@ -150,8 +164,15 @@ public class DateField extends FieldBase<Object> implements ControlField {
                 } else {
                     working = new Date(lastIssued);
                 }
+            } else if (range != null ){
+//                System.out.println("Range GAP: WIP " + toString());
+//                lastIssued = range.getMin().getTime();
+                double multiplierD = randomizer.nextDouble();
+                long incrementL = Math.round((Long) diff * multiplierD);
+                working = new Date(range.getMin().getTime() + incrementL);
             } else {
-                System.out.println("What?");
+                System.out.print("INVALID STATE " + toString());
+                throw new RuntimeException("Invalid Configuration [maintainState=false, current=false, increment=false, range=null] " + toString());
             }
         } else {
             stateValues.clear();
@@ -201,5 +222,23 @@ public class DateField extends FieldBase<Object> implements ControlField {
     @Override
     public boolean isControlField() {
         return controlField;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "->DateField{" +
+                "range=" + range +
+                ", diff=" + diff +
+                ", startStopSpan=" + startStopSpan +
+                ", format='" + format + '\'' +
+//                ", df=" + df +
+                ", increment=" + increment +
+                ", current=" + current +
+                ", lateArriving=" + lateArriving +
+                ", lastIssued=" + lastIssued +
+                ", as=" + as +
+                ", lastValue=" + lastValue +
+                ", controlField=" + controlField +
+                '}';
     }
 }

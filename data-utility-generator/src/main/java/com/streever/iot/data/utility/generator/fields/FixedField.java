@@ -13,6 +13,7 @@ public class FixedField extends FieldBase<String> {
 
     @Override
     public String getNext() {
+        setLast(value);
         return value;
     }
 }

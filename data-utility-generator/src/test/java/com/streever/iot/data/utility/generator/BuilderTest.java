@@ -2,7 +2,6 @@ package com.streever.iot.data.utility.generator;
 
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Test;
-import org.junit.experimental.theories.suppliers.TestedOn;
 
 import java.io.IOException;
 import java.util.Date;
@@ -43,6 +42,12 @@ public class BuilderTest {
         runResource("/generator_v2/one-many.yaml", 5, "/csv_unique_out.yaml");
     }
 
+//    @Test
+    // TODO: Geo Test needed once GeoLocation Field completed.
+//    public void init_geo_test_01() {
+//        runResource("/generator/geo.yaml", 5, "/csv_out.yaml");
+//    }
+
     @Test
     public void init_relationship_one_to_many_unique_alt_ts() {
         runResource("/generator_v2/one-many.yaml", 5, "/outputspec/csv_unique_alt_tsf_out.yaml");
@@ -57,8 +62,8 @@ public class BuilderTest {
             "/generator/date-as.yaml", "/generator/ip-as.yaml", "/generator/date-as-repeat.yaml", "/generator/date-increment.yaml",
             "/generator/date-late-arriving_day.yaml", "/generator/date-late-arriving_hour.yaml",
             "/generator/date-late-arriving_minute.yaml", "/generator/date-late-arriving_month.yaml",
-            "/generator/date-late-arriving_year.yaml", "/generator/date-terminate.yaml", "/generator/one.yaml",
-            "/generator/ip-as.yaml", "/generator/one.json", "/generator/record-definition.yaml",
+            "/generator/date-late-arriving_year.yaml", "/generator/date-terminate.yaml",
+            "/generator/ip-as.yaml", "/generator/record-definition.yaml",
             "/generator/ref-string.yaml", "/generator/date-start_stop.yaml", "/generator/wide-table.yaml"};
 
     // Basic Tests
@@ -66,6 +71,7 @@ public class BuilderTest {
     public void init_csv_cpr_all_01() {
         Builder builder = new Builder();
         for (String resource : cpResources) {
+            System.out.println("Processing Resource: " + resource);
             runResourceToCSV(resource, 1000);
         }
     }
@@ -81,13 +87,13 @@ public class BuilderTest {
     private String[] fileResources = {"data-utility-generator/src/schemas/file-date-as.yaml"};
 
     @Test
+    // TODO: Test fails with Maven.  It's a current path issue.
     public void init_csv_fr_all_02() {
         Builder builder = new Builder();
         for (String resource : fileResources) {
             runResourceToCSV(resource, 1000);
         }
     }
-
 
     // Exceptions Test
     private String[] cpExceptionResources = {"/bad_schemas/repeat-too-high.yaml", "/bad_schemas/ip-as.yaml",
@@ -126,13 +132,13 @@ public class BuilderTest {
 
     @Test
     public void runBuilderWithoutPrefixdir() {
-        long recordsCreated[] = {0,0};
+        long recordsCreated[] = {0, 0};
         Builder builder = new Builder();
         Record record = null;
         try {
-            record = Record.deserialize("/generator/one.yaml");
+            record = Record.deserialize("/generator/cc_account.yaml");
         } catch (IOException e) {
-            System.err.println("Processing: " + "/generator/one.yaml");
+            System.err.println("Processing: " + "/generator/cc_account.yaml");
             e.printStackTrace();
             assertTrue(false);
         }
@@ -152,7 +158,7 @@ public class BuilderTest {
 
         System.out.println("Time: " + diff + " Loops: " + recordsCreated[0]);
         System.out.println("Rate (perSec): " + perSecRate);
-        System.out.println("Records Created: " + recordsCreated[0] + ":" + recordsCreated[1] );
+        System.out.println("Records Created: " + recordsCreated[0] + ":" + recordsCreated[1]);
 
     }
 
@@ -165,7 +171,7 @@ public class BuilderTest {
     }
 
     protected long[] runResource(String resource, long count, String outputSpecResource) {
-        long recordsCreated[] = {0,0};
+        long recordsCreated[] = {0, 0};
         Builder builder = new Builder();
         Record record = null;
         try {
@@ -191,7 +197,7 @@ public class BuilderTest {
 
         System.out.println("Time: " + diff + " Loops: " + recordsCreated[0]);
         System.out.println("Rate (perSec): " + perSecRate);
-        System.out.println("Records Created: " + recordsCreated[0] + ":" + recordsCreated[1] );
+        System.out.println("Records Created: " + recordsCreated[0] + ":" + recordsCreated[1]);
         return recordsCreated;
     }
 

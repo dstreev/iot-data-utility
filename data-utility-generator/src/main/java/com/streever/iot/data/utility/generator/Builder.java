@@ -151,6 +151,9 @@ public class Builder {
         link(getRecord(), "main");
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
+        if (!validate()) {
+            throw new RuntimeException("Failed to Validate");
+        }
         initialized = true;
     }
 
@@ -161,8 +164,16 @@ public class Builder {
     - relationship map name aren't duplicated
      */
     protected boolean validate() {
-
-        return true;
+        boolean rtn = Boolean.TRUE;
+        if (this.getRecord() != null) {
+            if (!this.getRecord().validate()) {
+                rtn = Boolean.FALSE;
+            }
+        } else {
+            rtn = Boolean.FALSE;
+            System.err.println("Validation Issue: Set 'Record' in builder");
+        }
+        return rtn;
     }
 
     protected void write(Record record, Map<FieldProperties, Object> parentKeys) throws IOException {

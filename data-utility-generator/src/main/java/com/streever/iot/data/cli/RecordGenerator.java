@@ -30,31 +30,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RecordGenerator {
-    public enum FILE_TYPE {
-        JSON, YAML;
-    }
+//    public enum FILE_TYPE {
+//        JSON, YAML;
+//    }
 
     private Options options;
     private CommandLine line;
-    private Long count = 10l; // default
-    private String outputDirectory = null; // default is working dir.
-//    private String generatorConfigurationFile = null;
-//    private String outputConfigurationFile = null;
-//    private Boolean genHiveTable = Boolean.FALSE;
-//    private Boolean tsOnFile;
-//    Integer transactionCommitCount = 5000;
     Integer progressIndicatorCount = 5000;
-//    private Integer streamingDuration = null;
-//    private Integer burstCount = null;
-//    private Integer pauseMax = null;
-//    private boolean randomBurst = false;
-//    private boolean randomPause = false;
-//    private Random random = new Random(new Date().getTime());
 
-    private com.streever.iot.data.utility.generator.RecordGenerator recordGenerator = null;
-    private CSVOutput outputSpec = null;
-
-    private ProducerSpec streamingSpec = null;
 
     private void buildOptions() {
         options = new Options();
@@ -67,8 +50,6 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
-        // TODO: May adjust this as it is "file" specific.
-        //    What about Kafka?
         Option OUTPUT_PREFIX_OPTION = Option.builder("p")
                 .argName("OUTPUT_PREFIX")
                 .desc("Prefix for Output Spec.  For filesystems, this is an output directory.")
@@ -78,15 +59,6 @@ public class RecordGenerator {
                 .type(String.class)
                 .required(false)
                 .build();
-
-//        Option dOutput = Option.builder("d")
-//                .argName("directory")
-//                .desc("Output Directory")
-//                .hasArg(true)
-//                .numberOfArgs(1)
-//                .type(String.class)
-//                .required(false)
-//                .build();
 
         Option SCHEMA_CONFIG_OPTION = Option.builder("s")
                 .argName("SCHEMA_CONFIG_FILE")

@@ -1,21 +1,13 @@
 package com.streever.iot.data.utility.generator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.streever.iot.data.utility.generator.fields.*;
-import com.streever.iot.data.utility.generator.fields.support.StartStopState;
+import com.streever.iot.data.utility.generator.fields.ControlField;
+import com.streever.iot.data.utility.generator.fields.FieldBase;
+import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.CSVOutput;
-//import com.streever.iot.data.utility.generator.output.OutputFormat;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang3.ClassUtils;
 
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.*;
 
 @JsonIgnoreProperties({"orderedFields"})

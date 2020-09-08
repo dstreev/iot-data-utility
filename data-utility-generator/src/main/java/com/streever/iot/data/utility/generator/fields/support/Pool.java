@@ -42,4 +42,13 @@ public class Pool<T> {
         rtn = items.get((int) (getItems().size() * multiplier));
         return rtn;
     }
+
+    @Override
+    public String toString() {
+        return "Pool{" +
+                "size=" + size +
+                ", initialized=" + initialized +
+//                ", items=" + items +
+                '}';
+    }
 }

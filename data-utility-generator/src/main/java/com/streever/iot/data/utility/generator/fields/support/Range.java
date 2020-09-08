@@ -29,4 +29,11 @@ public class Range<T> {
         this.max = max;
     }
 
+    @Override
+    public String toString() {
+        return "Range{" +
+                "min=" + min +
+                ", max=" + max +
+                '}';
+    }
 }
