@@ -16,32 +16,30 @@
     </modules>
 
     <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
         <hadoop.version>3.1.1</hadoop.version>
-        <hbase.version>2.0.2</hbase.version>
+        <hbase.version>2.2.3</hbase.version>
         <jcabi.manifests.version>1.1</jcabi.manifests.version>
 
         <kafka.client.version>2.0.0</kafka.client.version>
 
-        <storm.version>0.9.1</storm.version>
-
-        <pig.version>0.12.1</pig.version>
-
         <junit.version>4.12</junit.version>
 
-        <jaxen.version>1.1.4</jaxen.version>
-        <jline.version>0.9.94</jline.version>
+<!--        <jaxen.version>1.1.4</jaxen.version>-->
+        <jline.version>2.5</jline.version>
         <slf4j.version>1.7.6</slf4j.version>
 
-        <jdom.version>2.0.5</jdom.version>
+<!--        <jdom.version>2.0.5</jdom.version>-->
         
 
         <jackson.json.version>2.9.5</jackson.json.version>
         <jackson.yaml.version>2.9.5</jackson.yaml.version>
 
-        <apache.commons.io.version>2.5</apache.commons.io.version>
+        <apache.commons.io.version>2.4</apache.commons.io.version>
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
         <apache.commons.cli.version>1.4</apache.commons.cli.version>

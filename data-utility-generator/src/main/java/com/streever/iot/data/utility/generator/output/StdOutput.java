@@ -46,8 +46,9 @@ public class StdOutput extends OutputBase {
     }
 
     @Override
-    public void write(Map<FieldProperties, Object> record) {
+    public long write(Map<FieldProperties, Object> record) {
         String line = null;
+        long rtn = 0;
         switch (format) {
             case csv:
                 line = CSVOutput.getLine(record, "\"", ",");
@@ -59,6 +60,7 @@ public class StdOutput extends OutputBase {
         if (prefix) {
             line = getName() + "-->" + line;
         }
+        rtn = line.length();
         switch (std) {
             case out:
                 System.out.println(line);
@@ -67,6 +69,7 @@ public class StdOutput extends OutputBase {
                 System.err.println(line);
                 break;
         }
+        return rtn;
     }
 
     @Override

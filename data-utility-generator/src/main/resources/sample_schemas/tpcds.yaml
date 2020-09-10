@@ -1,0 +1,10 @@
+title: "TPCDS"
+description: "TPCDS Dataset"
+order:
+  - ...
+keyFields:
+  - ...
+fields:
+
+relationships:
+  ...:

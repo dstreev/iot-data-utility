@@ -30,18 +30,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RecordGenerator {
-//    public enum FILE_TYPE {
-//        JSON, YAML;
-//    }
 
     private Options options;
     private CommandLine line;
-    Integer progressIndicatorCount = 5000;
-
 
     private void buildOptions() {
         options = new Options();
 
+//        Option HELP_OPTION = new Option("h", "help", false, "Help");
         Option HELP_OPTION = Option.builder("h")
                 .argName("help")
                 .desc("This Help")
@@ -50,6 +46,9 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
+//        Option OUTPUT_PREFIX_OPTION = new Option("p", "prefix", true,
+//                "Prefix for Output Spec.  For filesystems, this is an output directory.");
+//        OUTPUT_PREFIX_OPTION.setRequired(false);
         Option OUTPUT_PREFIX_OPTION = Option.builder("p")
                 .argName("OUTPUT_PREFIX")
                 .desc("Prefix for Output Spec.  For filesystems, this is an output directory.")
@@ -60,16 +59,24 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
-        Option SCHEMA_CONFIG_OPTION = Option.builder("s")
+//        Option SCHEMA_CONFIG_OPTION = new Option("s", "schema", true,
+//                "Schema File.");
+//        SCHEMA_CONFIG_OPTION.setRequired(true);
+//        SCHEMA_CONFIG_OPTION.setType(String.class);
+        Option SCHEMA_CONFIG_OPTION = Option.builder("cfg")
                 .argName("SCHEMA_CONFIG_FILE")
                 .desc("Schema Filename")
-                .longOpt("schema")
+                .longOpt("schema-cfg")
                 .hasArg(true)
                 .numberOfArgs(1)
                 .type(String.class)
                 .required(true)
                 .build();
 
+//        Option COUNT_OPTION = new Option("c", "count", true,
+//                "Record count.");
+//        COUNT_OPTION.setRequired(false);
+//        COUNT_OPTION.setType(Long.class);
         Option COUNT_OPTION = Option.builder("c")
                 .argName("COUNT")
                 .desc("Record Count")
@@ -80,6 +87,21 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
+        Option SIZE_OPTION = Option.builder("s")
+                .argName("SIZE")
+                .desc("Record(s) Size")
+                .longOpt("size")
+                .hasArg(true)
+                .numberOfArgs(1)
+                .type(Long.class)
+                .required(false)
+                .build();
+
+
+//        Option OUTPUT_CONFIG_OPTION = new Option("o", "output", true,
+//                "Output Configuration.");
+//        OUTPUT_CONFIG_OPTION.setRequired(false);
+//        OUTPUT_CONFIG_OPTION.setType(String.class);
         Option OUTPUT_CONFIG_OPTION = Option.builder("o")
                 .argName("OUTPUT_CONFIG_FILE")
                 .longOpt("output")
@@ -90,6 +112,10 @@ public class RecordGenerator {
                 .required(false)
                 .build();
 
+//        Option STD_OPTION = new Option("std", "std", false,
+//                "STD Output.");
+//        STD_OPTION.setRequired(false);
+//        STD_OPTION.setType(String.class);
         Option STD_OPTION = Option.builder("std")
                 .argName("std")
                 .longOpt("std")
@@ -98,6 +124,11 @@ public class RecordGenerator {
                 .type(String.class)
                 .required(false)
                 .build();
+
+//        Option CSV_OPTION = new Option("csv", "csv", false,
+//                "CSV Output.");
+//        CSV_OPTION.setRequired(false);
+//        CSV_OPTION.setType(String.class);
         Option CSV_OPTION = Option.builder("csv")
                 .argName("csv")
                 .longOpt("csv")
@@ -106,6 +137,11 @@ public class RecordGenerator {
                 .type(String.class)
                 .required(false)
                 .build();
+
+//        Option JSON_OPTION = new Option("json", "json", false,
+//                "JSON Output.");
+//        JSON_OPTION.setRequired(false);
+//        JSON_OPTION.setType(String.class);
         Option JSON_OPTION = Option.builder("json")
                 .argName("json")
                 .longOpt("json")
@@ -157,6 +193,13 @@ public class RecordGenerator {
                 .build();
         */
 
+        Option DEBUG_OPTION = new Option("debug", "debug", false,
+                "Debug.  Pause to allow remote jvm attachment.");
+        DEBUG_OPTION.setRequired(false);
+
+//        Option GEN_HIVE_SCHEMA_OPTION = new Option("hive", "hive", false,
+//                "Generate Hive Table.");
+//        GEN_HIVE_SCHEMA_OPTION.setRequired(false);
         Option GEN_HIVE_SCHEMA_OPTION = Option.builder("hive")
                 .argName("HIVE_TABLE")
                 .desc("Generate Hive Table")
@@ -182,6 +225,8 @@ public class RecordGenerator {
 //        options.addOption(TIMESTAMP_OPTION);
 
         options.addOption(COUNT_OPTION);
+        options.addOption(SIZE_OPTION);
+        options.addOption(DEBUG_OPTION);
 
 //        options.addOption(BURST_MAX_OPTION);
 //        options.addOption(STREAMING_DURATION_OPTION);
@@ -201,11 +246,12 @@ public class RecordGenerator {
         boolean rtn = true;
         buildOptions();
 
-        CommandLineParser clParser = new DefaultParser();
+        CommandLineParser parser = new PosixParser();
+//        CommandLineParser parser = new DefaultParser();
 //        CommandLine line = null;
 
         try {
-            line = clParser.parse(options, args, true);
+            line = parser.parse(options, args, true);
         } catch (ParseException pe) {
             printUsage("Missing Required Elements");
             return false;
@@ -215,10 +261,8 @@ public class RecordGenerator {
             printUsage("HELP");
             return false;
         }
-
         return rtn;
     }
-
 
     public int run(String[] args) throws IOException {
         int rtn = 0;
@@ -226,11 +270,19 @@ public class RecordGenerator {
         if (!checkUsage(args)) {
             rtn = -1;
         } else {
+            if (line.hasOption("debug")) {
+                Scanner sc = new Scanner(System.in);
+                System.out.println("Attached Remote Debugger <enter to proceed>");
+                sc.nextLine();
+            }
             Builder builder = new Builder();
-            Record record = Record.deserialize(line.getOptionValue("s"));
+            Record record = Record.deserialize(line.getOptionValue("cfg"));
             builder.setRecord(record);
             if (line.hasOption("c")) {
                 builder.setCount(Long.valueOf(line.getOptionValue("c")));
+            }
+            if (line.hasOption("s")) {
+                builder.setSize(Long.valueOf(line.getOptionValue("s")));
             }
             if (line.hasOption("o")) {
                 OutputSpec outputSpec = OutputSpec.deserialize(line.getOptionValue("o"));

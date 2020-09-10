@@ -29,12 +29,12 @@ public class BuilderTest {
 
     @Test
     public void init_csv_07() {
-        runResourceToCSV("/generator_v2/array.yaml", 1000);
+        runResourceToCSV("/generator_v2/array.yaml", 100000);
     }
 
     @Test
     public void init_relationship_one_to_many() {
-        runResourceToCSV("/generator_v2/one-many.yaml", 5);
+        runResourceToCSV("/generator_v2/one-many.yaml", 100000, 10000000);
     }
 
     @Test
@@ -56,6 +56,11 @@ public class BuilderTest {
     @Test
     public void init_relationship_one_to_many_unique_uuid() {
         runResource("/generator_v2/one-many.yaml", 5, "/outputspec/csv_unique_uuid_out.yaml");
+    }
+
+    @Test
+    public void to_hcfs_001 () {
+        runResourceToHCFS("/generator_v2/one-many.yaml", 5);
     }
 
     private String[] cpResources = {"/generator/array.yaml", "/generator/cc_trans.yaml", "/generator/cc_account.yaml",
@@ -84,7 +89,7 @@ public class BuilderTest {
         }
     }
 
-    private String[] fileResources = {"data-utility-generator/src/schemas/file-date-as.yaml"};
+    private String[] fileResources = {"src/schemas/file-date-as.yaml"};
 
     @Test
     // TODO: Test fails with Maven.  It's a current path issue.
@@ -170,6 +175,14 @@ public class BuilderTest {
 
     }
 
+    protected long[] runResourceToHCFS(String resource, long count) {
+        return runResource(resource, count, "/csv_hcfs_out.yaml");
+    }
+
+    protected long[] runResourceToCSV(String resource, long count, long size) {
+        return runResource(resource, count, size, "/csv_out.yaml");
+    }
+
     protected long[] runResourceToCSV(String resource, long count) {
         return runResource(resource, count, "/csv_out.yaml");
     }
@@ -179,6 +192,10 @@ public class BuilderTest {
     }
 
     protected long[] runResource(String resource, long count, String outputSpecResource) {
+        return runResource(resource, count, -1l, outputSpecResource);
+    }
+
+    protected long[] runResource(String resource, long count, long size, String outputSpecResource) {
         long recordsCreated[] = {0, 0};
         Builder builder = new Builder();
         Record record = null;
@@ -198,6 +215,7 @@ public class BuilderTest {
         String filename = FilenameUtils.getName(resource);
         builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
         builder.setCount(count);
+        builder.setSize(size);
         builder.init();
         Date start = new Date();
         recordsCreated = builder.run();

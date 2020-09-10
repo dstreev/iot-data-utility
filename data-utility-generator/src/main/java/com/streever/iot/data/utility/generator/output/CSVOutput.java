@@ -61,13 +61,16 @@ public class CSVOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldProperties, Object> record) throws IOException {
+    public long write(Map<FieldProperties, Object> record) throws IOException {
+        long rtn = 0;
         if (isOpen()) {
             String recLine = getLine(record, getQuoteChar(), getSeparator());
+            rtn = recLine.length() + 1;
             writeLine(recLine);
         } else {
             // TODO: Throw not open exception.
         }
+        return rtn;
     }
 
     @Override

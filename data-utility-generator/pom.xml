@@ -128,18 +128,25 @@
         </dependency-->
 
         <!-- Misc. -->
-        <dependency>
-            <groupId>org.jdom</groupId>
-            <artifactId>jdom2</artifactId>
-            <version>${jdom.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.jdom</groupId>-->
+<!--            <artifactId>jdom2</artifactId>-->
+<!--            <version>${jdom.version}</version>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>jline</groupId>
-            <artifactId>jline</artifactId>
-            <version>${jline.version}</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.sonatype.jline</groupId>-->
+<!--            <artifactId>jline</artifactId>-->
+<!--            <version>${jline.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>jline</groupId>-->
+<!--            <artifactId>jline</artifactId>-->
+<!--            <version>${jline.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
 
         <!-- Jackson JSON Libraries -->
         <dependency>
@@ -257,12 +264,12 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <artifactSet>
-                                <excludes>
-                                    <!--<exclude>org.apache.kafka:*</exclude>-->
-                                    <exclude>org.scala-lang:scala-library:*</exclude>
-                                </excludes>
-                            </artifactSet>
+<!--                            <artifactSet>-->
+<!--                                <excludes>-->
+<!--                                    &lt;!&ndash;<exclude>org.apache.kafka:*</exclude>&ndash;&gt;-->
+<!--                                    <exclude>org.scala-lang:scala-library:*</exclude>-->
+<!--                                </excludes>-->
+<!--                            </artifactSet>-->
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">

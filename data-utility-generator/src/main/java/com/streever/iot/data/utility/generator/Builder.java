@@ -19,6 +19,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Builder {
     private boolean initialized = false;
     private long count = 10; // default if not specified.
+    private long size = -1; // default size output limit. -1 = no check
+    Integer progressIndicatorCount = 5000;
     private Record record;
     // Added to the Output when it's opened.
     private String outputPrefix;
@@ -33,6 +35,14 @@ public class Builder {
 
     public void setCount(long count) {
         this.count = count;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
     }
 
     public Record getRecord() {
@@ -179,10 +189,10 @@ public class Builder {
         return rtn;
     }
 
-    protected void write(Record record, Map<FieldProperties, Object> parentKeys) throws IOException {
+    protected long write(Record record, Map<FieldProperties, Object> parentKeys) throws IOException {
         Output output = this.outputMap.get(record);
         // The last generated recordset
-        output.write(record.getValueMap());
+        return output.write(record.getValueMap());
     }
 
     protected void openOutput() throws IOException {
@@ -195,7 +205,7 @@ public class Builder {
         }
     }
 
-    protected void closeOutput() {
+    protected void closeOutput() throws IOException {
         Set<Record> outputKeys = outputMap.keySet();
         for (Record record : outputKeys) {
             outputMap.get(record).close();
@@ -210,31 +220,54 @@ public class Builder {
         if (!initialized) {
             throw new RuntimeException("Builder was not initialized. Call init() before run().");
         }
-        long lclCount[] = new long[2];
-        lclCount[0] = count;
+        // 0 for counts
+        // 1 for size
+        long runStatus[] = new long[2];
+        long localCount = count;
+        long localSize = size;
         try {
             openOutput();
-            while (lclCount[0] > 0) {
+            do {
+//            while (localCount > 0) {
                 getRecord().next(null);
-                write(getRecord(), null);
-                lclCount[1] += writeRelationships(getRecord().getRelationships(), getRecord().getKeyMap());
-
-                lclCount[0]--;
-            }
+                long lsize = write(getRecord(), null);
+                runStatus[1] += lsize;
+                if (localSize != -1)
+                    localSize -= lsize;
+                runStatus[0]++;
+                long[] rStatus = writeRelationships(getRecord().getRelationships(), getRecord().getKeyMap());
+                runStatus[0] += rStatus[0];
+                runStatus[1] += rStatus[1];
+                if (localCount != -1)
+                    localCount--;
+                if (localSize != -1)
+                    localSize -= rStatus[1];
+                if (localCount % progressIndicatorCount == 0) {
+                    System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
+                }
+            } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
         } catch (TerminateException te) {
-            System.out.println("Terminate Exception Raised after " + (count - lclCount[0]) + " records");
+            System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
         } catch (IOException ioe) {
             System.err.println("Issue Writing to file");
             ioe.printStackTrace();
         } finally {
-            closeOutput();
+            try {
+                closeOutput();
+                System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
+            } catch (IOException e) {
+                // TODO: Handle ioexception
+                e.printStackTrace();
+            }
         }
-        lclCount[0] = count - lclCount[0];
-        return lclCount;
+//        runStatus[0] = count - runStatus[0];
+        return runStatus;
     }
 
-    protected long writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
-        long count = 0;
+    protected long[] writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
+        // status[0] for counts
+        // status[1] for size
+        long[] status = {0,0};
         if (relationships != null) {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {
@@ -248,18 +281,24 @@ public class Builder {
                         // Assume 1-1 relationship.
                         rRecord.next(parentKeys);
                         write(rRecord, parentKeys);
-                        count++;
+                        status[0]++;
                         // Recurse into hierarchy
-                        count += writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                        long[] rStatus;
+                        rStatus = writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                        status[0] += rStatus[0];
+                        status[1] += rStatus[1];
                     } else {
                         // Assume min to max relationship.
                         int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
                         for (int i=relationship.getCardinality().getMin();i<rNum;i++) {
                             rRecord.next(parentKeys);
-                            write(rRecord, parentKeys);
-                            count++;
+                            status[1] += write(rRecord, parentKeys);
+                            status[0]++;
                             // Recurse into hierarchy
-                            count += writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                            long[] rStatus;
+                            rStatus = writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                            status[0] += rStatus[0];
+                            status[1] += rStatus[1];
                         }
                     }
                 } catch (TerminateException | IOException te) {
@@ -267,7 +306,7 @@ public class Builder {
                 }
             }
         }
-        return count;
+        return status;
     }
 
 }

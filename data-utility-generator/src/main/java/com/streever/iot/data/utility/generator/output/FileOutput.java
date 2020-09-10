@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-@JsonIgnoreProperties({"writeStream"})
+@JsonIgnoreProperties({"writeStream", "fileSystem"})
 public abstract class FileOutput extends OutputBase {
 
     public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
@@ -23,6 +23,8 @@ public abstract class FileOutput extends OutputBase {
 
     private final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
     private DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
+
+    private FileSystem fileSystem;
 
     private enum UniqueType {TIMESTAMP, UUID}
 
@@ -59,6 +61,10 @@ public abstract class FileOutput extends OutputBase {
 
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public void setFileSystem(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
     }
 
     public TargetFilesystem getTargetFilesystem() {
@@ -110,22 +116,33 @@ public abstract class FileOutput extends OutputBase {
         filename = record.getId();
     }
 
-    protected boolean createDir(String directory) {
+    protected boolean createDir(String directory) throws IOException {
+        boolean rtn = false;
         switch (targetFilesystem) {
             case LOCAL:
                 File dirFile = new File(directory);
                 if (!dirFile.exists()) {
                     System.out.println("LOCAL Filesystem: Creating directory [" + directory + "] for output");
-                    dirFile.mkdirs();
+                    rtn = dirFile.mkdirs();
+                } else {
+                    // Already exists
+                    rtn = true;
                 }
                 break;
             case HCFS:
                 // Relative Directories will be calculated from the users hdfs home directory.
-
+                FileSystem fs = getFileSystem();
+                Path dirPath = new Path("/user/dstreev/"+directory);
+                if (!fs.exists(dirPath)) {
+                    rtn = fs.mkdirs(dirPath);
+                } else {
+                    // Already exists
+                    rtn = true;
+                }
                 break;
         }
         // TODO: handle failures to createdir
-        return true;
+        return rtn;
     }
 
     protected void writeLine(String line) throws IOException {
@@ -165,10 +182,11 @@ public abstract class FileOutput extends OutputBase {
                 FileSystem fs = getFileSystem();
                 Path writeFile = new Path(file);
                 if (fs.exists(writeFile)) {
-                    System.out.println("Input file not found");
-                    throw new IOException("Input file not found");
+                    System.out.println("Output file [" + file + "] already exists");
+                    throw new IOException("Output file [" + file + "] already exists");
+                } else {
+                    writeStream = fs.create(writeFile);
                 }
-                writeStream = fs.create(writeFile);
                 break;
         }
                 /*
@@ -208,47 +226,40 @@ public abstract class FileOutput extends OutputBase {
 
     }
 
-    protected FileSystem getFileSystem() {
-        // Get a value that over rides the default, if nothing then use default.
-        String hadoopConfDirProp = System.getenv().getOrDefault(HADOOP_CONF_DIR, "/etc/hadoop/conf");
+    protected FileSystem getFileSystem() throws IOException {
+        if (fileSystem == null) {
+            // Get a value that over rides the default, if nothing then use default.
+            String hadoopConfDirProp = System.getenv().getOrDefault(HADOOP_CONF_DIR, "/etc/hadoop/conf");
 
-        // Set a default
-        if (hadoopConfDirProp == null)
-            hadoopConfDirProp = "/etc/hadoop/conf";
+            // Set a default
+            if (hadoopConfDirProp == null)
+                hadoopConfDirProp = "/etc/hadoop/conf";
 
-        Configuration config = new Configuration(true);
+            System.out.println("Using '" + hadoopConfDirProp + "' for HDFS Configurations");
 
-        File hadoopConfDir = new File(hadoopConfDirProp).getAbsoluteFile();
-        for (String file : HADOOP_CONF_FILES) {
-            File f = new File(hadoopConfDir, file);
-            if (f.exists()) {
-                config.addResource(new Path(f.getAbsolutePath()));
+            Configuration config = new Configuration(true);
+
+            File hadoopConfDir = new File(hadoopConfDirProp).getAbsoluteFile();
+            for (String file : HADOOP_CONF_FILES) {
+                File f = new File(hadoopConfDir, file);
+                if (f.exists()) {
+                    System.out.println("Found '" + file + "' in conf directory.  Added as configuration resource.");
+                    config.addResource(new Path(f.getAbsolutePath()));
+                }
+            }
+
+            // hadoop.security.authentication
+            if (config.get("hadoop.security.authentication", "simple").equalsIgnoreCase("kerberos")) {
+                UserGroupInformation.setConfiguration(config);
+                System.out.println("Kerberos Connection.  User: [" + UserGroupInformation.getCurrentUser().getShortUserName() + "]");
+            }
+            try {
+                fileSystem = FileSystem.get(config);
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
         }
-
-        // hadoop.security.authentication
-        if (config.get("hadoop.security.authentication", "simple").equalsIgnoreCase("kerberos")) {
-            UserGroupInformation.setConfiguration(config);
-//                env.getProperties().setProperty(CURRENT_USER_PROP, UserGroupInformation.getCurrentUser().getShortUserName());
-//                log(env, UserGroupInformation.getCurrentUser().getUserName());
-//                log(env, UserGroupInformation.getCurrentUser().getShortUserName());
-        }
-
-//            Enumeration e = env.getProperties().propertyNames();
-
-//            while (e.hasMoreElements()) {
-//                String key = (String) e.nextElement();
-//                String value = env.getProperties().getProperty(key);
-//                config.set(key, value);
-//            }
-
-        FileSystem fs = null;
-        try {
-            fs = FileSystem.get(config);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-        return fs;
+        return fileSystem;
     }
 
     /*
@@ -287,7 +298,8 @@ public abstract class FileOutput extends OutputBase {
             } else {
                 file = adjustedFilename + "." + getExtension();
             }
-            openStream(file);
+            String fullFile = file;
+            openStream(fullFile);
 //            writeStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)), true);
             setOpen(true);
         } catch (FileNotFoundException fnfe) {
@@ -296,16 +308,19 @@ public abstract class FileOutput extends OutputBase {
         return true;
     }
 
-    public boolean close() {
-        switch (targetFilesystem) {
-            case LOCAL:
-                //            getWriteStream().println(recLine);
-                ((PrintStream) writeStream).close();
-                break;
-            case HCFS:
-                break;
+    public boolean close() throws IOException {
+        if (isOpen()) {
+            switch (targetFilesystem) {
+                case LOCAL:
+                    //            getWriteStream().println(recLine);
+                    ((PrintStream) writeStream).close();
+                    break;
+                case HCFS:
+                    ((FSDataOutputStream) writeStream).close();
+                    break;
+            }
+            setOpen(false);
         }
-        setOpen(false);
         return true;
     }
 

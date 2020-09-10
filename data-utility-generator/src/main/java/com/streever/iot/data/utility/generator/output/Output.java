@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface Output {
     void link(Record record);
-    void write(Map<FieldProperties, Object> record) throws IOException;
+    long write(Map<FieldProperties, Object> record) throws IOException;
     boolean open(String prefix) throws IOException;
-    boolean close();
+    boolean close() throws IOException;
 }

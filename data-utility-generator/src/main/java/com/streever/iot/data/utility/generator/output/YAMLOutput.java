@@ -6,7 +6,7 @@ import com.streever.iot.data.utility.generator.fields.FieldProperties;
 
 import java.util.Map;
 
-public class YAMLOutput extends FileOutput {
+public class YAMLOutput extends JSONOutput {
 
     @Override
     protected String getExtension() {
@@ -14,8 +14,8 @@ public class YAMLOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldProperties, Object> record) {
-
+    public long write(Map<FieldProperties, Object> record) {
+        return 0;
     }
 
     @Override

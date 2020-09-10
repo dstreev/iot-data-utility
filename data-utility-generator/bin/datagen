@@ -2,6 +2,7 @@
 
 APP_DIR=`dirname $0`
 CURR_DIR=`pwd`
+REMOTE_DEBUG=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
 
 if [[ -f ./datagen && "${APP_DIR}" != "${CURR_DIR}" && "${APP_DIR}" != "." ]]; then
   echo "Appears you are referencing a previously installed 'datagen' while "
@@ -28,7 +29,7 @@ else
         CMD_CP=/usr/local/datagen/lib/data-utility-generator-shaded.jar
         #echo "Using bin from installation directory"
     else
-        echo "Couldn't locate Hadoop Cli Library"
+        echo "Couldn't locate 'Data Utility Generator' Library"
         exit 1
     fi
 fi
@@ -42,6 +43,7 @@ SHOW_CP=
 CMD_DIRECTIVE=
 CMD_ARGS=
 VERBOSE=
+REMOTE_DEBUG=
 
 if [[ ! -d ${AUX_LIBS_DIR} ]]; then
     mkdir -p ${AUX_LIBS_DIR}
@@ -57,6 +59,11 @@ while [[ $# -gt 0 ]]; do
     --show-cp)
       shift
       SHOW_CP="true"
+      ;;
+    --debug)
+      shift
+      REMOTE_DEBUG=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+      PRG_ARGS="${PRG_ARGS} --debug"
       ;;
     *)
       PRG_ARGS="${PRG_ARGS} $@"
@@ -84,6 +91,6 @@ if [[ "${SHOW_CP}x" != "x" ]]; then
     echo "Classpath: ${CMD_CP}"
 fi
 
-CLI_CMD="${CLI_CMD}java -cp ${CMD_CP} com.streever.iot.data.cli.RecordGenerator ${PRG_ARGS}"
+CLI_CMD="${CLI_CMD}java -cp ${CMD_CP} ${REMOTE_DEBUG} com.streever.iot.data.cli.RecordGenerator ${PRG_ARGS}"
 
 eval "${CLI_CMD}"

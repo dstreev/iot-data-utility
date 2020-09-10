@@ -12,12 +12,12 @@ cp -f datagen /usr/local/datagen/bin
 # Cleanup previous installation
 rm -f /usr/local/datagen/lib/*.jar
 
-if [ -f ../target/datagen-full-bin.jar ]; then
-    cp -f ../target/datagen-full-bin.jar /usr/local/datagen/lib
+if [ -f ../target/data-utility-generator-shaded.jar ]; then
+    cp -f ../target/data-utility-generator-shaded.jar /usr/local/datagen/lib
 fi
 
-if [ -f datagen-full-bin.jar ]; then
-    cp -f datagen-full-bin.jar /usr/local/datagen/lib
+if [ -f data-utility-generator-shaded.jar ]; then
+    cp -f data-utility-generator-shaded.jar /usr/local/datagen/lib
 fi
 
 chmod -R +r /usr/local/datagen

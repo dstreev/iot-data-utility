@@ -83,13 +83,16 @@ public class JSONOutput extends FileOutput {
     }
 
     @Override
-    public void write(Map<FieldProperties, Object> record) throws IOException {
+    public long write(Map<FieldProperties, Object> record) throws IOException {
+        long rtn = 0;
         if (isOpen()) {
             String line = getLine(record);
+            rtn = line.length() + 1;
             writeLine(line);
         } else {
             // TODO: Throw not open exception.
         }
+        return rtn;
     }
 
     @Override
