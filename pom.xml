@@ -9,45 +9,46 @@
     <name>IOT Data Utilities</name>
 
     <modules>
-        <module>kafka.integration</module>
+<!--        <module>kafka.integration</module>-->
         <module>data-utility-generator</module>
-        <module>mapreduce</module>
-        <module>testing.spark</module>
+<!--        <module>mapreduce</module>-->
+<!--        <module>testing.spark</module>-->
     </modules>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Maven Pluggins -->
+        <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
+        <maven.compiler.version>3.8.1</maven.compiler.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.clean.version>3.1.0</maven.clean.version>
+        <maven.resources.version>3.0.2</maven.resources.version>
+        <maven.surefire.version>2.22.1</maven.surefire.version>
+        <maven.jar.version>3.0.2</maven.jar.version>
+        <maven.install.version>2.5.2</maven.install.version>
+        <maven.deploy.version>2.8.2</maven.deploy.version>
+        <maven.site.version>3.7.1</maven.site.version>
+        <maven.reports.version>3.0.0</maven.reports.version>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
+        <maven.assembly.version>3.3.0</maven.assembly.version>
+        <maven.dependency.version>3.1.2</maven.dependency.version>
 
-        <hadoop.version>3.1.1</hadoop.version>
-        <hbase.version>2.2.3</hbase.version>
         <jcabi.manifests.version>1.1</jcabi.manifests.version>
-
-        <kafka.client.version>2.0.0</kafka.client.version>
 
         <junit.version>4.12</junit.version>
 
-<!--        <jaxen.version>1.1.4</jaxen.version>-->
         <jline.version>2.5</jline.version>
         <slf4j.version>1.7.6</slf4j.version>
-
-<!--        <jdom.version>2.0.5</jdom.version>-->
-        
-
-        <jackson.json.version>2.9.5</jackson.json.version>
-        <jackson.yaml.version>2.9.5</jackson.yaml.version>
 
         <apache.commons.io.version>2.4</apache.commons.io.version>
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
-        <apache.commons.cli.version>1.4</apache.commons.cli.version>
+        <!-- Need to be in sync with Hadoop Libs (1.2) -->
+<!--        <apache.commons.cli.version>1.2</apache.commons.cli.version>-->
         <apache.commons.codec.version>1.11</apache.commons.codec.version>
         <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
-
-        <kafka.artifact>kafka-clients</kafka.artifact>
-        <kafka.version>2.0.0</kafka.version>
     </properties>
 
     <dependencies>
@@ -57,40 +58,63 @@
             <version>${jcabi.manifests.version}</version>
         </dependency>
     </dependencies>
-    <!--repositories>
-        <repository>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
-            <id>HDPReleases</id>
-            <name>HDP Releases</name>
-            <url>http://repo.hortonworks.com/content/repositories/releases/</url>
-            <layout>default</layout>
-        </repository>
-    </repositories-->
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven.clean.version}</version>
+                </plugin>
+                <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven.resources.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven.install.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven.deploy.version}</version>
+                </plugin>
+                <!--            site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle-->
+                <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${maven.site.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>${maven.reports.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven.shade.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven.assembly.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven.jar.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
-<!--            <plugin>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <version>2.3.2</version>-->
-<!--                <configuration>-->
-<!--                    <source>1.6</source>-->
-<!--                    <target>1.6</target>-->
-<!--                    <encoding>UTF-8</encoding>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -105,7 +129,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
@@ -125,58 +148,12 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
-
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-shade-plugin</artifactId>-->
-<!--                <version>3.2.1</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>shade</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <shadedArtifactAttached>true</shadedArtifactAttached>-->
-<!--                            <filters>-->
-<!--                                <filter>-->
-<!--                                    <artifact>*:*</artifact>-->
-<!--                                    <excludes>-->
-<!--                                        <exclude>META-INF/*.SF</exclude>-->
-<!--                                        <exclude>META-INF/*.RSA</exclude>-->
-<!--                                        <exclude>META-INF/*.INF</exclude>-->
-<!--                                        <exclude>META-INF/**/pom.xml</exclude>-->
-<!--                                    </excludes>-->
-<!--                                </filter>-->
-<!--                            </filters>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-
-            <!--plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptor>src/main/assembly/assembly.xml</descriptor>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin-->
-
         </plugins>
     </build>
 

@@ -132,7 +132,7 @@ public abstract class FileOutput extends OutputBase {
             case HCFS:
                 // Relative Directories will be calculated from the users hdfs home directory.
                 FileSystem fs = getFileSystem();
-                Path dirPath = new Path("/user/dstreev/"+directory);
+                Path dirPath = new Path(directory);
                 if (!fs.exists(dirPath)) {
                     rtn = fs.mkdirs(dirPath);
                 } else {

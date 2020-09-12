@@ -22,6 +22,7 @@
   -->
 
 <assembly>
+    <id>dist</id>
     <formats>
         <format>tar.gz</format>
     </formats>

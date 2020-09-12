@@ -1,31 +1,13 @@
 package com.streever.iot.data.cli;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-//import com.streever.iot.data.utility.generator.Child;
-//import com.streever.iot.data.utility.generator.Record;
 import com.jcabi.manifests.Manifests;
 import com.streever.iot.data.utility.generator.Builder;
 import com.streever.iot.data.utility.generator.OutputSpec;
 import com.streever.iot.data.utility.generator.Record;
-import com.streever.iot.data.utility.generator.fields.TerminateException;
-import com.streever.iot.data.utility.generator.output.CSVOutput;
-import com.streever.iot.data.utility.generator.output.OutputBase;
-import com.streever.iot.kafka.producer.KafkaProducerConfig;
-import com.streever.iot.kafka.producer.ProducerCreator;
-import com.streever.iot.kafka.spec.ProducerSpec;
 import org.apache.commons.cli.*;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.kafka.clients.producer.Producer;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,119 +19,123 @@ public class RecordGenerator {
     private void buildOptions() {
         options = new Options();
 
-//        Option HELP_OPTION = new Option("h", "help", false, "Help");
-        Option HELP_OPTION = Option.builder("h")
-                .argName("help")
-                .desc("This Help")
-                .longOpt("help")
-                .hasArg(false)
-                .required(false)
-                .build();
+        Option HELP_OPTION = new Option("h", "help", false, "Help");
+//        Option HELP_OPTION = Option.builder("h")
+//                .argName("help")
+//                .desc("This Help")
+//                .longOpt("help")
+//                .hasArg(false)
+//                .required(false)
+//                .build();
 
-//        Option OUTPUT_PREFIX_OPTION = new Option("p", "prefix", true,
-//                "Prefix for Output Spec.  For filesystems, this is an output directory.");
-//        OUTPUT_PREFIX_OPTION.setRequired(false);
-        Option OUTPUT_PREFIX_OPTION = Option.builder("p")
-                .argName("OUTPUT_PREFIX")
-                .desc("Prefix for Output Spec.  For filesystems, this is an output directory.")
-                .longOpt("prefix")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(false)
-                .build();
+        Option OUTPUT_PREFIX_OPTION = new Option("p", "prefix", true,
+                "Prefix for Output Spec.  For filesystems, this is an output directory.");
+        OUTPUT_PREFIX_OPTION.setRequired(false);
+//        Option OUTPUT_PREFIX_OPTION = Option.builder("p")
+//                .argName("OUTPUT_PREFIX")
+//                .desc("Prefix for Output Spec.  For filesystems, this is an output directory.")
+//                .longOpt("prefix")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(String.class)
+//                .required(false)
+//                .build();
 
-//        Option SCHEMA_CONFIG_OPTION = new Option("s", "schema", true,
-//                "Schema File.");
-//        SCHEMA_CONFIG_OPTION.setRequired(true);
-//        SCHEMA_CONFIG_OPTION.setType(String.class);
-        Option SCHEMA_CONFIG_OPTION = Option.builder("cfg")
-                .argName("SCHEMA_CONFIG_FILE")
-                .desc("Schema Filename")
-                .longOpt("schema-cfg")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(true)
-                .build();
+        Option SCHEMA_CONFIG_OPTION = new Option("cfg", "cfg", true,
+                "Schema Config File.");
+        SCHEMA_CONFIG_OPTION.setRequired(true);
+        SCHEMA_CONFIG_OPTION.setType(String.class);
+//        Option SCHEMA_CONFIG_OPTION = Option.builder("cfg")
+//                .argName("SCHEMA_CONFIG_FILE")
+//                .desc("Schema Filename")
+//                .longOpt("schema-cfg")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(String.class)
+//                .required(true)
+//                .build();
 
-//        Option COUNT_OPTION = new Option("c", "count", true,
-//                "Record count.");
-//        COUNT_OPTION.setRequired(false);
-//        COUNT_OPTION.setType(Long.class);
-        Option COUNT_OPTION = Option.builder("c")
-                .argName("COUNT")
-                .desc("Record Count")
-                .longOpt("count")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(Long.class)
-                .required(false)
-                .build();
+        Option COUNT_OPTION = new Option("c", "count", true,
+                "Record count.");
+        COUNT_OPTION.setRequired(false);
+        COUNT_OPTION.setType(Long.class);
+//        Option COUNT_OPTION = Option.builder("c")
+//                .argName("COUNT")
+//                .desc("Record Count")
+//                .longOpt("count")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(Long.class)
+//                .required(false)
+//                .build();
 
-        Option SIZE_OPTION = Option.builder("s")
-                .argName("SIZE")
-                .desc("Record(s) Size")
-                .longOpt("size")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(Long.class)
-                .required(false)
-                .build();
+        Option SIZE_OPTION = new Option("s", "size", true,
+                "Output size.");
+        SIZE_OPTION.setRequired(false);
+        SIZE_OPTION.setType(Long.class);
+//        Option SIZE_OPTION = Option.builder("s")
+//                .argName("SIZE")
+//                .desc("Output Size")
+//                .longOpt("size")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(Long.class)
+//                .required(false)
+//                .build();
 
 
-//        Option OUTPUT_CONFIG_OPTION = new Option("o", "output", true,
-//                "Output Configuration.");
-//        OUTPUT_CONFIG_OPTION.setRequired(false);
-//        OUTPUT_CONFIG_OPTION.setType(String.class);
-        Option OUTPUT_CONFIG_OPTION = Option.builder("o")
-                .argName("OUTPUT_CONFIG_FILE")
-                .longOpt("output")
-                .desc("Output Configuration")
-                .hasArg(true)
-                .numberOfArgs(1)
-                .type(String.class)
-                .required(false)
-                .build();
+        Option OUTPUT_CONFIG_OPTION = new Option("o", "output", true,
+                "Output Configuration.");
+        OUTPUT_CONFIG_OPTION.setRequired(false);
+        OUTPUT_CONFIG_OPTION.setType(String.class);
+//        Option OUTPUT_CONFIG_OPTION = Option.builder("o")
+//                .argName("OUTPUT_CONFIG_FILE")
+//                .longOpt("output")
+//                .desc("Output Configuration")
+//                .hasArg(true)
+//                .numberOfArgs(1)
+//                .type(String.class)
+//                .required(false)
+//                .build();
 
-//        Option STD_OPTION = new Option("std", "std", false,
-//                "STD Output.");
-//        STD_OPTION.setRequired(false);
-//        STD_OPTION.setType(String.class);
-        Option STD_OPTION = Option.builder("std")
-                .argName("std")
-                .longOpt("std")
-                .desc("STD Output")
-                .hasArg(false)
-                .type(String.class)
-                .required(false)
-                .build();
+        Option STD_OPTION = new Option("std", "std", false,
+                "STD Output.");
+        STD_OPTION.setRequired(false);
+        STD_OPTION.setType(String.class);
+//        Option STD_OPTION = Option.builder("std")
+//                .argName("std")
+//                .longOpt("std")
+//                .desc("STD Output")
+//                .hasArg(false)
+//                .type(String.class)
+//                .required(false)
+//                .build();
 
-//        Option CSV_OPTION = new Option("csv", "csv", false,
-//                "CSV Output.");
-//        CSV_OPTION.setRequired(false);
-//        CSV_OPTION.setType(String.class);
-        Option CSV_OPTION = Option.builder("csv")
-                .argName("csv")
-                .longOpt("csv")
-                .desc("CSV Output")
-                .hasArg(false)
-                .type(String.class)
-                .required(false)
-                .build();
+        Option CSV_OPTION = new Option("csv", "csv", false,
+                "CSV Output.");
+        CSV_OPTION.setRequired(false);
+        CSV_OPTION.setType(String.class);
+//        Option CSV_OPTION = Option.builder("csv")
+//                .argName("csv")
+//                .longOpt("csv")
+//                .desc("CSV Output")
+//                .hasArg(false)
+//                .type(String.class)
+//                .required(false)
+//                .build();
 
-//        Option JSON_OPTION = new Option("json", "json", false,
-//                "JSON Output.");
-//        JSON_OPTION.setRequired(false);
-//        JSON_OPTION.setType(String.class);
-        Option JSON_OPTION = Option.builder("json")
-                .argName("json")
-                .longOpt("json")
-                .desc("json Output")
-                .hasArg(false)
-                .type(String.class)
-                .required(false)
-                .build();
+        Option JSON_OPTION = new Option("json", "json", false,
+                "JSON Output.");
+        JSON_OPTION.setRequired(false);
+        JSON_OPTION.setType(String.class);
+//        Option JSON_OPTION = Option.builder("json")
+//                .argName("json")
+//                .longOpt("json")
+//                .desc("json Output")
+//                .hasArg(false)
+//                .type(String.class)
+//                .required(false)
+//                .build();
 
         /* MOVE ALL THIS TO THE OUTPUT SPEC
         Option STREAMING_DURATION_OPTION = Option.builder("sd")
@@ -197,15 +183,15 @@ public class RecordGenerator {
                 "Debug.  Pause to allow remote jvm attachment.");
         DEBUG_OPTION.setRequired(false);
 
-//        Option GEN_HIVE_SCHEMA_OPTION = new Option("hive", "hive", false,
-//                "Generate Hive Table.");
-//        GEN_HIVE_SCHEMA_OPTION.setRequired(false);
-        Option GEN_HIVE_SCHEMA_OPTION = Option.builder("hive")
-                .argName("HIVE_TABLE")
-                .desc("Generate Hive Table")
-                .longOpt("gen-hive-schema")
-                .required(false)
-                .build();
+        Option GEN_HIVE_SCHEMA_OPTION = new Option("hive", "hive", false,
+                "Generate Hive Table.");
+        GEN_HIVE_SCHEMA_OPTION.setRequired(false);
+//        Option GEN_HIVE_SCHEMA_OPTION = Option.builder("hive")
+//                .argName("HIVE_TABLE")
+//                .desc("Generate Hive Table")
+//                .longOpt("gen-hive-schema")
+//                .required(false)
+//                .build();
 
         OptionGroup outputGroup = new OptionGroup();
         outputGroup.setRequired(false);
