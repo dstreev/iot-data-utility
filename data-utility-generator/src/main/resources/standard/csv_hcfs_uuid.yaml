@@ -1,0 +1,6 @@
+default:
+  type: "csv"
+  dirForRelationship: true
+  targetFilesystem: LOCAL
+  unique: true
+  uniqueType: UUID

@@ -1,8 +1,10 @@
 package com.streever.iot.data.utility.generator;
 
 import org.apache.commons.io.FilenameUtils;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
@@ -10,7 +12,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class BuilderTest {
-    private String BASE_OUTPUT_DIR = "data-utility-generator/target/testcases/";
+    String BASE_OUTPUT_DIR = null;
+
+    @Before
+    public void setUp() throws Exception {
+        BASE_OUTPUT_DIR = System.getProperty("user.home") + System.getProperty("file.separator") + "DATAGEN_JUNIT";
+        File bd = new File(BASE_OUTPUT_DIR);
+        if (!bd.exists()) {
+            bd.mkdirs();
+        }
+    }
+
 
     @Test
     public void init_01() {
@@ -39,7 +51,7 @@ public class BuilderTest {
 
     @Test
     public void init_relationship_one_to_many_unique() {
-        runResource("/generator_v2/one-many.yaml", 5, "/csv_unique_out.yaml");
+        runResource("/generator_v2/one-many.yaml", 5, "/standard/csv_local_ts.yaml");
     }
 
 //    @Test
@@ -156,7 +168,7 @@ public class BuilderTest {
             assertTrue(false);
         }
         builder.setRecord(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/csv_out.yaml");
+        OutputSpec outputSpec = OutputSpec.deserialize("/standard/csv_std.yaml");
         builder.setOutputSpec(outputSpec);
         // Strip off path.
 //        String filename = FilenameUtils.getName(resource);
@@ -176,19 +188,19 @@ public class BuilderTest {
     }
 
     protected long[] runResourceToHCFS(String resource, long count) {
-        return runResource(resource, count, "/csv_hcfs_out.yaml");
+        return runResource(resource, count, "/standard/json_hcfs.yaml");
     }
 
     protected long[] runResourceToCSV(String resource, long count, long size) {
-        return runResource(resource, count, size, "/csv_out.yaml");
+        return runResource(resource, count, size, "/standard/csv_std.yaml");
     }
 
     protected long[] runResourceToCSV(String resource, long count) {
-        return runResource(resource, count, "/csv_out.yaml");
+        return runResource(resource, count, "/standard/csv_std.yaml");
     }
 
     protected long[] runResourceToJson(String resource, long count) {
-        return runResource(resource, count, "/json_out.yaml");
+        return runResource(resource, count, "/standard/json_std.yaml");
     }
 
     protected long[] runResource(String resource, long count, String outputSpecResource) {

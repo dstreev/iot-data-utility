@@ -1,0 +1,6 @@
+default:
+  type: "json"
+  dirForRelationship: true
+  targetFilesystem: HCFS
+  unique: true
+  uniqueType: UUID

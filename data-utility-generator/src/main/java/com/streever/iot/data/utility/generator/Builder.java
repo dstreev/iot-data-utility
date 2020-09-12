@@ -1,6 +1,5 @@
 package com.streever.iot.data.utility.generator;
 
-import com.streever.iot.data.utility.generator.fields.FieldBase;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.FileOutput;
@@ -18,7 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Builder {
     private boolean initialized = false;
-    private long count = 10; // default if not specified.
+    private long count = -1; // default if not specified.
     private long size = -1; // default size output limit. -1 = no check
     Integer progressIndicatorCount = 5000;
     private Record record;
@@ -64,7 +63,7 @@ public class Builder {
     public OutputSpec getOutputSpec() {
         if (outputSpec == null) {
             // Load Default.
-            outputSpec = OutputSpec.deserialize("/default_out.yaml");
+            outputSpec = OutputSpec.deserialize("/standard/csv_std.yaml");
             System.out.println("Loading default output spec (System.out)");
         }
         return outputSpec;
@@ -227,6 +226,7 @@ public class Builder {
         long localSize = size;
         try {
             openOutput();
+            long loop = 0;
             do {
 //            while (localCount > 0) {
                 getRecord().next(null);
@@ -242,9 +242,10 @@ public class Builder {
                     localCount--;
                 if (localSize != -1)
                     localSize -= rStatus[1];
-                if (localCount % progressIndicatorCount == 0) {
-                    System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
+                if (loop % progressIndicatorCount == 0) {
+                    System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
                 }
+                loop++;
             } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
         } catch (TerminateException te) {
             System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");

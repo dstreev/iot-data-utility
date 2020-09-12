@@ -1,0 +1,4 @@
+default:
+  type: "json"
+  dirForRelationship: true
+  targetFilesystem: LOCAL

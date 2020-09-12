@@ -1,8 +1,8 @@
 default:
-  type: "stdout"
+  type: "std"
 relationships:
   acct:
-    type: "stdout"
+    type: "std"
   address:
-    type: "stdout"
+    type: "std"
 #    filename: "addr.json"

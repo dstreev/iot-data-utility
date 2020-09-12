@@ -1,3 +1,4 @@
 default:
   type: "json"
   dirForRelationship: true
+  targetFilesystem: "HCFS"
