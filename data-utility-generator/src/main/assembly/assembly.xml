@@ -47,7 +47,7 @@
         <fileSet>
             <directory>${project.basedir}/target</directory>
             <includes>
-                <include>*full-bin.jar</include>
+                <include>*shaded.jar</include>
             </includes>
             <outputDirectory>datagen</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>

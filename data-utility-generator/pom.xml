@@ -43,8 +43,8 @@
 
         <!--dependency>
             <groupId>com.streever.hadoop</groupId>
-            <artifactId>hadoop.cli</artifactId>
-            <version>${hadoop.cli.version}</version>
+            <artifactId>hadoop-cli</artifactId>
+            <version>${hadoop-cli.version}</version>
         </dependency-->
 
         <dependency>
