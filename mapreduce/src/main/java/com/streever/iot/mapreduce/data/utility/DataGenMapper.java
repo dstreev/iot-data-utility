@@ -20,10 +20,7 @@ package com.streever.iot.mapreduce.data.utility;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.streever.iot.data.utility.generator.Record;
-import com.streever.iot.data.utility.generator.RecordGenerator;
-import com.streever.iot.data.utility.generator.fields.TerminateException;
+import com.streever.iot.data.utility.generator.Schema;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,7 +43,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     protected Boolean earlyTermination = Boolean.FALSE;
 
-    protected Record record;
+    protected Schema record;
 
     protected void setup(Context context) {
         // Get the conf location from the job conf.
@@ -59,7 +56,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
                 ObjectMapper mapper = new ObjectMapper();
                 // TODO: Fix for Record
-                record = Record.deserialize("broken");
+                record = Schema.deserialize("broken");
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -90,7 +87,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 //                }
 
                 // TODO: Fix for Record
-                record = Record.deserialize("broken");
+                record = Schema.deserialize("broken");
 
             } catch (IOException e) {
                 e.printStackTrace();

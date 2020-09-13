@@ -1,17 +1,10 @@
 package com.streever.iot.data.utility.generator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
@@ -25,7 +18,7 @@ public class RecordTest {
     @Test
     public void loadTest_001() {
         try {
-            Record r1 = Record.deserialize("/generator_v2/cc_account_with_relationships.yaml");
+            Schema r1 = Schema.deserialize("/generator_v2/cc_account_with_relationships.yaml");
         } catch (IOException e) {
             assertTrue(false);
         }
@@ -34,9 +27,9 @@ public class RecordTest {
 
     @Test
     public void recordTest_001() {
-        Record record = null;
+        Schema record = null;
         try {
-            record = Record.deserialize("/generator_v2/cc_account.yaml");
+            record = Schema.deserialize("/generator_v2/cc_account.yaml");
         } catch (IOException e) {
             assertTrue(false);
         }

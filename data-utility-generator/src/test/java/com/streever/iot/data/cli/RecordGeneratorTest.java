@@ -69,11 +69,12 @@ public class RecordGeneratorTest {
         String[] options = {"-csv", "-local", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", BASE_DIR, "-uuid"};
         doIt(options);
     }
-    @Test
-    public void test_006_01() {
-        String[] options = {"-csv", "-hcfs", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", "s3a://dstreev-cdp/datagen_001", "-uuid"};
-        doIt(options);
-    }
+
+//    @Test
+//    public void test_006_01() {
+//        String[] options = {"-csv", "-hcfs", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", "s3a://dstreev-cdp/datagen_001", "-uuid"};
+//        doIt(options);
+//    }
 
     @Test
     public void test_007() {

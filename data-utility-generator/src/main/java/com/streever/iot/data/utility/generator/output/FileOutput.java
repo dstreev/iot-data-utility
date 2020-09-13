@@ -1,7 +1,7 @@
 package com.streever.iot.data.utility.generator.output;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.streever.iot.data.utility.generator.Record;
+import com.streever.iot.data.utility.generator.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,7 +112,7 @@ public abstract class FileOutput extends OutputBase {
         return writeStream;
     }
 
-    public void link(Record record) {
+    public void link(Schema record) {
         filename = record.getId();
     }
 

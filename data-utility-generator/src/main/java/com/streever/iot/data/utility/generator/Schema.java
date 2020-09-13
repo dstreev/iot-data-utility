@@ -19,11 +19,11 @@ import java.net.URL;
 import java.util.*;
 
 @JsonIgnoreProperties({"orderedFields", "parent", "id", "keyMap", "valueMap"})
-public class Record implements Comparable<Record> {
+public class Schema implements Comparable<Schema> {
     private String id;
     private String title;
     private String description;
-    private Record parent;
+    private Schema parent;
 
     public String getId() {
         return id;
@@ -33,11 +33,11 @@ public class Record implements Comparable<Record> {
         this.id = id;
     }
 
-    public Record getParent() {
+    public Schema getParent() {
         return parent;
     }
 
-    public void setParent(Record parent) {
+    public void setParent(Schema parent) {
         this.parent = parent;
     }
 
@@ -122,7 +122,7 @@ public class Record implements Comparable<Record> {
         return validate(this);
     }
 
-    protected boolean validate(Record record) {
+    protected boolean validate(Schema record) {
         boolean rtn = Boolean.TRUE;
         for (FieldBase field: record.getFields()) {
             if (!field.validate()) {
@@ -309,7 +309,7 @@ public class Record implements Comparable<Record> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Record record = (Record) o;
+        Schema record = (Schema) o;
 
         return id != null ? id.equals(record.id) : record.id == null;
     }
@@ -320,12 +320,12 @@ public class Record implements Comparable<Record> {
     }
 
     @Override
-    public int compareTo(Record o) {
+    public int compareTo(Schema o) {
         return this.getId().compareTo(o.getId());
     }
 
-    public static Record deserialize(String configResource) throws IOException, JsonMappingException {
-        Record recDef = null;
+    public static Schema deserialize(String configResource) throws IOException, JsonMappingException {
+        Schema recDef = null;
 //        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
 //        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
 //        String methodName = et.getMethodName();
@@ -347,13 +347,13 @@ public class Record implements Comparable<Record> {
         if (configURL != null) {
             // Convert to String.
             String configDefinition = IOUtils.toString(configURL, "UTF-8");
-            recDef = mapper.readerFor(Record.class).readValue(configDefinition);
+            recDef = mapper.readerFor(Schema.class).readValue(configDefinition);
         } else {
             // Try on Local FileSystem.
             configURL = new URL("file", null, configResource);
             if (configURL != null) {
                 String configDefinition = IOUtils.toString(configURL, "UTF-8");
-                recDef = mapper.readerFor(Record.class).readValue(configDefinition);
+                recDef = mapper.readerFor(Schema.class).readValue(configDefinition);
             } else {
                 throw new RuntimeException("Couldn't locate 'Serialized Record File': " + configResource);
             }

@@ -1,6 +1,6 @@
 package com.streever.iot.data.utility.generator.output;
 
-import com.streever.iot.data.utility.generator.Record;
+import com.streever.iot.data.utility.generator.Schema;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 
 import java.util.Map;
@@ -41,7 +41,7 @@ public class StdOutput extends OutputBase {
     }
 
     @Override
-    public void link(Record record) {
+    public void link(Schema record) {
         // Nothing needed.
     }
 

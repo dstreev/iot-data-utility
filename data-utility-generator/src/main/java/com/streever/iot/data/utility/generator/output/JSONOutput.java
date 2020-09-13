@@ -5,13 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.streever.iot.data.utility.generator.Record;
-import com.streever.iot.data.utility.generator.fields.FieldBase;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.ReferenceField;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

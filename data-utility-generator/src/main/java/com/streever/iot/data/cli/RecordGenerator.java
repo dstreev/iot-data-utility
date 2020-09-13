@@ -1,9 +1,10 @@
 package com.streever.iot.data.cli;
 
 import com.jcabi.manifests.Manifests;
-import com.streever.iot.data.utility.generator.Builder;
+import com.streever.iot.data.utility.generator.RecordBuilder;
 import com.streever.iot.data.utility.generator.OutputSpec;
-import com.streever.iot.data.utility.generator.Record;
+import com.streever.iot.data.utility.generator.Schema;
+import com.streever.iot.data.utility.generator.SqlBuilder;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 
@@ -93,15 +94,15 @@ public class RecordGenerator {
                 "Debug.  Pause to allow remote jvm attachment.");
         DEBUG_OPTION.setRequired(false);
 
-        Option GEN_HIVE_SCHEMA_OPTION = new Option("hive", "hive", false,
+        Option GEN_SQL_SCHEMA_OPTION = new Option("sql", "sql", true,
                 "Generate Hive Table.");
-        GEN_HIVE_SCHEMA_OPTION.setRequired(false);
+        GEN_SQL_SCHEMA_OPTION.setRequired(false);
 
         OptionGroup outputGroup = new OptionGroup();
         outputGroup.setRequired(false);
 
         outputGroup.addOption(OUTPUT_CONFIG_OPTION);
-        outputGroup.addOption(GEN_HIVE_SCHEMA_OPTION);
+        outputGroup.addOption(GEN_SQL_SCHEMA_OPTION);
         outputGroup.addOption(STD_OPTION);
         outputGroup.addOption(HCFS_OPTION);
         outputGroup.addOption(LOCAL_OPTION);
@@ -170,70 +171,75 @@ public class RecordGenerator {
                 System.out.println("Attached Remote Debugger <enter to proceed>");
                 sc.nextLine();
             }
-            Builder builder = new Builder();
-            Record record = Record.deserialize(line.getOptionValue("s"));
-            builder.setRecord(record);
+            if (line.hasOption("sql")) {
+                SqlBuilder sBuilder = new SqlBuilder();
+                Schema schema = Schema.deserialize(line.getOptionValue("s"));
+                sBuilder.setSchema(schema);
+                sBuilder.build();
 
-            if (line.hasOption("c")) {
-                builder.setCount(Long.valueOf(line.getOptionValue("c")));
-            } else if (line.hasOption("mb")) {
-                Long mb = Long.valueOf(line.getOptionValue("mb")) * (1024*1024);
-                builder.setSize(mb);
-            } else if (line.hasOption("gb")) {
-                Long gb = Long.valueOf(line.getOptionValue("gb")) * (1024*1024*1024);
-                builder.setSize(gb);
-            }
-
-            // Use the supplied ouput spec
-            if (line.hasOption("o")) {
-                OutputSpec outputSpec = OutputSpec.deserialize(line.getOptionValue("o"));
-                builder.setOutputSpec(outputSpec);
             } else {
-                // or build the reference based in flags.
-                String[] specOutput = new String[2];
-                if (line.hasOption("csv")) {
-                    specOutput[0] = "csv";
-                }
-                if (line.hasOption("json")) {
-                    specOutput[0] = "json";
-                }
-                if (line.hasOption("std")) {
-                    specOutput[1] = "std";
-                }
-                if (line.hasOption("local")) {
-                    specOutput[1] = "local";
-                }
-                if (line.hasOption("hcfs")) {
-                    specOutput[1] = "hcfs";
+                RecordBuilder builder = new RecordBuilder();
+                Schema record = Schema.deserialize(line.getOptionValue("s"));
+                builder.setSchema(record);
+
+                if (line.hasOption("c")) {
+                    builder.setCount(Long.valueOf(line.getOptionValue("c")));
+                } else if (line.hasOption("mb")) {
+                    Long mb = Long.valueOf(line.getOptionValue("mb")) * (1024 * 1024);
+                    builder.setSize(mb);
+                } else if (line.hasOption("gb")) {
+                    Long gb = Long.valueOf(line.getOptionValue("gb")) * (1024 * 1024 * 1024);
+                    builder.setSize(gb);
                 }
 
-                String specFile = null;
-                if (specOutput[0] != null && specOutput[1] != null) {
-                    specFile = specOutput[0] + "_" + specOutput[1];
-                } else if (specOutput[0] != null && specOutput[1] == null) {
-                    specFile = specOutput[0] + "_std";
-                } else if (specOutput[0] == null && specOutput[1] != null) {
-                    specFile = "csv_" + specOutput[1];
+                // Use the supplied ouput spec
+                if (line.hasOption("o")) {
+                    OutputSpec outputSpec = OutputSpec.deserialize(line.getOptionValue("o"));
+                    builder.setOutputSpec(outputSpec);
                 } else {
-                    specFile = "csv_std";
+                    // or build the reference based in flags.
+                    String[] specOutput = new String[2];
+                    if (line.hasOption("csv")) {
+                        specOutput[0] = "csv";
+                    }
+                    if (line.hasOption("json")) {
+                        specOutput[0] = "json";
+                    }
+                    if (line.hasOption("std")) {
+                        specOutput[1] = "std";
+                    }
+                    if (line.hasOption("local")) {
+                        specOutput[1] = "local";
+                    }
+                    if (line.hasOption("hcfs")) {
+                        specOutput[1] = "hcfs";
+                    }
+
+                    String specFile = null;
+                    if (specOutput[0] != null && specOutput[1] != null) {
+                        specFile = specOutput[0] + "_" + specOutput[1];
+                    } else if (specOutput[0] != null && specOutput[1] == null) {
+                        specFile = specOutput[0] + "_std";
+                    } else if (specOutput[0] == null && specOutput[1] != null) {
+                        specFile = "csv_" + specOutput[1];
+                    } else {
+                        specFile = "csv_std";
+                    }
+
+                    if (!line.hasOption("std") && line.hasOption("ts")) {
+                        specFile = specFile + "_ts";
+                    } else if (!line.hasOption("std") && line.hasOption("uuid")) {
+                        specFile = specFile + "_uuid";
+                    }
+                    OutputSpec outputSpec = OutputSpec.deserialize("/standard/" + specFile + ".yaml");
+                    builder.setOutputSpec(outputSpec);
                 }
-
-                if (!line.hasOption("std") && line.hasOption("ts")) {
-                    specFile = specFile + "_ts";
-                } else if (!line.hasOption("std") && line.hasOption("uuid")) {
-                    specFile = specFile + "_uuid";
+                if (line.hasOption("p")) {
+                    builder.setOutputPrefix(line.getOptionValue("p"));
                 }
-
-                OutputSpec outputSpec = OutputSpec.deserialize("/standard/"+specFile+".yaml");
-                builder.setOutputSpec(outputSpec);
-
+                builder.init();
+                long[] counts = builder.run();
             }
-
-            if (line.hasOption("p")) {
-                builder.setOutputPrefix(line.getOptionValue("p"));
-            }
-            builder.init();
-            long[] counts = builder.run();
             rtn = 0;
         }
         return rtn;

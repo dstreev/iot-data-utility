@@ -86,7 +86,7 @@ public class BuilderTest {
     // Basic Tests
     @Test
     public void init_csv_cpr_all_01() {
-        Builder builder = new Builder();
+        RecordBuilder builder = new RecordBuilder();
         for (String resource : cpResources) {
             System.out.println("Processing Resource: " + resource);
             runResourceToCSV(resource, 1000);
@@ -95,7 +95,7 @@ public class BuilderTest {
 
     @Test
     public void init_json_cpr_all_01() {
-        Builder builder = new Builder();
+        RecordBuilder builder = new RecordBuilder();
         for (String resource : cpResources) {
             runResourceToJson(resource, 1000);
         }
@@ -106,7 +106,7 @@ public class BuilderTest {
     @Test
     // TODO: Test fails with Maven.  It's a current path issue.
     public void init_csv_fr_all_02() {
-        Builder builder = new Builder();
+        RecordBuilder builder = new RecordBuilder();
         for (String resource : fileResources) {
             runResourceToCSV(resource, 1000);
         }
@@ -118,10 +118,10 @@ public class BuilderTest {
 
     @Test
     public void init_exception_all_01() {
-        Builder builder = new Builder();
+        RecordBuilder builder = new RecordBuilder();
         for (String resource : cpExceptionResources) {
             try {
-                Record record = Record.deserialize(resource);
+                Schema record = Schema.deserialize(resource);
                 assertFalse(true);
             } catch (IOException rte) {
                 rte.printStackTrace();
@@ -158,16 +158,16 @@ public class BuilderTest {
     @Test
     public void runBuilderWithoutPrefixdir() {
         long recordsCreated[] = {0, 0};
-        Builder builder = new Builder();
-        Record record = null;
+        RecordBuilder builder = new RecordBuilder();
+        Schema record = null;
         try {
-            record = Record.deserialize("/generator/cc_account.yaml");
+            record = Schema.deserialize("/generator/cc_account.yaml");
         } catch (IOException e) {
             System.err.println("Processing: " + "/generator/cc_account.yaml");
             e.printStackTrace();
             assertTrue(false);
         }
-        builder.setRecord(record);
+        builder.setSchema(record);
         OutputSpec outputSpec = OutputSpec.deserialize("/standard/csv_std.yaml");
         builder.setOutputSpec(outputSpec);
         // Strip off path.
@@ -209,23 +209,23 @@ public class BuilderTest {
 
     protected long[] runResource(String resource, long count, long size, String outputSpecResource) {
         long recordsCreated[] = {0, 0};
-        Builder builder = new Builder();
-        Record record = null;
+        RecordBuilder builder = new RecordBuilder();
+        Schema record = null;
         try {
-            record = Record.deserialize(resource);
+            record = Schema.deserialize(resource);
         } catch (IOException e) {
             System.err.println("Processing: " + resource);
             e.printStackTrace();
             assertTrue(false);
         }
-        builder.setRecord(record);
+        builder.setSchema(record);
         if (outputSpecResource != null) {
             OutputSpec outputSpec = OutputSpec.deserialize(outputSpecResource);
             builder.setOutputSpec(outputSpec);
         }
         // Strip off path.
         String filename = FilenameUtils.getName(resource);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
+        builder.setOutputPrefix(BASE_OUTPUT_DIR + System.getProperty("file.separator") + filename);
         builder.setCount(count);
         builder.setSize(size);
         builder.init();

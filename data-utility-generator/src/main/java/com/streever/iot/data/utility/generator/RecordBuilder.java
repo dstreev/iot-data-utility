@@ -15,18 +15,18 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * This class will bring together the Record and Output Spec's and generator the desired output
  */
-public class Builder {
+public class RecordBuilder {
     private boolean initialized = false;
     private long count = -1; // default if not specified.
     private long size = -1; // default size output limit. -1 = no check
     Integer progressIndicatorCount = 5000;
-    private Record record;
+    private Schema schema;
     // Added to the Output when it's opened.
     private String outputPrefix;
 
     private OutputSpec outputSpec;
 
-    private Map<Record, Output> outputMap = new TreeMap<Record, Output>();
+    private Map<Schema, Output> outputMap = new TreeMap<Schema, Output>();
 
     public long getCount() {
         return count;
@@ -44,12 +44,12 @@ public class Builder {
         this.size = size;
     }
 
-    public Record getRecord() {
-        return record;
+    public Schema getSchema() {
+        return schema;
     }
 
-    public void setRecord(Record record) {
-        this.record = record;
+    public void setSchema(Schema schema) {
+        this.schema = schema;
     }
 
     public String getOutputPrefix() {
@@ -81,17 +81,17 @@ public class Builder {
         boolean rtn = Boolean.TRUE;
         if (getOutputSpec() != null) {
             if (getOutputSpec().getDefault() != null) {
-                getOutputSpec().getDefault().setName(getRecord().getId());
-                outputMap.put(getRecord(), getOutputSpec().getDefault());
+                getOutputSpec().getDefault().setName(getSchema().getId());
+                outputMap.put(getSchema(), getOutputSpec().getDefault());
                 // When filename in output spec if not set, use the 'record.id'
                 // TODO: file extension
                 if (getOutputSpec().getDefault() instanceof FileOutput && ((FileOutput) getOutputSpec().getDefault()).getFilename() == null) {
                     // The id is set in the linking process and is not a serialized element
-                    ((FileOutput) getOutputSpec().getDefault()).setFilename(getRecord().getId());
+                    ((FileOutput) getOutputSpec().getDefault()).setFilename(getSchema().getId());
                 }
-                if (getRecord().getRelationships() != null) {
+                if (getSchema().getRelationships() != null) {
                     // Start processing relationships
-                    rtn = mapOutputSpecRelationships(getRecord().getRelationships(), getOutputSpec().getRelationships());
+                    rtn = mapOutputSpecRelationships(getSchema().getRelationships(), getOutputSpec().getRelationships());
                 }
             } else {
                 rtn = Boolean.FALSE;
@@ -107,7 +107,7 @@ public class Builder {
         Set<String> relationshipNames = relationships.keySet();
         for (String key : relationshipNames) {
             Relationship relationship = relationships.get(key);
-            Record record = relationship.getRecord();
+            Schema record = relationship.getRecord();
             OutputBase output = outputRelationships.get(key);
             if (output == null) {
                 // Output Spec matching name not found.
@@ -126,7 +126,7 @@ public class Builder {
                     // When filename in output spec if not set, use the 'record.id'
                     // TODO: file extension
                     if (output instanceof FileOutput && ((FileOutput) output).getFilename() == null) {
-                        ((FileOutput) output).setFilename(getRecord().getId());
+                        ((FileOutput) output).setFilename(getSchema().getId());
                     }
                     outputMap.put(record, output);
                     output.setUsed(Boolean.TRUE);
@@ -146,13 +146,13 @@ public class Builder {
         return rtn;
     }
 
-    protected void link(Record record, String id) {
+    protected void link(Schema record, String id) {
         record.setId(id);
         if (record.getRelationships() != null) {
             Set<String> relationshipKeys = record.getRelationships().keySet();
             for (String key : relationshipKeys) {
                 Relationship relationship = record.getRelationships().get(key);
-                Record rRecord = relationship.getRecord();
+                Schema rRecord = relationship.getRecord();
                 rRecord.setParent(record);
                 link(rRecord, key);
             }
@@ -160,7 +160,7 @@ public class Builder {
     }
 
     public void init() {
-        link(getRecord(), "main");
+        link(getSchema(), "main");
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
         if (!validate()) {
@@ -177,8 +177,8 @@ public class Builder {
      */
     protected boolean validate() {
         boolean rtn = Boolean.TRUE;
-        if (this.getRecord() != null) {
-            if (!this.getRecord().validate()) {
+        if (this.getSchema() != null) {
+            if (!this.getSchema().validate()) {
                 rtn = Boolean.FALSE;
             }
         } else {
@@ -188,7 +188,7 @@ public class Builder {
         return rtn;
     }
 
-    protected long write(Record record, Map<FieldProperties, Object> parentKeys) throws IOException {
+    protected long write(Schema record, Map<FieldProperties, Object> parentKeys) throws IOException {
         Output output = this.outputMap.get(record);
         // The last generated recordset
         return output.write(record.getValueMap());
@@ -198,15 +198,15 @@ public class Builder {
         // Initialize if null;
         getOutputSpec();
         // Open specs
-        Set<Record> outputKeys = outputMap.keySet();
-        for (Record record : outputKeys) {
+        Set<Schema> outputKeys = outputMap.keySet();
+        for (Schema record : outputKeys) {
             outputMap.get(record).open(outputPrefix);
         }
     }
 
     protected void closeOutput() throws IOException {
-        Set<Record> outputKeys = outputMap.keySet();
-        for (Record record : outputKeys) {
+        Set<Schema> outputKeys = outputMap.keySet();
+        for (Schema record : outputKeys) {
             outputMap.get(record).close();
         }
     }
@@ -229,13 +229,13 @@ public class Builder {
             long loop = 0;
             do {
 //            while (localCount > 0) {
-                getRecord().next(null);
-                long lsize = write(getRecord(), null);
+                getSchema().next(null);
+                long lsize = write(getSchema(), null);
                 runStatus[1] += lsize;
                 if (localSize != -1)
                     localSize -= lsize;
                 runStatus[0]++;
-                long[] rStatus = writeRelationships(getRecord().getRelationships(), getRecord().getKeyMap());
+                long[] rStatus = writeRelationships(getSchema().getRelationships(), getSchema().getKeyMap());
                 runStatus[0] += rStatus[0];
                 runStatus[1] += rStatus[1];
                 if (localCount != -1)
@@ -273,7 +273,7 @@ public class Builder {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {
                 Relationship relationship = relationships.get(key);
-                Record rRecord = relationship.getRecord();
+                Schema rRecord = relationship.getRecord();
                 try {
                     // TODO: Address Cardinality HERE!!
                     // For now, just do 1-1.
