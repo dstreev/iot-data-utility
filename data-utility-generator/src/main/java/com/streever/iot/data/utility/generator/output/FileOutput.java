@@ -153,7 +153,6 @@ public abstract class FileOutput extends OutputBase {
                 break;
             case HCFS:
                 byte buffer[] = new byte[256];
-//                try {
                 // Add newline
                 String newLine = line + "\n";
                 int bytesRead = newLine.length();

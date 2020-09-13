@@ -1,6 +1,6 @@
 default:
   type: "csv"
   dirForRelationship: true
-  targetFilesystem: "HCFS"
+  targetFilesystem: HCFS
   unique: true
   uniqueType: TIMESTAMP
