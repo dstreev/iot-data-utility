@@ -9,7 +9,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
-public class RecordTest {
+public class SchemaTest {
 
     @Before
     public void before() {
@@ -35,7 +35,7 @@ public class RecordTest {
         }
         try {
             for (int i = 0; i < 10; i++) {
-                record.next(null);
+                record.next();
                 Map keys = record.getKeyMap();
                 Map values = record.getValueMap();
                 System.out.println("KeyMap:" + keys.toString());

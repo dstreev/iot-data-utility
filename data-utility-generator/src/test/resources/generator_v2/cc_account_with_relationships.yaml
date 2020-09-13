@@ -15,6 +15,7 @@ fields:
   -
     type: "string"
     name: "acct_num"
+    desc: "Account Number"
     hash: true
     messageDigest: "SHA-1"
     characters: "0123456789"
@@ -24,6 +25,7 @@ fields:
   -
     type: "regex"
     name: "phone_num"
+    desc: "Account Holder's Phone Number"
     regex: "\\(\\d{3}\\)\\d{3}\\-\\d{4}"
   -
     type: "date"
@@ -87,6 +89,7 @@ relationships:
           characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         - type: "string"
           name: "state"
+          desc: "Account holder's state of residence"
           pool:
             items:
               - AL

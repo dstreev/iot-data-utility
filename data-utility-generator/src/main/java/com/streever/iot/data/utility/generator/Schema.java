@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.streever.iot.data.utility.generator.fields.ControlField;
-import com.streever.iot.data.utility.generator.fields.FieldBase;
-import com.streever.iot.data.utility.generator.fields.FieldProperties;
-import com.streever.iot.data.utility.generator.fields.TerminateException;
+import com.streever.iot.data.utility.generator.fields.*;
 import com.streever.iot.data.utility.generator.output.CSVOutput;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -115,6 +112,18 @@ public class Schema implements Comparable<Schema> {
 
     protected ObjectMapper om = new ObjectMapper();
 
+    // With a fieldbase object, convert to the sql type.
+    public String getSqlType(SqlType type, Object value) {
+        return type.getSqlField(value);
+    }
+
+    public boolean hasParent() {
+        if (parent != null) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.FALSE;
+        }
+    }
     /*
     Use this to loop through the fields and relationships to validate the configurations.
      */
@@ -173,10 +182,41 @@ public class Schema implements Comparable<Schema> {
             orderFields();
     }
 
+    public Map<String, FieldBase> getOrderedFields() {
+        if (orderedFields == null) {
+            orderFields();
+        }
+        return orderedFields;
+    }
+
     protected void orderFields() {
         if (this.fields != null && this.order != null) {
             orderedFields = new LinkedHashMap<String, FieldBase>();
-//            int position = 1;
+            if (hasParent()) {
+                for (String parentKey: getParent().getKeyFields()) {
+                    String[] searchFieldName = parentKey.split("\\.");
+                    boolean found = Boolean.FALSE;
+                    for (FieldBase field : getParent().getFields()) {
+                        if (field.getName().equals(searchFieldName[0])) {
+                            orderedFields.put(parentKey, field);
+                            if (searchFieldName.length > 1) {
+                                field.setMaintainState(true);
+                                if (field.getRepeat() > 1) {
+                                    throw new RuntimeException("Field: " + field.getName() + " with Ordering: " +
+                                            parentKey + " is set for 'repeat' AND with 'state' (like start/stop).  This isn't supported");
+                                }
+                            }
+                            found = Boolean.TRUE;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        throw new RuntimeException("Ordering Field [" + searchFieldName[0] +
+                                "] not found in record fields list for schema [" +
+                                this.getTitle() + "]");
+                    }
+                }
+            }
             for (String fieldName : order) {
                 String[] searchFieldName = fieldName.split("\\.");
                 boolean found = Boolean.FALSE;
@@ -200,6 +240,11 @@ public class Schema implements Comparable<Schema> {
                             this.getTitle() + "]");
                 }
             }
+            if (getRelationships() != null) {
+                for (Map.Entry<String, Relationship> entry : getRelationships().entrySet()) {
+                    entry.getValue().getRecord().orderFields();
+                }
+            }
         }
     }
 
@@ -211,57 +256,20 @@ public class Schema implements Comparable<Schema> {
         return valueMap;
     }
 
-    public String hiveTableLayout() {
-        Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
-
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("CREATE EXTERNAL TABLE <my_gen_table> (\n");
-        while (iFieldKeys.hasNext()) {
-            String iFieldKey = iFieldKeys.next();
-            FieldBase fb = orderedFields.get(iFieldKey);
-            for (int i = 1; i <= fb.getRepeat(); i++) {
-                String keyFieldName = iFieldKey;
-                if (fb.getRepeat() > 1) {
-                    keyFieldName = keyFieldName + "_" + i;
-                }
-                sb.append("\t" + keyFieldName + " STRING");
-                if (i < fb.getRepeat()) {
-                    sb.append(",\n");
-                }
-            }
-            if (iFieldKeys.hasNext()) {
-                sb.append(",\n");
-            } else {
-                sb.append(")\n");
-            }
-        }
-        return sb.toString();
-    }
-
-    public void next(Map<FieldProperties, Object> parentKeys) throws TerminateException {
+    public void next() throws TerminateException {
         // Clear Maps holding previous record.
         keyMap.clear();
         valueMap.clear();
-        if (parentKeys != null && !parentKeys.isEmpty()) {
-            keyMap.putAll(parentKeys);
-            valueMap.putAll(parentKeys);
+        if (hasParent() && getParent().getKeyMap() != null) {
+            keyMap.putAll(getParent().getKeyMap());
+            valueMap.putAll(getParent().getKeyMap());
         }
 
-        // TODO: Stuck HERE.  Need to deal with maintained state, order, and repeat.
         Map<String, FieldProperties> fieldNextValues = new TreeMap<String, FieldProperties>();
         for (FieldBase field : fields) {
-//            if (field.getRepeat() > 1) {
-//                for (int i=1;i<field.getRepeat();i++) {
-//                    String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
-//                    FieldProperties fp = field.getFieldProperties(repeater);
-//                    fieldNextValues.put(fp, field.getNext());
-//                }
-//            } else {
             Object value = field.getNext();
             FieldProperties fp = field.getFieldProperties();
             fieldNextValues.put(field.getName(), fp);
-//            }
         }
 
         Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
@@ -271,30 +279,33 @@ public class Schema implements Comparable<Schema> {
         while (iFieldKeys.hasNext()) {
             String iFieldKey = iFieldKeys.next();
 
-//            FieldBase fbase = orderedFields.get(iFieldKey);
             String[] fieldNameParts = iFieldKey.split("\\.");
             String state = (fieldNameParts.length > 1 ? fieldNameParts[1] : null);
             // Get the FieldProperties from the Map.
             FieldProperties fp = fieldNextValues.get(fieldNameParts[0]);
-            if (fp.getField().isMaintainState()) {
-                if (state != null) {
-                    // State items shouldn't be keys.
-                    FieldProperties stateFp = new FieldProperties(iFieldKey, fp.getField());
-                    valueMap.put(stateFp, fp.getField().getNextStateValue(state));
+            if (fp != null) {
+                if (fp.getField().isMaintainState()) {
+                    if (state != null) {
+                        // State items shouldn't be keys.
+                        FieldProperties stateFp = new FieldProperties(iFieldKey, fp.getField());
+                        valueMap.put(stateFp, fp.getField().getNextStateValue(state));
+                    } else {
+                        // Shouldn't happen.
+                    }
+                } else if (fp.getField().getRepeat() > 1) {
+                    for (int i = 1; i < fp.getField().getRepeat(); i++) {
+                        String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
+                        FieldProperties repeatFp = new FieldProperties(fieldNameParts[0] + "_" + repeater, fp.getField());
+                        valueMap.put(repeatFp, fp.getField().getNext());
+                    }
                 } else {
-                    // Shouldn't happen.
-                }
-            } else if (fp.getField().getRepeat() > 1) {
-                for (int i = 1; i < fp.getField().getRepeat(); i++) {
-                    String repeater = StringUtils.leftPad(Integer.toString(i), 3, '0');
-                    FieldProperties repeatFp = new FieldProperties(fieldNameParts[0] + "_" + repeater, fp.getField());
-                    valueMap.put(repeatFp, fp.getField().getNext());
+                    if (keyFields != null && keyFields.contains(fp.getName())) {
+                        keyMap.put(fp, fp.getField().getLast());
+                    }
+                    valueMap.put(fp, fp.getField().getLast());
                 }
             } else {
-                if (keyFields != null && keyFields.contains(fp.getName())) {
-                    keyMap.put(fp, fp.getField().getLast());
-                }
-                valueMap.put(fp, fp.getField().getLast());
+                System.out.println("Key field from child");
             }
 
         }
@@ -302,6 +313,34 @@ public class Schema implements Comparable<Schema> {
         if (controlFieldInt != null && controlFieldInt.terminate()) {
             throw new TerminateException("Field " + controlField + " has reached it limit and terminated the record generating process");
         }
+    }
+
+    private void link(Schema schema, String id) {
+        schema.setId(id);
+        if (schema.getRelationships() != null) {
+            Set<String> relationshipKeys = schema.getRelationships().keySet();
+            for (String key : relationshipKeys) {
+                Relationship relationship = schema.getRelationships().get(key);
+                Schema rSchema = relationship.getRecord();
+                rSchema.setParent(schema);
+                link(rSchema, key);
+            }
+        }
+
+    }
+
+    public void link(String id) {
+        this.setId(id);
+        if (this.getRelationships() != null) {
+            Set<String> relationshipKeys = this.getRelationships().keySet();
+            for (String key : relationshipKeys) {
+                Relationship relationship = this.getRelationships().get(key);
+                Schema rSchema = relationship.getRecord();
+                rSchema.setParent(this);
+                link(rSchema, key);
+            }
+        }
+        orderFields();
     }
 
     @Override

@@ -146,21 +146,8 @@ public class RecordBuilder {
         return rtn;
     }
 
-    protected void link(Schema record, String id) {
-        record.setId(id);
-        if (record.getRelationships() != null) {
-            Set<String> relationshipKeys = record.getRelationships().keySet();
-            for (String key : relationshipKeys) {
-                Relationship relationship = record.getRelationships().get(key);
-                Schema rRecord = relationship.getRecord();
-                rRecord.setParent(record);
-                link(rRecord, key);
-            }
-        }
-    }
-
     public void init() {
-        link(getSchema(), "main");
+        getSchema().link("main");
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
         if (!validate()) {
@@ -188,7 +175,7 @@ public class RecordBuilder {
         return rtn;
     }
 
-    protected long write(Schema record, Map<FieldProperties, Object> parentKeys) throws IOException {
+    protected long write(Schema record) throws IOException {
         Output output = this.outputMap.get(record);
         // The last generated recordset
         return output.write(record.getValueMap());
@@ -229,13 +216,14 @@ public class RecordBuilder {
             long loop = 0;
             do {
 //            while (localCount > 0) {
-                getSchema().next(null);
-                long lsize = write(getSchema(), null);
+                getSchema().next();
+                long lsize = write(getSchema());
                 runStatus[1] += lsize;
                 if (localSize != -1)
                     localSize -= lsize;
                 runStatus[0]++;
-                long[] rStatus = writeRelationships(getSchema().getRelationships(), getSchema().getKeyMap());
+//                long[] rStatus = writeRelationships(getSchema().getRelationships(), getSchema().getKeyMap());
+                long[] rStatus = writeRelationships(getSchema().getRelationships());
                 runStatus[0] += rStatus[0];
                 runStatus[1] += rStatus[1];
                 if (localCount != -1)
@@ -265,7 +253,8 @@ public class RecordBuilder {
         return runStatus;
     }
 
-    protected long[] writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
+//    protected long[] writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
+    protected long[] writeRelationships(Map<String, Relationship> relationships) {
         // status[0] for counts
         // status[1] for size
         long[] status = {0,0};
@@ -280,24 +269,24 @@ public class RecordBuilder {
                     int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
                     if (range <= 0) {
                         // Assume 1-1 relationship.
-                        rRecord.next(parentKeys);
-                        write(rRecord, parentKeys);
+                        rRecord.next();
+                        write(rRecord);
                         status[0]++;
                         // Recurse into hierarchy
                         long[] rStatus;
-                        rStatus = writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                        rStatus = writeRelationships(rRecord.getRelationships());
                         status[0] += rStatus[0];
                         status[1] += rStatus[1];
                     } else {
                         // Assume min to max relationship.
                         int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
                         for (int i=relationship.getCardinality().getMin();i<rNum;i++) {
-                            rRecord.next(parentKeys);
-                            status[1] += write(rRecord, parentKeys);
+                            rRecord.next();
+                            status[1] += write(rRecord);
                             status[0]++;
                             // Recurse into hierarchy
                             long[] rStatus;
-                            rStatus = writeRelationships(rRecord.getRelationships(), rRecord.getKeyMap());
+                            rStatus = writeRelationships(rRecord.getRelationships());
                             status[0] += rStatus[0];
                             status[1] += rStatus[1];
                         }
