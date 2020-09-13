@@ -184,11 +184,12 @@ public class RecordGenerator {
                 builder.setSize(gb);
             }
 
+            // Use the supplied ouput spec
             if (line.hasOption("o")) {
                 OutputSpec outputSpec = OutputSpec.deserialize(line.getOptionValue("o"));
                 builder.setOutputSpec(outputSpec);
             } else {
-
+                // or build the reference based in flags.
                 String[] specOutput = new String[2];
                 if (line.hasOption("csv")) {
                     specOutput[0] = "csv";
