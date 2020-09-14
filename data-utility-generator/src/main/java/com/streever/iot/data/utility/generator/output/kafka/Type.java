@@ -1,4 +1,4 @@
-package com.streever.iot.kafka.spec;
+package com.streever.iot.data.utility.generator.output.kafka;
 
 public class Type {
     private String key;

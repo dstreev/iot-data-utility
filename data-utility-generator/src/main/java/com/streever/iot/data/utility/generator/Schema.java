@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.fields.*;
-import com.streever.iot.data.utility.generator.output.CSVOutput;
+import com.streever.iot.data.utility.generator.output.CSVFormat;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +45,7 @@ public class Schema implements Comparable<Schema> {
     private String controlField;
     private ControlField controlFieldInt;
 
-    private CSVOutput output;
+    private CSVFormat output;
     private List<String> order;
     private Map<String, FieldBase> orderedFields;
 
@@ -87,11 +87,11 @@ public class Schema implements Comparable<Schema> {
         this.description = description;
     }
 
-    public CSVOutput getOutput() {
+    public CSVFormat getOutput() {
         return output;
     }
 
-    public void setOutput(CSVOutput output) {
+    public void setOutput(CSVFormat output) {
         this.output = output;
     }
 
@@ -305,7 +305,7 @@ public class Schema implements Comparable<Schema> {
                     valueMap.put(fp, fp.getField().getLast());
                 }
             } else {
-                System.out.println("Key field from child");
+                // The key has already been addressed from the parent.
             }
 
         }

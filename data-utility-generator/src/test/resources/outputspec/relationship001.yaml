@@ -1,9 +1,15 @@
 default:
-  type: "csv"
+  type: "file"
+  format:
+    type: "csv"
 relationships:
   acct:
-    type: "csv"
+    type: "file"
+    format:
+      type: "csv"
     filename: "acct.csv"
   address:
-    type: "json"
+    type: "file"
+    format:
+      type: "csv"
     filename: "addr.json"

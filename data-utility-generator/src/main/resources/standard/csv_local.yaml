@@ -1,4 +1,6 @@
 default:
-  type: "csv"
+  type: "file"
+  format:
+    type: "csv"
   dirForRelationship: true
   targetFilesystem: LOCAL

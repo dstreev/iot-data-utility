@@ -2,7 +2,7 @@ package com.streever.iot.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.streever.iot.kafka.spec.ProducerSpec;
+import com.streever.iot.data.utility.generator.output.kafka.ProducerSpec;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;

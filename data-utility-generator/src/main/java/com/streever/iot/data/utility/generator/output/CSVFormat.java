@@ -9,13 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CSVOutput extends FileOutput {
+public class CSVFormat extends FormatBase {
     private String separator = ",";
     private String newLine = "\n";
     private String quoteChar = "\"";
 
-    @Override
-    protected String getExtension() {
+    public String getExtension() {
         return "csv";
     }
 
@@ -58,22 +57,21 @@ public class CSVOutput extends FileOutput {
         return recLine;
     }
 
-    @Override
-    public long write(Map<FieldProperties, Object> record) throws IOException {
-        long rtn = 0;
-        if (isOpen()) {
-            String recLine = getLine(record, getQuoteChar(), getSeparator());
-            rtn = recLine.length() + 1;
-            writeLine(recLine);
-        } else {
+    public String write(Map<FieldProperties, Object> record) throws IOException {
+        String rtn = null;
+//        if (isOpen()) {
+            rtn = getLine(record, getQuoteChar(), getSeparator());
+//            rtn = recLine.length() + 1;
+//            writeLine(recLine);
+//        } else {
             // TODO: Throw not open exception.
-        }
+//        }
         return rtn;
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        CSVOutput clone = (CSVOutput)super.clone();
+        CSVFormat clone = (CSVFormat)super.clone();
         clone.setNewLine(this.newLine);
         clone.setQuoteChar(this.quoteChar);
         clone.setSeparator(this.separator);

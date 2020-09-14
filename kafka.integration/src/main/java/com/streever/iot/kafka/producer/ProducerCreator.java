@@ -1,6 +1,6 @@
 package com.streever.iot.kafka.producer;
 
-import com.streever.iot.kafka.spec.ProducerSpec;
+import com.streever.iot.data.utility.generator.output.kafka.ProducerSpec;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.LongSerializer;

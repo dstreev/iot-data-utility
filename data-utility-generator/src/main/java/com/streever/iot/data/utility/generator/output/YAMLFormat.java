@@ -4,21 +4,21 @@ import com.streever.iot.data.utility.generator.fields.FieldProperties;
 
 import java.util.Map;
 
-public class YAMLOutput extends JSONOutput {
+public class YAMLFormat extends JSONFormat {
 
     @Override
-    protected String getExtension() {
+    public String getExtension() {
         return "yaml";
     }
 
     @Override
-    public long write(Map<FieldProperties, Object> record) {
-        return 0;
+    public String write(Map<FieldProperties, Object> record) {
+        return null;
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        YAMLOutput clone = (YAMLOutput)super.clone();
+        YAMLFormat clone = (YAMLFormat)super.clone();
 
         return clone;
     }

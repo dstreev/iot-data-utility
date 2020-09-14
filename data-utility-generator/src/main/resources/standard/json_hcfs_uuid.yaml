@@ -1,5 +1,7 @@
 default:
-  type: "json"
+  type: "file"
+  format:
+    type: "json"
   dirForRelationship: true
   targetFilesystem: HCFS
   unique: true

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.streever.iot.data.utility.generator.fields.ControlField;
 import com.streever.iot.data.utility.generator.fields.FieldBase;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import com.streever.iot.data.utility.generator.output.CSVOutput;
+import com.streever.iot.data.utility.generator.output.CSVFormat;
 
 import java.util.*;
 
@@ -22,7 +22,7 @@ public class RecordGenerator {
     private String controlField;
     private ControlField controlFieldInt;
 
-    private CSVOutput output;
+    private CSVFormat output;
     private List<String> order;
     private Map<String, FieldBase> orderedFields;
 
@@ -62,11 +62,11 @@ public class RecordGenerator {
         this.description = description;
     }
 
-    public CSVOutput getOutput() {
+    public CSVFormat getOutput() {
         return output;
     }
 
-    public void setOutput(CSVOutput output) {
+    public void setOutput(CSVFormat output) {
         this.output = output;
     }
 

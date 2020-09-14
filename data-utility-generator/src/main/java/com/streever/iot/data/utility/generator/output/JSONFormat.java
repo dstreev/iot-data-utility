@@ -16,11 +16,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-public class JSONOutput extends FileOutput {
+public class JSONFormat extends FormatBase {
     private static ObjectMapper om = new ObjectMapper();
 
-    @Override
-    protected String getExtension() {
+    public String getExtension() {
         return "json";
     }
 
@@ -79,22 +78,22 @@ public class JSONOutput extends FileOutput {
         return rtn;
     }
 
-    @Override
-    public long write(Map<FieldProperties, Object> record) throws IOException {
-        long rtn = 0;
-        if (isOpen()) {
-            String line = getLine(record);
-            rtn = line.length() + 1;
-            writeLine(line);
-        } else {
+    public String write(Map<FieldProperties, Object> record) throws IOException {
+        String rtn = null;
+//        long rtn = 0;
+//        if (isOpen()) {
+            rtn = getLine(record);
+//            rtn = line.length() + 1;
+//            writeLine(line);
+//        } else {
             // TODO: Throw not open exception.
-        }
+//        }
         return rtn;
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        JSONOutput clone = (JSONOutput) super.clone();
+        JSONFormat clone = (JSONFormat) super.clone();
         return clone;
     }
 }

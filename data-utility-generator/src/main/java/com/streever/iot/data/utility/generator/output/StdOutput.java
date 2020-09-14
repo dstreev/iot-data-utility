@@ -3,26 +3,15 @@ package com.streever.iot.data.utility.generator.output;
 import com.streever.iot.data.utility.generator.Schema;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class StdOutput extends OutputBase {
-    enum FORMAT_TYPE {
-        csv,json;
-    }
     enum STD_TYPE {
         out, err;
     }
-    private FORMAT_TYPE format = FORMAT_TYPE.csv;
     private STD_TYPE std = STD_TYPE.out;
     private boolean prefix = Boolean.TRUE;
-
-    public FORMAT_TYPE getFormat() {
-        return format;
-    }
-
-    public void setFormat(FORMAT_TYPE format) {
-        this.format = format;
-    }
 
     public STD_TYPE getStd() {
         return std;
@@ -46,32 +35,44 @@ public class StdOutput extends OutputBase {
     }
 
     @Override
-    public long write(Map<FieldProperties, Object> record) {
-        String line = null;
-        long rtn = 0;
-        switch (format) {
-            case csv:
-                line = CSVOutput.getLine(record, "\"", ",");
-                break;
-            case json:
-                line = JSONOutput.getLine(record);
-                break;
-        }
-        if (prefix) {
-            line = getName() + "-->" + line;
-        }
-        rtn = line.length();
+    protected void writeLine(String line) throws IOException {
         switch (std) {
             case out:
                 System.out.println(line);
                 break;
             case err:
                 System.err.println(line);
-                break;
         }
-        return rtn;
     }
 
+
+    //    @Override
+//    public long write(Map<FieldProperties, Object> record) {
+//        String line = null;
+//        long rtn = 0;
+//        switch (format) {
+//            case csv:
+//                line = CSVFormat.getLine(record, "\"", ",");
+//                break;
+//            case json:
+//                line = JSONFormat.getLine(record);
+//                break;
+//        }
+//        if (prefix) {
+//            line = getName() + "-->" + line;
+//        }
+//        rtn = line.length();
+//        switch (std) {
+//            case out:
+//                System.out.println(line);
+//                break;
+//            case err:
+//                System.err.println(line);
+//                break;
+//        }
+//        return rtn;
+//    }
+//
     @Override
     public boolean open(String prefix) {
         return true;

@@ -1,5 +1,6 @@
 package com.streever.iot.data.utility.generator;
 
+import com.streever.iot.data.utility.generator.output.FileOutput;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class RecordBuilderTest {
     }
 
     @Test
-    public void to_hcfs_001 () {
+    public void to_hcfs_001() {
         runResourceToHCFS("/generator_v2/one-many.yaml", 5);
     }
 
@@ -188,7 +189,7 @@ public class RecordBuilderTest {
     }
 
     protected long[] runResourceToHCFS(String resource, long count) {
-        return runResource(resource, count, "/standard/json_hcfs.yaml");
+        return runResource(resource, count, "/standard/json_hcfs_ts.yaml");
     }
 
     protected long[] runResourceToCSV(String resource, long count, long size) {
@@ -203,8 +204,17 @@ public class RecordBuilderTest {
         return runResource(resource, count, "/standard/json_std.yaml");
     }
 
-    protected long[] runResource(String resource, long count, String outputSpecResource) {
+    protected long[] runResource(String resource, long count) {
+        String outputSpecResource = "/standard/csv_std.yaml";
         return runResource(resource, count, -1l, outputSpecResource);
+    }
+
+    protected long[] runResource(String resource, long count, String outputSpecResource) {
+        String spec = outputSpecResource;
+        if (spec == null) {
+            spec = "/standard/csv_std.yaml";
+        }
+        return runResource(resource, count, -1l, spec);
     }
 
     protected long[] runResource(String resource, long count, long size, String outputSpecResource) {
@@ -225,7 +235,16 @@ public class RecordBuilderTest {
         }
         // Strip off path.
         String filename = FilenameUtils.getName(resource);
-        builder.setOutputPrefix(BASE_OUTPUT_DIR + System.getProperty("file.separator") + filename);
+        // Check if LOCAL or HCFS is the target FileSystem
+        if (builder.getOutputSpec().getDefault() instanceof FileOutput) {
+            if (((FileOutput) builder.getOutputSpec().getDefault()).getTargetFilesystem() == FileOutput.TargetFilesystem.LOCAL) {
+                // Only set root dir for LOCAL Filesytem.
+                builder.setOutputPrefix(BASE_OUTPUT_DIR + System.getProperty("file.separator") + filename);
+            } else {
+                builder.setOutputPrefix("/user/" + System.getProperty("user.name") + System.getProperty("file.separator") +
+                        "DATAGEN_JUNIT" + System.getProperty("file.separator") + filename);
+            }
+        }
         builder.setCount(count);
         builder.setSize(size);
         builder.init();
@@ -241,4 +260,67 @@ public class RecordBuilderTest {
         return recordsCreated;
     }
 
+    /*
+           ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try {
+            File kfile = new File(cl.getResource(kafkaConfig).getFile());
+            String jsonFromkFile = FileUtils.readFileToString(kfile, Charset.forName("UTF-8"));
+
+            ProducerSpec producerSpec = mapper.readerFor(ProducerSpec.class).readValue(jsonFromkFile);
+
+            Boolean transactional = null;
+            if (producerSpec.getConfigs().get(KafkaProducerConfig.TRANSACTIONAL_ID.getConfig()) != null &&
+                    producerSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()) != null &&
+                    producerSpec.getConfigs().get(KafkaProducerConfig.ACKS.getConfig()).toString().equals("all")) {
+                transactional = true;
+            } else {
+                transactional = false;
+            }
+
+            System.out.println("Transaction: " + transactional);
+
+            Producer<String, String> producer = (Producer<String, String>) ProducerCreator.createProducer(producerSpec);
+
+            File file = new File(cl.getResource(genConfig).getFile());
+            String jsonFromFile = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+
+            RecordGenerator recGen = mapper.readerFor(com.streever.iot.data.utility.generator.RecordGenerator.class).readValue(jsonFromFile);
+            Date start = new Date();
+            if (transactional) {
+                producer.initTransactions();
+                producer.beginTransaction();
+            }
+            Map<Integer, Long> offsets = new TreeMap<Integer, Long>();
+            for (int i = 1; i < loops + 1; i++) {
+                recGen.next();
+                Object key = recGen.getKey();
+                Object value = recGen.getValue();
+                if (i % 5000l == 0) {
+                    if (transactional) {
+                        producer.commitTransaction();
+                        producer.beginTransaction();
+                    }
+                    System.out.println("Key: " + key + " Value: " + value);
+                }
+
+                final ProducerRecord<String, String> record = new ProducerRecord<String, String>(producerSpec.getTopic().getName(), key.toString(), value.toString());
+                try {
+                    RecordMetadata metadata = producer.send(record).get();
+                    offsets.put(metadata.partition(), metadata.offset());
+//                    System.out.println("Record sent with key " + key.toString() + " to partition " + metadata.partition()
+//                            + " with offset " + metadata.offset());
+                } catch (ExecutionException e) {
+                    System.out.println("Error in sending record");
+                    System.out.println(e);
+                } catch (InterruptedException e) {
+                    System.out.println("Error in sending record");
+                    System.out.println(e);
+                }
+
+            }
+            if (transactional) {
+                producer.commitTransaction();
+            }
+
+     */
 }

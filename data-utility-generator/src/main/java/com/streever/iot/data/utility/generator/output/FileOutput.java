@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @JsonIgnoreProperties({"writeStream", "fileSystem"})
-public abstract class FileOutput extends OutputBase {
+public class FileOutput extends OutputBase {
 
     public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
     private static final String[] HADOOP_CONF_FILES = {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
@@ -30,7 +30,7 @@ public abstract class FileOutput extends OutputBase {
 
     ;
 
-    private enum TargetFilesystem {
+    public enum TargetFilesystem {
         /*
         Local Filesystem
          */
@@ -52,8 +52,6 @@ public abstract class FileOutput extends OutputBase {
     private String uniqueTimestampFormat = DEFAULT_TS_FORMAT;
     private UniqueType uniqueType = UniqueType.TIMESTAMP;
     private OutputStream writeStream;
-
-    protected abstract String getExtension();
 
     public String getFilename() {
         return filename;
@@ -145,6 +143,7 @@ public abstract class FileOutput extends OutputBase {
         return rtn;
     }
 
+    @Override
     protected void writeLine(String line) throws IOException {
         switch (targetFilesystem) {
             case LOCAL:
@@ -293,9 +292,9 @@ public abstract class FileOutput extends OutputBase {
             }
             if (baseDir != null) {
                 createDir(baseDir);
-                file = baseDir + System.getProperty("file.separator") + adjustedFilename + "." + getExtension();
+                file = baseDir + System.getProperty("file.separator") + adjustedFilename + "." + getFormat().getExtension();
             } else {
-                file = adjustedFilename + "." + getExtension();
+                file = adjustedFilename + "." + getFormat().getExtension();
             }
             String fullFile = file;
             openStream(fullFile);
