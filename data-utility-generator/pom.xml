@@ -20,7 +20,7 @@
 
     <properties>
         <hadoop.version>3.1.1</hadoop.version>
-        <cdp.version>7.1.1.0-565</cdp.version>
+        <kafka.client.version>2.4.1</kafka.client.version>
         <jackson.version>2.11.1</jackson.version>
         <generex.version>1.0.2</generex.version>
         <format.preserving.version>1.0.0</format.preserving.version>
@@ -62,6 +62,13 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
             <version>${hadoop.version}.${cdp.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.client.version}.${cdp.version}</version>
             <scope>provided</scope>
         </dependency>
 

@@ -42,6 +42,8 @@
         <jline.version>2.5</jline.version>
         <slf4j.version>1.7.6</slf4j.version>
 
+        <cdp.version>7.1.1.0-565</cdp.version>
+
         <apache.commons.io.version>2.4</apache.commons.io.version>
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
