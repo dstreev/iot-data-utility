@@ -1,4 +1,4 @@
-package com.streever.iot.kafka.producer;
+package com.streever.iot.data.utility.generator.output.kafka;
 
 import com.streever.iot.data.utility.generator.output.kafka.ProducerSpec;
 import org.apache.kafka.clients.producer.KafkaProducer;
