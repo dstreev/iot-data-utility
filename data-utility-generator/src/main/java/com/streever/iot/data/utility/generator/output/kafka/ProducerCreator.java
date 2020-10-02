@@ -1,6 +1,5 @@
 package com.streever.iot.data.utility.generator.output.kafka;
 
-import com.streever.iot.data.utility.generator.output.kafka.ProducerSpec;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.LongSerializer;
@@ -10,17 +9,16 @@ import java.util.Properties;
 
 public class ProducerCreator {
 
-    public static Producer<?, ?> createProducer(ProducerSpec spec) {
+    public static Producer<?, ?> createProducer(KafkaOutput spec) {
 
         Properties props = spec.getConfigs();
 
-        if (spec.getType().getKey().equalsIgnoreCase("long") &
-                spec.getType().getValue().equalsIgnoreCase("string")) {
+        if (spec.getRecordType().getKey().equalsIgnoreCase("long") &
+                spec.getRecordType().getValue().equalsIgnoreCase("string")) {
             props.put(KafkaProducerConfig.KEY_SERIALIZER.getConfig(), LongSerializer.class.getName());
             props.put(KafkaProducerConfig.VALUE_SERIALIZER.getConfig(), StringSerializer.class.getName());
-
-        } else if (spec.getType().getKey().equalsIgnoreCase("string") &
-                spec.getType().getValue().equalsIgnoreCase("string")) {
+        } else if (spec.getRecordType().getKey().equalsIgnoreCase("string") &
+                spec.getRecordType().getValue().equalsIgnoreCase("string")) {
             props.put(KafkaProducerConfig.KEY_SERIALIZER.getConfig(), StringSerializer.class.getName());
             props.put(KafkaProducerConfig.VALUE_SERIALIZER.getConfig(), StringSerializer.class.getName());
         }

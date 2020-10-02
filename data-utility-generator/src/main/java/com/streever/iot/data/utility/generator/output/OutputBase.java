@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
+import com.streever.iot.data.utility.generator.output.kafka.KafkaOutput;
 
 import java.io.IOException;
 import java.util.Map;
@@ -66,6 +67,10 @@ public abstract class OutputBase implements Output, Cloneable {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+        OutputBase clone = (OutputBase)super.clone();
+        if (this.format != null) {
+            clone.setFormat((FormatBase)this.format.clone());
+        }
+        return clone;
     }
 }

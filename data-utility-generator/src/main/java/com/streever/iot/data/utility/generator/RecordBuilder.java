@@ -147,9 +147,15 @@ public class RecordBuilder {
     }
 
     public void init() {
+        // Part of the initialization requires us to sweep through the schema and
+        // link the parts of the schema together (hierarchy) so we can build complex
+        // output streams with dependencies.
         getSchema().link("main");
+        // Link the parts of the output with the schema so we know where to
+        // send records when they are produced.
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
+        // Ensure the associations are all valid.
         if (!validate()) {
             throw new RuntimeException("Failed to Validate");
         }
@@ -175,12 +181,18 @@ public class RecordBuilder {
         return rtn;
     }
 
+    /*
+    Write a record, based on the schema, to the proper output path.
+     */
     protected long write(Schema record) throws IOException {
         Output output = this.outputMap.get(record);
         // The last generated recordset
         return output.write(record.getValueMap());
     }
 
+    /*
+    Open the output spec IO channel(s) for writing.
+     */
     protected void openOutput() throws IOException {
         // Initialize if null;
         getOutputSpec();
@@ -191,6 +203,9 @@ public class RecordBuilder {
         }
     }
 
+    /*
+    Clean up after we're done by closing the IO channels
+     */
     protected void closeOutput() throws IOException {
         Set<Schema> outputKeys = outputMap.keySet();
         for (Schema record : outputKeys) {
@@ -214,6 +229,7 @@ public class RecordBuilder {
         try {
             openOutput();
             long loop = 0;
+            // Run the loop until the counts/sizes are met.  If the count/size has been set to -1, then run indefinitely.
             do {
 //            while (localCount > 0) {
                 getSchema().next();
@@ -253,7 +269,9 @@ public class RecordBuilder {
         return runStatus;
     }
 
-//    protected long[] writeRelationships(Map<String, Relationship> relationships, Map<FieldProperties, Object> parentKeys) {
+    /*
+    Process the hierarchy of the schema.
+     */
     protected long[] writeRelationships(Map<String, Relationship> relationships) {
         // status[0] for counts
         // status[1] for size
@@ -264,8 +282,6 @@ public class RecordBuilder {
                 Relationship relationship = relationships.get(key);
                 Schema rRecord = relationship.getRecord();
                 try {
-                    // TODO: Address Cardinality HERE!!
-                    // For now, just do 1-1.
                     int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
                     if (range <= 0) {
                         // Assume 1-1 relationship.

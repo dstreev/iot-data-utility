@@ -1,15 +1,2 @@
-topic:
-  name: "airline-demo"
-  headers:
-type:
-  key: "String"
-  value: "String"
-configs:
-  bootstrap.servers: "os04.streever.local:6667,os05.streever.local:6667"
-  acks: "0"
-  client.id: "my-gen-app-1"
-#  compression.type: "gzip"
-#  max.in.flight.requests.per.connection: 2
-#  transactional.id: "my-trans-id-1"
-#  batch.size: 3000000
-#  linger.ms: 5
+default:
+  type: "kafka"

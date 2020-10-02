@@ -15,9 +15,13 @@ import java.util.Map;
         , @JsonSubTypes.Type(value = JSONFormat.class, name = "json")
 //        , @JsonSubTypes.Type(value = AVROFormat.class, name = "avro")
 })
-public abstract class FormatBase {
+public abstract class FormatBase implements Cloneable {
     public abstract String getExtension();
     public abstract String write(Map<FieldProperties, Object> record) throws IOException;
+
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }
 
 

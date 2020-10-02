@@ -3,6 +3,7 @@ package com.streever.iot.data.utility.generator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.streever.iot.data.utility.generator.output.FileOutput;
 import com.streever.iot.data.utility.generator.output.OutputBase;
 import org.apache.commons.io.IOUtils;
 
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class OutputSpec {
-    private OutputBase default_;
+    private OutputBase default_ = new FileOutput();
     private Map<String, OutputBase> relationships = new TreeMap<String, OutputBase>();
 
     public void setDefault(OutputBase default_) {

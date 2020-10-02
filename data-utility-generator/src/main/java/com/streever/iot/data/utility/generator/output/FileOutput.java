@@ -18,17 +18,7 @@ import java.util.UUID;
 @JsonIgnoreProperties({"writeStream", "fileSystem"})
 public class FileOutput extends OutputBase {
 
-    public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
-    private static final String[] HADOOP_CONF_FILES = {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
-
-    private final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
-    private DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
-
-    private FileSystem fileSystem;
-
-    private enum UniqueType {TIMESTAMP, UUID}
-
-    ;
+    private enum UniqueType {TIMESTAMP, UUID};
 
     public enum TargetFilesystem {
         /*
@@ -39,9 +29,16 @@ public class FileOutput extends OutputBase {
         Hadoop Compatible File System
          */
         HCFS
-    }
+    };
 
-    ;
+    public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
+    private static final String[] HADOOP_CONF_FILES = {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
+
+    private final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
+    private DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
+
+    private FileSystem fileSystem;
+
     private String filename;
     // Build sub-directories for the relationships
     private TargetFilesystem targetFilesystem = TargetFilesystem.LOCAL;
@@ -324,7 +321,15 @@ public class FileOutput extends OutputBase {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+        FileOutput clone = (FileOutput)super.clone();
+        clone.setDirForRelationship(new Boolean(this.dirForRelationship));
+        if (this.filename != null)
+            clone.setFilename(new String(this.filename));
+        clone.setUnique(new Boolean(this.unique));
+        if (this.uniqueTimestampFormat != null) {
+            clone.setUniqueTimestampFormat(new String(this.uniqueTimestampFormat));
+        }
+        return clone;
     }
 
 }
