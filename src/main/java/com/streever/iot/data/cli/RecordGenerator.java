@@ -94,7 +94,7 @@ public class RecordGenerator {
                 "Debug.  Pause to allow remote jvm attachment.");
         DEBUG_OPTION.setRequired(false);
 
-        Option GEN_SQL_SCHEMA_OPTION = new Option("sql", "sql", true,
+        Option GEN_SQL_SCHEMA_OPTION = new Option("sql", "sql", false,
                 "Generate Hive Table.");
         GEN_SQL_SCHEMA_OPTION.setRequired(false);
 
@@ -175,7 +175,7 @@ public class RecordGenerator {
                 SqlBuilder sBuilder = new SqlBuilder();
                 Schema schema = Schema.deserialize(line.getOptionValue("s"));
                 sBuilder.setSchema(schema);
-                sBuilder.build();
+                System.out.println(sBuilder.build());
 
             } else {
                 RecordBuilder builder = new RecordBuilder();

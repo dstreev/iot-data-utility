@@ -1,39 +1,29 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.streever.iot</groupId>
     <artifactId>iot-data-utility</artifactId>
     <version>3.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
 
-    <name>IOT Data Utilities</name>
+<!--    <parent>-->
+<!--        <groupId>com.streever.iot</groupId>-->
+<!--        <artifactId>iot-data-utility</artifactId>-->
+<!--        <version>3.0-SNAPSHOT</version>-->
+<!--    </parent>-->
 
-    <modules>
-<!--        <module>kafka.integration</module>-->
-        <module>data-utility-generator</module>
-<!--        <module>mapreduce</module>-->
-<!--        <module>testing.spark</module>-->
-    </modules>
+<!--    <artifactId>data-utility-generator</artifactId>-->
+    <packaging>jar</packaging>
+
+    <name>IOT Data Utility Generator</name>
+
+    <url>http://www.streever.com</url>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Maven Pluggins -->
-        <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
-        <maven.compiler.version>3.8.1</maven.compiler.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.clean.version>3.1.0</maven.clean.version>
-        <maven.resources.version>3.0.2</maven.resources.version>
-        <maven.surefire.version>2.22.1</maven.surefire.version>
-        <maven.jar.version>3.0.2</maven.jar.version>
-        <maven.install.version>2.5.2</maven.install.version>
-        <maven.deploy.version>2.8.2</maven.deploy.version>
-        <maven.site.version>3.7.1</maven.site.version>
-        <maven.reports.version>3.0.0</maven.reports.version>
-        <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
-        <maven.assembly.version>3.3.0</maven.assembly.version>
-        <maven.dependency.version>3.1.2</maven.dependency.version>
+        <hadoop.version>3.1.1</hadoop.version>
+        <kafka.client.version>2.4.1</kafka.client.version>
 
         <jcabi.manifests.version>1.1</jcabi.manifests.version>
 
@@ -47,116 +37,283 @@
         <apache.commons.io.version>2.4</apache.commons.io.version>
         <apache.commons.math.version>3.6.1</apache.commons.math.version>
         <apache.commons.lang3.version>3.1</apache.commons.lang3.version>
-        <!-- Need to be in sync with Hadoop Libs (1.2) -->
-<!--        <apache.commons.cli.version>1.2</apache.commons.cli.version>-->
+
         <apache.commons.codec.version>1.11</apache.commons.codec.version>
         <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
+
+        <jackson.version>2.11.1</jackson.version>
+        <generex.version>1.0.2</generex.version>
+        <format.preserving.version>1.0.0</format.preserving.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.jcabi</groupId>
             <artifactId>jcabi-manifests</artifactId>
             <version>${jcabi.manifests.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}.${cdp.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}.${cdp.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client</artifactId>
+            <version>${hadoop.version}.${cdp.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>${hadoop.version}.${cdp.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.client.version}.${cdp.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.streever.iot</groupId>-->
+        <!--            <artifactId>kafka.integration</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
+
+        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.kafka</groupId>-->
+        <!--            <artifactId>kafka-clients</artifactId>-->
+        <!--            <version>${kafka.client.version}</version>-->
+        <!--        </dependency>-->
+
+        <!-- Format Preserving Encryption -->
+        <dependency>
+            <groupId>com.idealista</groupId>
+            <artifactId>format-preserving-encryption</artifactId>
+            <version>${format.preserving.version}</version>
+        </dependency>
+
+        <!-- Kafka Support -->
+        <!--<dependency>-->
+        <!--<groupId>org.apache.kafka</groupId>-->
+        <!--<artifactId>${kafka.artifact}</artifactId>-->
+        <!--<version>${kafka.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--<groupId>org.apache.spec</groupId>-->
+        <!--<artifactId>${spec.artifact}</artifactId>-->
+        <!--<version>${spec.version}</version>-->
+        <!--<scope>provided</scope>-->
+        <!--</dependency>-->
+        <!--dependency>
+            <groupId>org.apache.spec</groupId>
+            <artifactId>hadoop-producer</artifactId>
+            <version>${spec.hadoop.producer.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.spec</groupId>
+                    <artifactId>kafka_2.10</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId> org.apache.pig</groupId>
+                    <artifactId>pig</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-core-asl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-mapper-asl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency-->
+
+        <!-- Misc. -->
+        <!--        <dependency>-->
+        <!--            <groupId>org.jdom</groupId>-->
+        <!--            <artifactId>jdom2</artifactId>-->
+        <!--            <version>${jdom.version}</version>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.sonatype.jline</groupId>-->
+        <!--            <artifactId>jline</artifactId>-->
+        <!--            <version>${jline.version}</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>jline</groupId>-->
+        <!--            <artifactId>jline</artifactId>-->
+        <!--            <version>${jline.version}</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
+
+        <!-- Jackson JSON Libraries -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- Misc Util Libs -->
+        <dependency>
+            <groupId>com.github.mifmif</groupId>
+            <artifactId>generex</artifactId>
+            <version>${generex.version}</version>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.commons</groupId>-->
+        <!--            <artifactId>commons-lang3</artifactId>-->
+        <!--            <version>${apache.commons.lang3.version}</version>-->
+        <!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>${apache.commons.math.version}</version>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>commons-cli</groupId>-->
+        <!--            <artifactId>commons-cli</artifactId>-->
+        <!--            <version>${apache.commons.cli.version}</version>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>commons-io</groupId>-->
+        <!--            <artifactId>commons-io</artifactId>-->
+        <!--            <version>${apache.commons.io.version}</version>-->
+        <!--        </dependency>-->
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${apache.commons.codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${apache.commons.beanutils.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-                <plugin>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>${maven.clean.version}</version>
-                </plugin>
-                <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-                <plugin>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>${maven.resources.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${maven.compiler.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${maven.surefire.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>${maven.install.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>${maven.deploy.version}</version>
-                </plugin>
-                <!--            site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle-->
-                <plugin>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>${maven.site.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>${maven.reports.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>${maven.shade.plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>${maven.assembly.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${maven.jar.version}</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-
         <plugins>
             <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <Apache-Hadoop-Version>${hadoop.version}</Apache-Hadoop-Version>
-                            <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
+                        <phase>package</phase>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>com.fasterxml.jackson.core,org.apache.commons</includeGroupIds>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <createSourcesJar>false</createSourcesJar>
+                            <finalName>${project.artifactId}-shaded</finalName>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/*.INF</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/**/pom.xml</exclude>
+                                        <exclude>META-INF/**/pom.properties</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ResourceBundleAppendingTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.streever.iot.data.cli.RecordGenerator</mainClass>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <descriptors>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
+                    </descriptors>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <!-- this is used for inheritance merges -->
+                        <phase>package</phase>
+                        <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
+
 
 </project>

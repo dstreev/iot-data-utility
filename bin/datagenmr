@@ -10,8 +10,8 @@ pushd $APP_DIR
 # Build Classpath for Tool
 #. ./hadoop_classpath.sh
 
-APP_JAR=../target/mr-data-utility-3.0-SNAPSHOT-shaded.jar
-MAIN=com.streever.iot.mapreduce.data.utility.DataGenTool
+APP_JAR=/usr/local/iot-data-utility/lib/iot-data-utility-shaded.jar
+MAIN=com.streever.iot.data.mapreduce.DataGenTool
 
 #hadoop jar $APP_JAR $MAIN --libjars $GENJARS -json.cfg $1 -count $2 -mappers $3 -output $4
 #hadoop jar $APP_JAR $MAIN -jsonCfg $1 -count $2 -mappers $3 -output $4

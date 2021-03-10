@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.streever.iot.mapreduce.data.utility;
+package com.streever.iot.data.mapreduce;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
