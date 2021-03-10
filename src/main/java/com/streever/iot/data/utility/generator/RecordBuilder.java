@@ -1,8 +1,7 @@
 package com.streever.iot.data.utility.generator;
 
-import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import com.streever.iot.data.utility.generator.output.FileOutput;
+import com.streever.iot.data.utility.generator.output.LocalFileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputBase;
 
@@ -85,9 +84,9 @@ public class RecordBuilder {
                 outputMap.put(getSchema(), getOutputSpec().getDefault());
                 // When filename in output spec if not set, use the 'record.id'
                 // TODO: file extension
-                if (getOutputSpec().getDefault() instanceof FileOutput && ((FileOutput) getOutputSpec().getDefault()).getFilename() == null) {
+                if (getOutputSpec().getDefault() instanceof LocalFileOutput && ((LocalFileOutput) getOutputSpec().getDefault()).getFilename() == null) {
                     // The id is set in the linking process and is not a serialized element
-                    ((FileOutput) getOutputSpec().getDefault()).setFilename(getSchema().getId());
+                    ((LocalFileOutput) getOutputSpec().getDefault()).setFilename(getSchema().getId());
                 }
                 if (getSchema().getRelationships() != null) {
                     // Start processing relationships
@@ -125,8 +124,8 @@ public class RecordBuilder {
                     output.setName(key);
                     // When filename in output spec if not set, use the 'record.id'
                     // TODO: file extension
-                    if (output instanceof FileOutput && ((FileOutput) output).getFilename() == null) {
-                        ((FileOutput) output).setFilename(getSchema().getId());
+                    if (output instanceof LocalFileOutput && ((LocalFileOutput) output).getFilename() == null) {
+                        ((LocalFileOutput) output).setFilename(getSchema().getId());
                     }
                     outputMap.put(record, output);
                     output.setUsed(Boolean.TRUE);

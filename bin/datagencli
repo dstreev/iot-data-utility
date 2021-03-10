@@ -4,7 +4,7 @@ APP_DIR=`dirname $0`
 CURR_DIR=`pwd`
 REMOTE_DEBUG=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
 
-if [[ -f ./datagen && "${APP_DIR}" != "${CURR_DIR}" && "${APP_DIR}" != "." ]]; then
+if [[ -f ./datagencli && "${APP_DIR}" != "${CURR_DIR}" && "${APP_DIR}" != "." ]]; then
   echo "Appears you are referencing a previously installed 'datagen' while "
   echo "  in the installation directory of 'datagen'."
   echo "Change directories and run 'datagen' to run installed version OR "
@@ -30,9 +30,9 @@ elif [[ -f $APP_DIR/../target/data-utility-generator-shaded.jar ]]; then
     CMD_CP=$APP_DIR/../target/data-utility-generator-shaded.jar
     #echo "Using bin from build directory"
 else
-    # Look in /usr/local/datagen/lib
-    if [[ -f /usr/local/datagen/lib/data-utility-generator-shaded.jar ]]; then
-        CMD_CP=/usr/local/datagen/lib/data-utility-generator-shaded.jar
+    # Look in /usr/local/datagencli/lib
+    if [[ -f /usr/local/datagencli/lib/data-utility-generator-shaded.jar ]]; then
+        CMD_CP=/usr/local/datagencli/lib/data-utility-generator-shaded.jar
         #echo "Using bin from installation directory"
     else
         echo "Couldn't locate 'Data Utility Generator' Library"
@@ -43,7 +43,7 @@ fi
 # Set the default.
 #export HADOOP_CONF_DIR="/etc/hadoop/conf"
 export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-/etc/hadoop/conf}
-AUX_LIBS_DIR=${HADOOP_CLI_AUX_LIBS:-${HOME}/.datagen/aux_libs}
+AUX_LIBS_DIR=${HADOOP_CLI_AUX_LIBS:-${HOME}/.datagencli/aux_libs}
 
 SHOW_CP=
 CMD_DIRECTIVE=

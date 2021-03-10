@@ -2,31 +2,22 @@ package com.streever.iot.data.utility.generator.output;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.streever.iot.data.utility.generator.Schema;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 
-//import java.io.*;
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
 @JsonIgnoreProperties({"writeStream", "fileSystem"})
-public class LocalFileOutput extends OutputBase {
+public abstract class FileOutput extends OutputBase {
 
-    private enum UniqueType {TIMESTAMP, UUID};
+    protected enum UniqueType {TIMESTAMP, UUID};
 
-    public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
-    private static final String[] HADOOP_CONF_FILES = {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
-
-    private final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
-    private DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
-
-    private FileSystem fileSystem;
+    protected final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
+    protected DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
 
     private String filename;
 
@@ -80,6 +71,10 @@ public class LocalFileOutput extends OutputBase {
         df = new SimpleDateFormat(this.uniqueTimestampFormat);
     }
 
+    public void setWriteStream(OutputStream writeStream) {
+        this.writeStream = writeStream;
+    }
+
     protected OutputStream getWriteStream() {
         return writeStream;
     }
@@ -88,31 +83,13 @@ public class LocalFileOutput extends OutputBase {
         filename = record.getId();
     }
 
-    protected boolean createDir(String directory) throws IOException {
-        boolean rtn = false;
-        File dirFile = new File(directory);
-        if (!dirFile.exists()) {
-            System.out.println("LOCAL Filesystem: Creating directory [" + directory + "] for output");
-            rtn = dirFile.mkdirs();
-        } else {
-            // Already exists
-            rtn = true;
-        }
-        // TODO: handle failures to createdir
-        return rtn;
-    }
+    protected abstract boolean createDir(String directory) throws IOException;
 
     @Override
-    protected void writeLine(String line) throws IOException {
-        //            getWriteStream().println(recLine);
-        ((PrintStream) writeStream).println(line);
-    }
+    protected abstract void writeLine(String line) throws IOException;
 
-    protected void openStream(String file) throws IOException {
-        //            getWriteStream().println(recLine);
-        writeStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)), true);
-    }
-
+    protected abstract void openStream(String file) throws IOException;
+    protected abstract void closeStream() throws IOException;
     /*
     Open a file for writing
      */
@@ -121,8 +98,8 @@ public class LocalFileOutput extends OutputBase {
             String file;
             String baseDir = null;
             String adjustedFilename = getFilename();
-            if (unique) {
-                switch (uniqueType) {
+            if (isUnique()) {
+                switch (getUniqueType()) {
                     case TIMESTAMP:
                         adjustedFilename = adjustedFilename + "_" + df.format(new Date());
                         break;
@@ -132,14 +109,14 @@ public class LocalFileOutput extends OutputBase {
                 }
             }
             if (prefix != null) {
-                if (dirForRelationship) {
+                if (isDirForRelationship()) {
                     baseDir = prefix + System.getProperty("file.separator") + getFilename();
                 } else {
                     baseDir = prefix;
                 }
                 createDir(baseDir);
             } else {
-                if (dirForRelationship) {
+                if (isDirForRelationship()) {
                     baseDir = getFilename();
                 }
             }
@@ -162,7 +139,7 @@ public class LocalFileOutput extends OutputBase {
     public boolean close() throws IOException {
         if (isOpen()) {
             //            getWriteStream().println(recLine);
-            ((PrintStream) writeStream).close();
+            closeStream();
             setOpen(false);
         }
         return true;
@@ -171,12 +148,12 @@ public class LocalFileOutput extends OutputBase {
     @Override
     public Object clone() throws CloneNotSupportedException {
         LocalFileOutput clone = (LocalFileOutput) super.clone();
-        clone.setDirForRelationship(new Boolean(this.dirForRelationship));
-        if (this.filename != null)
-            clone.setFilename(new String(this.filename));
+        clone.setDirForRelationship(new Boolean(isDirForRelationship()));
+        if (getFilename() != null)
+            clone.setFilename(new String(getFilename()));
         clone.setUnique(new Boolean(this.unique));
-        if (this.uniqueTimestampFormat != null) {
-            clone.setUniqueTimestampFormat(new String(this.uniqueTimestampFormat));
+        if (getUniqueTimestampFormat() != null) {
+            clone.setUniqueTimestampFormat(new String(getUniqueTimestampFormat()));
         }
         return clone;
     }

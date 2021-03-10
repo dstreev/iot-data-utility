@@ -1,9 +1,12 @@
-- hosts: sdlc
+- hosts: edge
   become: true
 
   vars:
     base_name: datagen
-    base_name_long: data-utility-generator
+    executables:
+      - datagencli
+      - datagenmr
+    binary_prefix: iot-data-utility
 
   tasks:
     - name: Check Directories
@@ -18,18 +21,20 @@
 
     - name: Copy bin
       copy:
-        src: "{{ base_name }}"
+        src: "{{ item }}"
         dest: /usr/local/{{ base_name }}/bin
         mode: 0755
+      with_items: "{{ executables }}"
 
     - name: Copy lib
       copy:
-        src: ../target/{{ base_name_long }}-shaded.jar
+        src: ../target/{{ binary_prefix }}-shaded.jar
         dest: /usr/local/{{ base_name }}/lib
         mode: 0755
 
     - name: Link executable
       file:
-        src: /usr/local/{{ base_name }}/bin/{{ base_name }}
-        dest: /usr/local/bin/{{ base_name }}
+        src: /usr/local/{{ base_name }}/bin/{{ item }}
+        dest: /usr/local/bin/{{ item }}
         mode: 0755
+      with_items: "{{ executables }}"

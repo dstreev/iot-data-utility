@@ -38,7 +38,7 @@ import java.io.InputStream;
 public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritable, Text> {
     static private Logger LOG = Logger.getLogger(DataGenTool.class.getName());
 
-    public static final String CONFIG_FILE = "app.config.file";
+    public static final String SCHEMA_FILE = "schema.file";
     public static final String DEFAULT_CONFIG_RESOURCE_FILE = "/validation-generator.json";
 
     protected Boolean earlyTermination = Boolean.FALSE;
@@ -47,7 +47,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     protected void setup(Context context) {
         // Get the conf location from the job conf.
-        String config = context.getConfiguration().get(CONFIG_FILE);
+        String config = context.getConfiguration().get(SCHEMA_FILE);
         if (config.equals("DEFAULT")) {
             // Use the default validation file.
             LOG.info("Using DEFAULT Config File: " + DEFAULT_CONFIG_RESOURCE_FILE + " from package resources.");

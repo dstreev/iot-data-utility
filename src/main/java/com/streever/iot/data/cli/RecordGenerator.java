@@ -14,6 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RecordGenerator {
+    public static String DEFAULT_VALIDATION_YAML = "/validation/default.yaml";
+    public static Long DEFAULT_COUNT = 500l;
 
     private Options options;
     private CommandLine line;
@@ -29,7 +31,7 @@ public class RecordGenerator {
 
         Option SCHEMA_CONFIG_OPTION = new Option("s", "schema", true,
                 "Schema Config File.");
-        SCHEMA_CONFIG_OPTION.setRequired(true);
+        SCHEMA_CONFIG_OPTION.setRequired(false);
         SCHEMA_CONFIG_OPTION.setType(String.class);
 
         Option COUNT_OPTION = new Option("c", "count", true,
@@ -176,10 +178,15 @@ public class RecordGenerator {
                 Schema schema = Schema.deserialize(line.getOptionValue("s"));
                 sBuilder.setSchema(schema);
                 System.out.println(sBuilder.build());
-
             } else {
                 RecordBuilder builder = new RecordBuilder();
-                Schema record = Schema.deserialize(line.getOptionValue("s"));
+                Schema record = null;
+                if (line.hasOption("s")) {
+                    record = Schema.deserialize(line.getOptionValue("s"));
+                } else {
+                    // use a default for testing.
+                    record = Schema.deserialize(DEFAULT_VALIDATION_YAML);
+                }
                 builder.setSchema(record);
 
                 if (line.hasOption("c")) {
@@ -190,6 +197,9 @@ public class RecordGenerator {
                 } else if (line.hasOption("gb")) {
                     Long gb = Long.valueOf(line.getOptionValue("gb")) * (1024 * 1024 * 1024);
                     builder.setSize(gb);
+                } else {
+                    // Limit when nothing specified.
+                    builder.setCount(DEFAULT_COUNT);
                 }
 
                 // Use the supplied ouput spec

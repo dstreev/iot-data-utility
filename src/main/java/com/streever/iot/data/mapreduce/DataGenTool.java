@@ -88,7 +88,7 @@ public class DataGenTool extends Configured implements Tool {
 //                .build();
 
 
-        Option config = new Option("cfg", "config", true, "Config File in HDFS");
+        Option config = new Option("s", "schema", true, "Schema File in HDFS");
         config.setRequired(true);
 //        Option config = Option.builder("cfg")
 //                .argName("config")
@@ -208,7 +208,7 @@ public class DataGenTool extends Configured implements Tool {
         outputPath = new Path(line.getOptionValue("d"));
         FileOutputFormat.setOutputPath(job, outputPath);
 
-        configuration.set(DataGenMapper.CONFIG_FILE, line.getOptionValue("cfg"));
+        configuration.set(DataGenMapper.SCHEMA_FILE, line.getOptionValue("s"));
 
         return rtn;
     }

@@ -13,7 +13,8 @@ import java.util.Map;
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = FileOutput.class, name = "file")
+        @JsonSubTypes.Type(value = LocalFileOutput.class, name = "local")
+        , @JsonSubTypes.Type(value = DFSOutput.class, name = "dfs")
         , @JsonSubTypes.Type(value = StdOutput.class, name = "std")
         , @JsonSubTypes.Type(value = KafkaOutput.class, name = "kafka")
 })

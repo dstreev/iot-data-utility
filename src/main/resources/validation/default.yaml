@@ -1,11 +1,10 @@
-title: hello
-description: helloDesc
+title: default
+description: validation
 order:
   - active.start
   - active.stop
   - output
   - amount
-  - coordinate
   - longs
   - types
   - report_date
@@ -49,14 +48,6 @@ fields:
       max: 19
     pool:
       size: 100
-  -
-    type: "location"
-    name: "coordinate"
-    pool:
-      items:
-        -
-          longitude: 33.5
-          latitude: -63.5
   -
     type: "date"
     name: "report_date"

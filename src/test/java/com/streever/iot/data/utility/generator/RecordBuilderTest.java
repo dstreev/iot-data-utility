@@ -1,6 +1,6 @@
 package com.streever.iot.data.utility.generator;
 
-import com.streever.iot.data.utility.generator.output.FileOutput;
+import com.streever.iot.data.utility.generator.output.LocalFileOutput;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -236,8 +236,8 @@ public class RecordBuilderTest {
         // Strip off path.
         String filename = FilenameUtils.getName(resource);
         // Check if LOCAL or HCFS is the target FileSystem
-        if (builder.getOutputSpec().getDefault() instanceof FileOutput) {
-            if (((FileOutput) builder.getOutputSpec().getDefault()).getTargetFilesystem() == FileOutput.TargetFilesystem.LOCAL) {
+        if (builder.getOutputSpec().getDefault() instanceof LocalFileOutput) {
+            if ((builder.getOutputSpec().getDefault()) instanceof LocalFileOutput) {
                 // Only set root dir for LOCAL Filesytem.
                 builder.setOutputPrefix(BASE_OUTPUT_DIR + System.getProperty("file.separator") + filename);
             } else {
