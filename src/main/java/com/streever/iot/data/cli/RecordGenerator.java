@@ -2,11 +2,13 @@ package com.streever.iot.data.cli;
 
 import com.jcabi.manifests.Manifests;
 import com.streever.iot.data.utility.generator.RecordBuilder;
-import com.streever.iot.data.utility.generator.OutputSpec;
+import com.streever.iot.data.utility.generator.OutputConfig;
 import com.streever.iot.data.utility.generator.Schema;
 import com.streever.iot.data.utility.generator.SqlBuilder;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -14,7 +16,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RecordGenerator {
-    public static String DEFAULT_VALIDATION_YAML = "/validation/default.yaml";
+    private static Logger LOG = LogManager.getLogger(RecordGenerator.class);
+
+    public static String DEFAULT_VALIDATION_YAML = "/validation/simple-default.yaml";
     public static Long DEFAULT_COUNT = 500l;
 
     private Options options;
@@ -173,55 +177,72 @@ public class RecordGenerator {
                 System.out.println("Attached Remote Debugger <enter to proceed>");
                 sc.nextLine();
             }
+            Schema record = null;
+            if (line.hasOption("s")) {
+                String schemaFile = line.getOptionValue("s");
+                LOG.info("Schema File: " + schemaFile);
+                record = Schema.deserializeResource(schemaFile);
+            } else {
+                // use a default for testing.
+                LOG.info("No schema specified.  Using default 'validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
+                record = Schema.deserializeResource(DEFAULT_VALIDATION_YAML);
+            }
+            RecordBuilder builder = new RecordBuilder();
+            builder.setSchema(record);
+
             if (line.hasOption("sql")) {
+                builder.init();
                 SqlBuilder sBuilder = new SqlBuilder();
-                Schema schema = Schema.deserialize(line.getOptionValue("s"));
-                sBuilder.setSchema(schema);
+                sBuilder.setSchema(record);
                 System.out.println(sBuilder.build());
             } else {
-                RecordBuilder builder = new RecordBuilder();
-                Schema record = null;
-                if (line.hasOption("s")) {
-                    record = Schema.deserialize(line.getOptionValue("s"));
-                } else {
-                    // use a default for testing.
-                    record = Schema.deserialize(DEFAULT_VALIDATION_YAML);
-                }
-                builder.setSchema(record);
-
                 if (line.hasOption("c")) {
-                    builder.setCount(Long.valueOf(line.getOptionValue("c")));
+                    Long count = Long.valueOf(line.getOptionValue("c"));
+                    LOG.info("Count: " + count);
+                    builder.setCount(count);
                 } else if (line.hasOption("mb")) {
-                    Long mb = Long.valueOf(line.getOptionValue("mb")) * (1024 * 1024);
+                    Long mbSize = Long.valueOf(line.getOptionValue("mb"));
+                    LOG.info("MB Size: " + mbSize);
+                    Long mb = mbSize * (1024 * 1024);
                     builder.setSize(mb);
                 } else if (line.hasOption("gb")) {
-                    Long gb = Long.valueOf(line.getOptionValue("gb")) * (1024 * 1024 * 1024);
+                    Long gbSize = Long.valueOf(line.getOptionValue("gb"));
+                    LOG.info("GB Size: " + gbSize);
+                    Long gb = gbSize * (1024 * 1024 * 1024);
                     builder.setSize(gb);
                 } else {
                     // Limit when nothing specified.
+                    LOG.info("No Size/Count specified, using default: " + DEFAULT_COUNT);
                     builder.setCount(DEFAULT_COUNT);
                 }
 
                 // Use the supplied ouput spec
                 if (line.hasOption("o")) {
-                    OutputSpec outputSpec = OutputSpec.deserialize(line.getOptionValue("o"));
-                    builder.setOutputSpec(outputSpec);
+                    String ops = line.getOptionValue("o");
+                    LOG.info("Output Configuration: " + ops);
+                    OutputConfig outputCfg = OutputConfig.deserialize(ops);
+                    builder.setOutputConfig(outputCfg);
                 } else {
                     // or build the reference based in flags.
                     String[] specOutput = new String[2];
                     if (line.hasOption("csv")) {
+                        LOG.info("Output Spec: csv");
                         specOutput[0] = "csv";
                     }
                     if (line.hasOption("json")) {
+                        LOG.info("Output Spec: json");
                         specOutput[0] = "json";
                     }
                     if (line.hasOption("std")) {
+                        LOG.info("Output Spec: std");
                         specOutput[1] = "std";
                     }
                     if (line.hasOption("local")) {
+                        LOG.info("Output Spec: local");
                         specOutput[1] = "local";
                     }
                     if (line.hasOption("hcfs")) {
+                        LOG.info("Output Spec: hcfs");
                         specOutput[1] = "hcfs";
                     }
 
@@ -241,11 +262,16 @@ public class RecordGenerator {
                     } else if (!line.hasOption("std") && line.hasOption("uuid")) {
                         specFile = specFile + "_uuid";
                     }
-                    OutputSpec outputSpec = OutputSpec.deserialize("/standard/" + specFile + ".yaml");
-                    builder.setOutputSpec(outputSpec);
+                    specFile = "/standard/" + specFile + ".yaml";
+                    LOG.info("SpecFile: " + specFile);
+
+                    OutputConfig outputSpec = OutputConfig.deserialize(specFile);
+                    builder.setOutputConfig(outputSpec);
                 }
                 if (line.hasOption("p")) {
-                    builder.setOutputPrefix(line.getOptionValue("p"));
+                    String outputPrefix = line.getOptionValue("p");
+                    LOG.info("Output Prefix: " + outputPrefix);
+                    builder.setOutputPrefix(outputPrefix);
                 }
                 builder.init();
                 long[] counts = builder.run();

@@ -1,6 +1,5 @@
 default:
-  type: "file"
+  type: "local"
   format:
     type: "csv"
   dirForRelationship: true
-  targetFilesystem: LOCAL

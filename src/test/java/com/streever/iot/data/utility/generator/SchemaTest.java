@@ -18,7 +18,7 @@ public class SchemaTest {
     @Test
     public void loadTest_001() {
         try {
-            Schema r1 = Schema.deserialize("/generator_v2/cc_account_with_relationships.yaml");
+            Schema r1 = Schema.deserializeResource("/generator_v2/cc_account_with_relationships.yaml");
         } catch (IOException e) {
             assertTrue(false);
         }
@@ -29,7 +29,7 @@ public class SchemaTest {
     public void recordTest_001() {
         Schema record = null;
         try {
-            record = Schema.deserialize("/generator_v2/cc_account.yaml");
+            record = Schema.deserializeResource("/generator_v2/cc_account.yaml");
         } catch (IOException e) {
             assertTrue(false);
         }

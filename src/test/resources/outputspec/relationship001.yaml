@@ -1,15 +1,15 @@
 default:
-  type: "file"
+  type: "local"
   format:
     type: "csv"
 relationships:
   acct:
-    type: "file"
+    type: "local"
     format:
       type: "csv"
     filename: "acct.csv"
   address:
-    type: "file"
+    type: "local"
     format:
       type: "csv"
     filename: "addr.json"

@@ -4,28 +4,46 @@
 
 cd `dirname $0`
 
-mkdir -p /usr/local/datagen/bin
-mkdir -p /usr/local/datagen/lib
+if (( $EUID != 0 )); then
+  echo "Setting up as non-root user"
+  BASE_DIR=$HOME/.iot-data-utility
+else
+  echo "Setting up as root user"
+  BASE_DIR=/usr/local/iot-data-utility
+fi
 
-cp -f datagencli /usr/local/datagen/bin
-cp -f datagenmr /usr/local/datagen/bin
+mkdir -p $BASE_DIR/bin
+mkdir -p $BASE_DIR/lib
 
 # Cleanup previous installation
-rm -f /usr/local/datagen/lib/*.jar
+rm -f $BASE_DIR/lib/*.jar
+rm -f $BASE_DIR/bin/*
 
-if [ -f ../target/iot-data-utility-shaded.jar ]; then
-    cp -f ../target/iot-data-utility-shaded.jar /usr/local/datagen/lib
-fi
+cp -f datagencli $BASE_DIR/bin
+cp -f datagenmr $BASE_DIR/bin
 
 if [ -f iot-data-utility-shaded.jar ]; then
-    cp -f iot-data-utility-shaded.jar /usr/local/datagen/lib
+    cp -f iot-data-utility-shaded.jar $BASE_DIR/lib
 fi
 
-chmod -R +r /usr/local/datagen
-chmod +x /usr/local/datagen/bin/datagencli
-chmod +x /usr/local/datagen/bin/datagenmr
+chmod -R +r $BASE_DIR
+chmod +x $BASE_DIR/bin/datagencli
+chmod +x $BASE_DIR/bin/datagenmr
 
-ln -sf /usr/local/datagen/bin/datagencli /usr/local/bin/datagencli
-ln -sf /usr/local/datagen/bin/datagenmr /usr/local/bin/datagenmr
+if (( $EUID == 0 )); then
+  echo "Setting up global links"
+  ln -sf $BASE_DIR/bin/datagencli /usr/local/bin/datagencli
+  ln -sf $BASE_DIR/bin/datagenmr /usr/local/bin/datagenmr
+else
+  mkdir -p $HOME/bin
+  ln -sf $BASE_DIR/bin/datagencli $HOME/bin/datagencli
+  ln -sf $BASE_DIR/bin/datagenmr $HOME/bin/datagenmr
+  echo "Executable in \$HOME/bin .  Add this to the environment path."
+fi
+
+
+
+
+
 
 

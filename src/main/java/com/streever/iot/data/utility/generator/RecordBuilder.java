@@ -23,7 +23,7 @@ public class RecordBuilder {
     // Added to the Output when it's opened.
     private String outputPrefix;
 
-    private OutputSpec outputSpec;
+    private OutputConfig outputConfig;
 
     private Map<Schema, Output> outputMap = new TreeMap<Schema, Output>();
 
@@ -59,17 +59,17 @@ public class RecordBuilder {
         this.outputPrefix = outputPrefix;
     }
 
-    public OutputSpec getOutputSpec() {
-        if (outputSpec == null) {
+    public OutputConfig getOutputConfig() {
+        if (outputConfig == null) {
             // Load Default.
-            outputSpec = OutputSpec.deserialize("/standard/csv_std.yaml");
+            outputConfig = OutputConfig.deserialize("/standard/csv_std.yaml");
             System.out.println("Loading default output spec (System.out)");
         }
-        return outputSpec;
+        return outputConfig;
     }
 
-    public void setOutputSpec(OutputSpec outputSpec) {
-        this.outputSpec = outputSpec;
+    public void setOutputConfig(OutputConfig outputConfig) {
+        this.outputConfig = outputConfig;
     }
 
     /*
@@ -78,19 +78,19 @@ public class RecordBuilder {
     */
     protected boolean mapOutputSpecs() {
         boolean rtn = Boolean.TRUE;
-        if (getOutputSpec() != null) {
-            if (getOutputSpec().getDefault() != null) {
-                getOutputSpec().getDefault().setName(getSchema().getId());
-                outputMap.put(getSchema(), getOutputSpec().getDefault());
+        if (getOutputConfig() != null) {
+            if (getOutputConfig().getDefault() != null) {
+                getOutputConfig().getDefault().setName(getSchema().getId());
+                outputMap.put(getSchema(), getOutputConfig().getDefault());
                 // When filename in output spec if not set, use the 'record.id'
                 // TODO: file extension
-                if (getOutputSpec().getDefault() instanceof LocalFileOutput && ((LocalFileOutput) getOutputSpec().getDefault()).getFilename() == null) {
+                if (getOutputConfig().getDefault() instanceof LocalFileOutput && ((LocalFileOutput) getOutputConfig().getDefault()).getFilename() == null) {
                     // The id is set in the linking process and is not a serialized element
-                    ((LocalFileOutput) getOutputSpec().getDefault()).setFilename(getSchema().getId());
+                    ((LocalFileOutput) getOutputConfig().getDefault()).setFilename(getSchema().getId());
                 }
                 if (getSchema().getRelationships() != null) {
                     // Start processing relationships
-                    rtn = mapOutputSpecRelationships(getSchema().getRelationships(), getOutputSpec().getRelationships());
+                    rtn = mapOutputSpecRelationships(getSchema().getRelationships(), getOutputConfig().getRelationships());
                 }
             } else {
                 rtn = Boolean.FALSE;
@@ -111,7 +111,7 @@ public class RecordBuilder {
             if (output == null) {
                 // Output Spec matching name not found.
                 try {
-                    OutputBase spec = (OutputBase) getOutputSpec().getDefault().clone();
+                    OutputBase spec = (OutputBase) getOutputConfig().getDefault().clone();
                     spec.setName(key);
                     outputMap.put(record, spec);
                     spec.link(record);
@@ -149,7 +149,7 @@ public class RecordBuilder {
         // Part of the initialization requires us to sweep through the schema and
         // link the parts of the schema together (hierarchy) so we can build complex
         // output streams with dependencies.
-        getSchema().link("main");
+        getSchema().link(getSchema().getTitle());
         // Link the parts of the output with the schema so we know where to
         // send records when they are produced.
         boolean map = mapOutputSpecs();
@@ -194,7 +194,7 @@ public class RecordBuilder {
      */
     protected void openOutput() throws IOException {
         // Initialize if null;
-        getOutputSpec();
+        getOutputConfig();
         // Open specs
         Set<Schema> outputKeys = outputMap.keySet();
         for (Schema record : outputKeys) {

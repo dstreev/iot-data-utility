@@ -122,7 +122,7 @@ public class RecordBuilderTest {
         RecordBuilder builder = new RecordBuilder();
         for (String resource : cpExceptionResources) {
             try {
-                Schema record = Schema.deserialize(resource);
+                Schema record = Schema.deserializeResource(resource);
                 assertFalse(true);
             } catch (IOException rte) {
                 rte.printStackTrace();
@@ -162,15 +162,15 @@ public class RecordBuilderTest {
         RecordBuilder builder = new RecordBuilder();
         Schema record = null;
         try {
-            record = Schema.deserialize("/generator/cc_account.yaml");
+            record = Schema.deserializeResource("/generator/cc_account.yaml");
         } catch (IOException e) {
             System.err.println("Processing: " + "/generator/cc_account.yaml");
             e.printStackTrace();
             assertTrue(false);
         }
         builder.setSchema(record);
-        OutputSpec outputSpec = OutputSpec.deserialize("/standard/csv_std.yaml");
-        builder.setOutputSpec(outputSpec);
+        OutputConfig outputSpec = OutputConfig.deserialize("/standard/csv_std.yaml");
+        builder.setOutputConfig(outputSpec);
         // Strip off path.
 //        String filename = FilenameUtils.getName(resource);
 //        builder.setOutputPrefix(BASE_OUTPUT_DIR + filename);
@@ -222,7 +222,7 @@ public class RecordBuilderTest {
         RecordBuilder builder = new RecordBuilder();
         Schema record = null;
         try {
-            record = Schema.deserialize(resource);
+            record = Schema.deserializeResource(resource);
         } catch (IOException e) {
             System.err.println("Processing: " + resource);
             e.printStackTrace();
@@ -230,14 +230,14 @@ public class RecordBuilderTest {
         }
         builder.setSchema(record);
         if (outputSpecResource != null) {
-            OutputSpec outputSpec = OutputSpec.deserialize(outputSpecResource);
-            builder.setOutputSpec(outputSpec);
+            OutputConfig outputSpec = OutputConfig.deserialize(outputSpecResource);
+            builder.setOutputConfig(outputSpec);
         }
         // Strip off path.
         String filename = FilenameUtils.getName(resource);
         // Check if LOCAL or HCFS is the target FileSystem
-        if (builder.getOutputSpec().getDefault() instanceof LocalFileOutput) {
-            if ((builder.getOutputSpec().getDefault()) instanceof LocalFileOutput) {
+        if (builder.getOutputConfig().getDefault() instanceof LocalFileOutput) {
+            if ((builder.getOutputConfig().getDefault()) instanceof LocalFileOutput) {
                 // Only set root dir for LOCAL Filesytem.
                 builder.setOutputPrefix(BASE_OUTPUT_DIR + System.getProperty("file.separator") + filename);
             } else {

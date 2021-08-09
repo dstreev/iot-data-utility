@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class CSVFormat extends FormatBase {
     private String separator = ",";
-    private String newLine = "\n";
+//    private String newLine = "\n";
     private String quoteChar = "\"";
 
     public String getExtension() {
@@ -26,13 +26,13 @@ public class CSVFormat extends FormatBase {
         this.separator = separator;
     }
 
-    public String getNewLine() {
-        return newLine;
-    }
+//    public String getNewLine() {
+//        return newLine;
+//    }
 
-    public void setNewLine(String newLine) {
-        this.newLine = newLine;
-    }
+//    public void setNewLine(String newLine) {
+//        this.newLine = newLine;
+//    }
 
     public String getQuoteChar() {
         return quoteChar;
@@ -72,7 +72,7 @@ public class CSVFormat extends FormatBase {
     @Override
     public Object clone() throws CloneNotSupportedException {
         CSVFormat clone = (CSVFormat)super.clone();
-        clone.setNewLine(this.newLine);
+//        clone.setNewLine(this.newLine);
         clone.setQuoteChar(this.quoteChar);
         clone.setSeparator(this.separator);
         return clone;

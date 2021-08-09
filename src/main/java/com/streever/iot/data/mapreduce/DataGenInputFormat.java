@@ -36,7 +36,8 @@ public class DataGenInputFormat extends InputFormat<LongWritable, NullWritable> 
 
     private static final Log LOG = LogFactory.getLog(DataGenInputFormat.class);
 
-    public static final String NUM_ROWS = "data.gen.num-rows";
+    public static final String NUM_ROWS = "data-gen.num-rows";
+    public static final String TOTAL_SIZE_MB = "data-gen.size.mb";
 
     /**
      * An input split consisting of a range on numbers.

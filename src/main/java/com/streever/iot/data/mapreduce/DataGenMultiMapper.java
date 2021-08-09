@@ -40,16 +40,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritable, Text> {
-    static private Logger LOG = Logger.getLogger(DataGenMapper.class.getName());
+public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text, Text> {
+    static private Logger LOG = Logger.getLogger(DataGenMultiMapper.class.getName());
 
-    public static final String DEFAULT_CONFIG_RESOURCE_FILE = "/validation/simple-default.yaml";
+//    public static final String SCHEMA_FILE = "schema.file";
+    public static final String DEFAULT_MULTI_CONFIG_RESOURCE_FILE = "/validation/multi-default.yaml";
+    public static final String PARTITION_PATH_PREFIX = "partition.path.prefix";
 
     protected Boolean earlyTermination = Boolean.FALSE;
-
-    protected Text textRecord = new Text();
-    protected long localCount = 0l;
-    protected long localSize = 0l;
+    protected String partitionPathPrefix = null;
 
     // default format for now.
     protected CSVFormat format = new CSVFormat();
@@ -58,12 +57,13 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     protected void setup(Context context) {
         // Get the conf location from the job conf.
-        String config = context.getConfiguration().get(DataGenTool.SCHEMA_FILE, DEFAULT_CONFIG_RESOURCE_FILE);
+        String config = context.getConfiguration().get(DataGenTool.SCHEMA_FILE, DEFAULT_MULTI_CONFIG_RESOURCE_FILE);
+        partitionPathPrefix = context.getConfiguration().get(PARTITION_PATH_PREFIX, "not-set");
 
-        if (config.equals(DEFAULT_CONFIG_RESOURCE_FILE)) {
+        if (config.equals(DEFAULT_MULTI_CONFIG_RESOURCE_FILE)) {
             // Use the default validation file.
             try {
-                InputStream configInputStream = getClass().getResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE);
+                InputStream configInputStream = getClass().getResourceAsStream(DEFAULT_MULTI_CONFIG_RESOURCE_FILE);
                 schema = Schema.deserializeInputStream(configInputStream);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -98,17 +98,20 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 Write a record, based on the schema, to the proper output path.
  */
     protected long write(Context context, Schema record) throws IOException, InterruptedException {
-//        Map<Schema, String> pathMap = record.getPathMap();
+        Map<Schema, String> pathMap = record.getPathMap();
         String strRec = format.write(record.getValueMap());
-//        if (pathMap != null) {
-//            String schemaPath = pathMap.get(record);
-//            if (record.getPartitioned()) {
-//                schemaPath = schemaPath + "/" + partitionPathPrefix;
-//            }
-//            context.write(new Text(schemaPath), new Text(strRec));
-//        } else {
-            context.write(NullWritable.get(), new Text(strRec));
-//        }
+        LOG.info("Writing record (" + record.getTitle() + "): " + strRec);
+        if (pathMap != null) {
+            String schemaPath = pathMap.get(record);
+            if (record.getPartitioned()) {
+                schemaPath = schemaPath + "/" + partitionPathPrefix;
+            }
+            context.write(new Text(schemaPath), new Text(strRec));
+        } else {
+            // Shouldn't happen.  Validations should ensure that there
+            // is a hierarchy.
+//            context.write(NullWritable.get(), new Text(strRec));
+        }
         // The last generated recordset
         return strRec.length();
     }

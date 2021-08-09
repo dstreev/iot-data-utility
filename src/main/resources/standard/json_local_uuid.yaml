@@ -1,8 +1,7 @@
 default:
-  type: "file"
+  type: "local"
   format:
     type: "json"
   dirForRelationship: true
-  targetFilesystem: LOCAL
   unique:     true
   uniqueType: UUID

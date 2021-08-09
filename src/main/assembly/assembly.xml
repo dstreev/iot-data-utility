@@ -37,10 +37,11 @@
         <fileSet>
             <directory>${project.basedir}/bin</directory>
             <includes>
-                <include>datagen</include>
+                <include>datagencli</include>
+                <include>datagenmr</include>
                 <include>setup.sh</include>
             </includes>
-            <outputDirectory>iot-datagen</outputDirectory>
+            <outputDirectory>iot-data-utility</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>
         </fileSet>
 
@@ -49,7 +50,7 @@
             <includes>
                 <include>*shaded.jar</include>
             </includes>
-            <outputDirectory>iot-datagen</outputDirectory>
+            <outputDirectory>iot-data-utility</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>
         </fileSet>
     </fileSets>

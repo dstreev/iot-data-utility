@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class OutputSpec {
+public class OutputConfig {
     private OutputBase default_ = new LocalFileOutput();
     private Map<String, OutputBase> relationships = new TreeMap<String, OutputBase>();
 
@@ -32,11 +32,11 @@ public class OutputSpec {
         this.relationships = relationships;
     }
 
-    public static OutputSpec deserialize(String configResource) {
+    public static OutputConfig deserialize(String configResource) {
         if (configResource == null) {
             return null;
         }
-        OutputSpec outputSpec = null;
+        OutputConfig outputSpec = null;
 //        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
 //        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
 //        String methodName = et.getMethodName();
@@ -50,7 +50,7 @@ public class OutputSpec {
             URL configURL = mapper.getClass().getResource(configResource);
             if (configURL != null) {
                 String yamlConfigDefinition = IOUtils.toString(configURL, "UTF-8");
-                outputSpec = mapper.readerFor(OutputSpec.class).readValue(yamlConfigDefinition);
+                outputSpec = mapper.readerFor(OutputConfig.class).readValue(yamlConfigDefinition);
             } else {
                 throw new RuntimeException("Couldn't locate 'Serialized Record File': " + configResource);
             }

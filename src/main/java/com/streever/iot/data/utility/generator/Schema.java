@@ -11,16 +11,19 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.*;
 
-@JsonIgnoreProperties({"orderedFields", "parent", "id", "keyMap", "valueMap"})
+@JsonIgnoreProperties({"orderedFields", "parent", "id", "keyMap", "valueMap", "pathMap"})
 public class Schema implements Comparable<Schema> {
     private String id;
     private String title;
     private String description;
     private Schema parent;
+    private Boolean partitioned = Boolean.FALSE;
+
+    private Map<Schema, String> pathMap = null;
 
     public String getId() {
         return id;
@@ -36,6 +39,14 @@ public class Schema implements Comparable<Schema> {
 
     public void setParent(Schema parent) {
         this.parent = parent;
+    }
+
+    public Boolean getPartitioned() {
+        return partitioned;
+    }
+
+    public void setPartitioned(Boolean partitioned) {
+        this.partitioned = partitioned;
     }
 
     // Used to control if record gen is terminated
@@ -124,6 +135,11 @@ public class Schema implements Comparable<Schema> {
             return Boolean.FALSE;
         }
     }
+
+    public Map<Schema, String> getPathMap() {
+        return pathMap;
+    }
+
     /*
     Use this to loop through the fields and relationships to validate the configurations.
      */
@@ -138,17 +154,19 @@ public class Schema implements Comparable<Schema> {
                 rtn = Boolean.FALSE;
             }
         }
-        if (record.getRelationships() != null) {
-            Set<String> relationships = record.getRelationships().keySet();
-            for (String relationshipKey: relationships) {
-                Relationship relationship = record.getRelationships().get(relationshipKey);
-                // TODO: Check Cardinality here, if needed...
-                // Recurse into record.
+        if (record.getRelationships() != null && record.getRelationships().size() > 0) {
+            pathMap = new TreeMap<Schema, String>();
+            pathMap.put(this, this.getTitle());
+            for (Map.Entry<String, Relationship> relationshipEntry: getRelationships().entrySet()) {
+                Relationship relationship = relationshipEntry.getValue();
+                pathMap.put(relationship.getRecord(), relationshipEntry.getKey());
+                relationship.getRecord().setParent(record);
                 if (!validate(relationship.getRecord())) {
                     rtn = Boolean.FALSE;
                 }
             }
         }
+
         return rtn;
     }
 
@@ -363,7 +381,40 @@ public class Schema implements Comparable<Schema> {
         return this.getId().compareTo(o.getId());
     }
 
-    public static Schema deserialize(String configResource) throws IOException, JsonMappingException {
+    public static Schema deserializeInputStream(InputStream inputStream) throws IOException {
+        Schema recDef = null;
+        ObjectMapper mapper = null;
+//        if ("yaml".equals(extension.toLowerCase()) || "yml".equals(extension.toLowerCase())) {
+            mapper = new ObjectMapper(new YAMLFactory());
+//        } else if ("json".equals(extension.toLowerCase()) || "jsn".equals(extension.toLowerCase())) {
+//            mapper = new ObjectMapper(new JsonFactory());
+//        } else {
+//            throw new RuntimeException(configResource + ": can't determine type by extension.  Require one of: ['yaml',yml,'json','jsn']");
+//        }
+
+        // Try as a Resource (in classpath)
+//        URL configURL = mapper.getClass().getResource(configResource);
+//        if (configURL != null) {
+//            // Convert to String.
+//            String configDefinition = IOUtils.toString(configURL, "UTF-8");
+//            recDef = mapper.readerFor(Schema.class).readValue(configDefinition);
+//        } else {
+//            // Try on Local FileSystem.
+//            configURL = new URL("file", null, configResource);
+//            if (configURL != null) {
+//                String configDefinition = IOUtils.toString(configURL, "UTF-8");
+//                recDef = mapper.readerFor(Schema.class).readValue(configDefinition);
+                recDef = mapper.readerFor(Schema.class).readValue(new BufferedReader(new InputStreamReader(inputStream)));
+//            } else {
+//                throw new RuntimeException("Couldn't locate 'Serialized Record File': " + configResource);
+//            }
+//        }
+
+        return recDef;
+
+    }
+
+    public static Schema deserializeResource(String configResource) throws IOException, JsonMappingException {
         Schema recDef = null;
 //        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
 //        StackTraceElement et = stacktrace[2];//maybe this number needs to be corrected
@@ -400,5 +451,6 @@ public class Schema implements Comparable<Schema> {
 
         return recDef;
     }
+
 
 }

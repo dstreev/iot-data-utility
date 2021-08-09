@@ -67,7 +67,7 @@ public class SqlBuilder {
 
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE EXTERNAL TABLE ");
-        sb.append(schema.getId()).append(" \n");//
+        sb.append(schema.getTitle()).append(" \n");//
         // Go through the valuemap.
         // TODO: Use the keymap to create CONSTRAINTS.
         Iterator<FieldProperties> iValueKeys = schema.getValueMap().keySet().iterator();

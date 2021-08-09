@@ -2,7 +2,7 @@
   become: true
 
   vars:
-    base_name: datagen
+    base_name: iot-data-utility
     executables:
       - datagencli
       - datagenmr
@@ -37,4 +37,5 @@
         src: /usr/local/{{ base_name }}/bin/{{ item }}
         dest: /usr/local/bin/{{ item }}
         mode: 0755
+        state: link
       with_items: "{{ executables }}"

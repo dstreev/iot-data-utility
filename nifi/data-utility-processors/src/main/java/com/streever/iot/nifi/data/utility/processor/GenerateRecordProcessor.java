@@ -18,7 +18,7 @@ package com.streever.iot.nifi.data.utility.processor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.streever.iot.data.utility.generator.RecordGenerator;
+//import com.streever.iot.data.utility.generator.RecordGenerator;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import org.apache.commons.logging.Log;
 

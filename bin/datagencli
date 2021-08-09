@@ -1,19 +1,22 @@
 #!/usr/bin/env sh
 
-APP_DIR=`dirname $0`
-CURR_DIR=`pwd`
-REMOTE_DEBUG=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+# Resolve Symlinks of exe
+RESOLVED_EXE_PATH=`readlink -f $0`
+# Find Dir of resolved script
+APP_DIR=$(dirname $RESOLVED_EXE_PATH)
+CURR_DIR=$(pwd)
 
-if [[ -f ./datagencli && "${APP_DIR}" != "${CURR_DIR}" && "${APP_DIR}" != "." ]]; then
-  echo "Appears you are referencing a previously installed 'datagen' while "
-  echo "  in the installation directory of 'datagen'."
-  echo "Change directories and run 'datagen' to run installed version OR "
-  echo "Run current directories 'datagen' via './datagen'"
-  exit -1
+echo "APP_DIR: $APP_DIR"
+
+if [[ "${APP_DIR}" == "${HOME}/.iot-data-utility/bin" ]]; then
+  echo "Running from User Local Instance"
+else
+  echo "Running Host instance"
 fi
 
-PRG_ARGS=
-CMD_CP=
+if [[ ! -d ${HOME}/.iot-data-utility/aux_libs ]]; then
+  mkdir -p ${HOME}/.iot-data-utility/aux_libs
+fi
 
 if [ ! -z ${JAVA_HOME} ]; then
   JAVA="${JAVA_HOME}/bin/java"
@@ -21,41 +24,27 @@ else
   JAVA=java
 fi
 
-if [[ -f ./data-utility-generator-shaded.jar ]]; then
-    # Look in Current Directory
-    CMD_CP=$APP_DIR/data-utility-generator-shaded.jar
-    #echo "Using bin from same directory"
-elif [[ -f $APP_DIR/../target/data-utility-generator-shaded.jar ]]; then
-    # Look in ../target
-    CMD_CP=$APP_DIR/../target/data-utility-generator-shaded.jar
-    #echo "Using bin from build directory"
-else
-    # Look in /usr/local/datagencli/lib
-    if [[ -f /usr/local/datagencli/lib/data-utility-generator-shaded.jar ]]; then
-        CMD_CP=/usr/local/datagencli/lib/data-utility-generator-shaded.jar
-        #echo "Using bin from installation directory"
-    else
-        echo "Couldn't locate 'Data Utility Generator' Library"
-        exit 1
-    fi
-fi
+PRG_ARGS=
+CMD_CP=
 
 # Set the default.
-#export HADOOP_CONF_DIR="/etc/hadoop/conf"
-export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-/etc/hadoop/conf}
-AUX_LIBS_DIR=${HADOOP_CLI_AUX_LIBS:-${HOME}/.datagencli/aux_libs}
+export HADOOP_CONF_DIR="/etc/hadoop/conf"
+
+AUX_LIBS_DIR=${HMS_MIRROR_AUX_LIBS:-${HOME}/.iot-data-utility/aux_libs}
 
 SHOW_CP=
 CMD_DIRECTIVE=
 CMD_ARGS=
 VERBOSE=
-REMOTE_DEBUG=
-ALT_JAVA_OPTS=
+HADOOP_CLASSPATH=
+APP_JAVA_OPTS=${JAVA_OPTS:-}
 
 if [[ ! -d ${AUX_LIBS_DIR} ]]; then
-    mkdir -p ${AUX_LIBS_DIR}
+  mkdir -p ${AUX_LIBS_DIR}
 fi
 
+
+#####
 while [[ $# -gt 0 ]]; do
   case "$1" in
       -D*)
@@ -77,7 +66,7 @@ while [[ $# -gt 0 ]]; do
       PRG_ARGS="${PRG_ARGS} --debug"
       ;;
     *)
-      PRG_ARGS="${PRG_ARGS} $@"
+      PRG_ARGS="${PRG_ARGS} \"$1\""
       break;
   esac
 done
@@ -88,9 +77,19 @@ if [[ ! -d ${AUX_LIBS_DIR} ]]; then
     mkdir -p ${AUX_LIBS_DIR}
 fi
 
-for jarFile in `ls -d ${AUX_LIBS_DIR}/*.jar 2> /dev/null`; do
-    CMD_CP=${CMD_CP}:$jarFile
+for jarFile in $(ls -d ${AUX_LIBS_DIR}/*.jar 2>/dev/null); do
+  CMD_CP=${CMD_CP}:$jarFile
 done
+
+# Choose to use embedded libs (Hadoop 3+) or get Hadoop Classpath locally
+if [[ -f $APP_DIR/../lib/iot-data-utility-shaded.jar ]]; then
+  # Look in /usr/local/iot-data-utility/lib
+  CMD_CP=$APP_DIR/../lib/iot-data-utility-shaded.jar:${CMD_CP}
+  #echo "Using bin from installation directory"
+else
+  echo "Couldn't locate hms-mirror Library: ${APP_DIR}/../lib/iot-data-utility-shaded.jar"
+  exit 1
+fi
 
 CLI_CMD=""
 
@@ -98,14 +97,15 @@ if [[ "${VERBOSE}x" != "x" ]]; then
     echo "Passing app Params: ${PRG_ARGS}"
 fi
 
+if [[ "${APP_JAVA_OPTS}x" != "x" ]]; then
+  echo "Application JAVA_OPTS=${APP_JAVA_OPTS}" 1>&2
+fi
+
 if [[ "${SHOW_CP}x" != "x" ]]; then
     echo "Classpath: ${CMD_CP}"
 fi
 
-JV=$(${JAVA} -version)
-
-echo "Using Java Version: "
-echo $JV
+$(${JAVA} -version)
 
 CLI_CMD="${JAVA} -cp ${CMD_CP} ${APP_JAVA_OPTS} ${REMOTE_DEBUG} com.streever.iot.data.cli.RecordGenerator ${PRG_ARGS}"
 

@@ -33,7 +33,7 @@ public class SqlBuilderTest {
         SqlBuilder sb = new SqlBuilder();
         Schema r1 = null;
         try {
-            r1 = Schema.deserialize(resource);
+            r1 = Schema.deserializeResource(resource);
             sb.setSchema(r1);
             sb.link("cc_acct");
             System.out.println(sb.build());
