@@ -149,13 +149,13 @@ public class RecordBuilder {
         // Part of the initialization requires us to sweep through the schema and
         // link the parts of the schema together (hierarchy) so we can build complex
         // output streams with dependencies.
-        getSchema().link(getSchema().getTitle());
+        getSchema().link();
         // Link the parts of the output with the schema so we know where to
         // send records when they are produced.
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
         // Ensure the associations are all valid.
-        if (!validate()) {
+        if (!validate(null)) {
             throw new RuntimeException("Failed to Validate");
         }
         initialized = true;
@@ -167,10 +167,10 @@ public class RecordBuilder {
     - Each 'record' has an output speck
     - relationship map name aren't duplicated
      */
-    protected boolean validate() {
+    protected boolean validate(String partition) {
         boolean rtn = Boolean.TRUE;
         if (this.getSchema() != null) {
-            if (!this.getSchema().validate()) {
+            if (!this.getSchema().validate(partition)) {
                 rtn = Boolean.FALSE;
             }
         } else {

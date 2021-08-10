@@ -35,7 +35,7 @@ public class SqlBuilderTest {
         try {
             r1 = Schema.deserializeResource(resource);
             sb.setSchema(r1);
-            sb.link("cc_acct");
+            sb.link();
             System.out.println(sb.build());
         } catch (IOException e) {
             e.printStackTrace();

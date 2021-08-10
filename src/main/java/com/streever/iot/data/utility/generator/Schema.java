@@ -23,7 +23,7 @@ public class Schema implements Comparable<Schema> {
     private Schema parent;
     private Boolean partitioned = Boolean.FALSE;
 
-    private Map<Schema, String> pathMap = null;
+//    private Map<Schema, String> pathMap = null;
 
     public String getId() {
         return id;
@@ -111,6 +111,8 @@ public class Schema implements Comparable<Schema> {
     }
 
     public Map<String, Relationship> getRelationships() {
+        if (relationships == null)
+            relationships = new TreeMap<String, Relationship>();
         return relationships;
     }
 
@@ -136,36 +138,48 @@ public class Schema implements Comparable<Schema> {
         }
     }
 
-    public Map<Schema, String> getPathMap() {
-        return pathMap;
-    }
+//    public Map<Schema, String> getPathMap() {
+//        return pathMap;
+//    }
 
     /*
     Use this to loop through the fields and relationships to validate the configurations.
      */
-    public boolean validate() {
-        return validate(this);
+    public boolean validate(String partition) {
+        return validate(this, partition);
     }
 
-    protected boolean validate(Schema record) {
+    protected boolean validate(Schema record, String partition) {
         boolean rtn = Boolean.TRUE;
         for (FieldBase field: record.getFields()) {
             if (!field.validate()) {
                 rtn = Boolean.FALSE;
             }
         }
-        if (record.getRelationships() != null && record.getRelationships().size() > 0) {
-            pathMap = new TreeMap<Schema, String>();
-            pathMap.put(this, this.getTitle());
-            for (Map.Entry<String, Relationship> relationshipEntry: getRelationships().entrySet()) {
-                Relationship relationship = relationshipEntry.getValue();
-                pathMap.put(relationship.getRecord(), relationshipEntry.getKey());
-                relationship.getRecord().setParent(record);
-                if (!validate(relationship.getRecord())) {
-                    rtn = Boolean.FALSE;
-                }
-            }
-        }
+//        if (record.getRelationships() != null && record.getRelationships().size() > 0) {
+//            pathMap = new TreeMap<Schema, String>();
+//            StringBuilder sb = new StringBuilder(this.getTitle());
+//            sb.append("OOO");
+//            if (this.getPartitioned() && partition != null) {
+//                sb.append(partition);
+//            }
+////            sb.append(this.getTitle()).append("-r-");
+//            pathMap.put(this, sb.toString());
+//            for (Map.Entry<String, Relationship> relationshipEntry: getRelationships().entrySet()) {
+//                Relationship relationship = relationshipEntry.getValue();
+//                StringBuilder sbi = new StringBuilder(relationshipEntry.getKey());
+//                sbi.append("OOO");
+//                if (relationship.getRecord().getPartitioned() && partition != null) {
+//                    sbi.append(partition);
+//                }
+////                sbi.append(relationshipEntry.getValue()).append("-r-");
+//                pathMap.put(relationship.getRecord(), sbi.toString());
+//                relationship.getRecord().setParent(record);
+//                if (!validate(relationship.getRecord(), null)) {
+//                    rtn = Boolean.FALSE;
+//                }
+//            }
+//        }
 
         return rtn;
     }
@@ -333,29 +347,22 @@ public class Schema implements Comparable<Schema> {
         }
     }
 
-    private void link(Schema schema, String id) {
-        schema.setId(id);
-        if (schema.getRelationships() != null) {
-            Set<String> relationshipKeys = schema.getRelationships().keySet();
-            for (String key : relationshipKeys) {
-                Relationship relationship = schema.getRelationships().get(key);
-                Schema rSchema = relationship.getRecord();
-                rSchema.setParent(schema);
-                link(rSchema, key);
-            }
-        }
-
+    public void link() {
+        link(null);
     }
 
-    public void link(String id) {
-        this.setId(id);
-        if (this.getRelationships() != null) {
-            Set<String> relationshipKeys = this.getRelationships().keySet();
+    private void link(String id) {
+        if (id == null)
+            this.setId(getTitle().toLowerCase(Locale.ROOT));
+        else
+            this.setId(id);
+        if (getRelationships() != null) {
+            Set<String> relationshipKeys = getRelationships().keySet();
             for (String key : relationshipKeys) {
-                Relationship relationship = this.getRelationships().get(key);
+                Relationship relationship = getRelationships().get(key);
                 Schema rSchema = relationship.getRecord();
                 rSchema.setParent(this);
-                link(rSchema, key);
+                rSchema.link(key);
             }
         }
         orderFields();

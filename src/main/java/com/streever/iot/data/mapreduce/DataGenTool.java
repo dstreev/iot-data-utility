@@ -20,6 +20,7 @@ package com.streever.iot.data.mapreduce;
 
 //import spec.bridge.hadoop2.KafkaOutputFormat;
 
+import com.streever.iot.data.utility.generator.Relationship;
 import com.streever.iot.data.utility.generator.Schema;
 import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
@@ -51,10 +52,11 @@ public class DataGenTool extends Configured implements Tool {
 
     static private Logger LOG = Logger.getLogger(DataGenTool.class.getName());
     public static final String SCHEMA_FILE = "schema.file";
+    public static final String DATAGEN_PARTITION = "datagen.partition";
 
     private Options options;
     private Path outputPath;
-    private String partitionPath;
+//    private String partitionPath;
     private Boolean forceFlat = Boolean.FALSE;
 
     private Schema schema;
@@ -196,11 +198,11 @@ public class DataGenTool extends Configured implements Tool {
             }
         }
 
-        schema.link(schema.getTitle());
-        schema.validate();
+        schema.link();
+        schema.validate(job.getConfiguration().get(DATAGEN_PARTITION, null));
 
         // Multi-File Output.
-        if (schema.getPathMap() != null) {
+        if (schema.getRelationships().size() > 0) {
             // There is a hierarchy.
             LOG.info("Multi-File Output");
             if (!forceFlat) {
@@ -209,27 +211,17 @@ public class DataGenTool extends Configured implements Tool {
                 job.setMapOutputValueClass(Text.class);
 
                 // Remove write of mapper.
+                LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
+                // Causes NPE
 //                job.setOutputFormatClass(LazyOutputFormat.class);
+
                 // Set Reducer, since there is a hierarchy.
                 job.setReducerClass(DataGenReducer.class);
 
                 // Force Reduce to push different writes.
-                for (Map.Entry<Schema, String> pathMapEntry : schema.getPathMap().entrySet()) {
-                    String path = pathMapEntry.getValue();
-                    LOG.info("Path: " + path);
-                    Boolean partitioned = pathMapEntry.getKey().getPartitioned();
-                    if (partitioned) {
-
-                        if (partitionPath != null) {
-                            String schemaPath = path + "/" + partitionPath;
-                            MultipleOutputs.addNamedOutput(job, schemaPath, TextOutputFormat.class, Text.class, Text.class);
-                        } else {
-                            throw new RuntimeException("Schema has partitions.  Need to specify a partition `-p` path");
-//                        return false;
-                        }
-                    } else {
-                        MultipleOutputs.addNamedOutput(job, path, TextOutputFormat.class, Text.class, Text.class);
-                    }
+                for (Map.Entry<String, Relationship> relationshipEntry : schema.getRelationships().entrySet()) {
+                    LOG.info("Multi-part: " + relationshipEntry.getKey());
+                    MultipleOutputs.addNamedOutput(job, relationshipEntry.getKey(), TextOutputFormat.class, Text.class, Text.class);
                 }
             } else {
                 // Flat Output (even when hierarchy present)
@@ -285,7 +277,8 @@ public class DataGenTool extends Configured implements Tool {
         }
 
         if (line.hasOption("p")) {
-            partitionPath = line.getOptionValue("p");
+            configuration.set(DATAGEN_PARTITION, line.getOptionValue("p"));
+//            partitionPath = line.getOptionValue("p");
         }
 
 //        if (line.hasOption("sink")) {

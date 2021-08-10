@@ -90,31 +90,63 @@ public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text,
                 IOUtils.closeStream(dfsConfigInputStream);
             }
         }
-        schema.link(schema.getTitle());
-        schema.validate();
+        schema.link();
+        schema.validate(context.getConfiguration().get(DataGenTool.DATAGEN_PARTITION, null));
     }
 
     /*
 Write a record, based on the schema, to the proper output path.
  */
-    protected long write(Context context, Schema record) throws IOException, InterruptedException {
-        Map<Schema, String> pathMap = record.getPathMap();
+    protected void write(Context context, Schema record) throws IOException, InterruptedException {
+//        Map<Schema, String> pathMap = record.getPathMap();
         String strRec = format.write(record.getValueMap());
-        LOG.info("Writing record (" + record.getTitle() + "): " + strRec);
-        if (pathMap != null) {
-            String schemaPath = pathMap.get(record);
-            if (record.getPartitioned()) {
-                schemaPath = schemaPath + "/" + partitionPathPrefix;
-            }
-            context.write(new Text(schemaPath), new Text(strRec));
-        } else {
+//        LOG.info("Writing record (" + record.getTitle() + "): " + strRec);
+//        if (pathMap != null) {
+//            String schemaPath = pathMap.get(record);
+            LOG.info("Writing record: " + record.getId() + ":" + strRec);
+            context.write(new Text(record.getId()), new Text(strRec));
+            writeRelationships(context, record.getRelationships());
+//        } else {
             // Shouldn't happen.  Validations should ensure that there
             // is a hierarchy.
 //            context.write(NullWritable.get(), new Text(strRec));
-        }
+//        }
         // The last generated recordset
-        return strRec.length();
+//        return strRec.length();
     }
+
+    /*
+    Process the hierarchy of the schema.
+*/
+    protected void writeRelationships(Context context, Map<String, Relationship> relationships) throws IOException, InterruptedException {
+        for (Map.Entry<String, Relationship> entry: relationships.entrySet()) {
+            Relationship relationship = entry.getValue();
+            Schema schema = relationship.getRecord();
+            int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
+            LOG.info("Range: " + range);
+            if (range <= 0) {
+                try {
+                    schema.next();
+                } catch (TerminateException e) {
+                    e.printStackTrace();
+                }
+                LOG.info("(1)Writing relationship: " + schema.getId());
+                write(context, schema);
+            } else {
+                int rNum = ThreadLocalRandom.current().nextInt(range);
+                for (int i=0;i<=rNum;i++) {
+                    try {
+                        schema.next();
+                    } catch (TerminateException e) {
+                        e.printStackTrace();
+                    }
+                    LOG.info("(n)Writing relationship: " + schema.getId());
+                    write(context, schema);
+                }
+            }
+        }
+    }
+
 
     public void map(LongWritable key, NullWritable value, Context context) throws IOException, InterruptedException {
 //        Text record = new Text();
@@ -126,159 +158,16 @@ Write a record, based on the schema, to the proper output path.
             // TODO: Fix
             try {
                 schema.next();
-                // Need an Output spec (CSV, Json, etc, maybe ORC, Parquet, Seq)
-//                Object k = recordGenerator.getKey();
-//                Object v = schema.getValueMap();
-//                record.set(v.toString());
-//                context.write(NullWritable.get(), record);
-
-
-                // 0 for counts
-                // 1 for size
-//                long runStatus[] = new long[2];
-//                long localCount = count;
-//                long localSize = size;
-//                try {
-//                    openOutput();
-//                    long loop = 0;
-                // Run the loop until the counts/sizes are met.  If the count/size has been set to -1, then run indefinitely.
-//                    do {
-//                        schema.next();
-                long lsize = write(context, schema);
-
-//                        runStatus[1] += lsize;
-//                        if (localSize != -1)
-//                            localSize -= lsize;
-//                        runStatus[0]++;
-                long[] rStatus = writeRelationships(context, schema.getRelationships());
-//                        runStatus[0] += rStatus[0];
-//                        runStatus[1] += rStatus[1];
-//                        if (localCount != -1)
-//                            localCount--;
-//                        if (localSize != -1)
-//                            localSize -= rStatus[1];
-//                        if (loop % progressIndicatorCount == 0) {
-//                            System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
-//                        }
-//                        loop++;
-//                    } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
+                write(context, schema);
             } catch (TerminateException te) {
 //                System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
             } catch (IOException ioe) {
                 System.err.println("Issue Writing to file");
                 ioe.printStackTrace();
             } finally {
-//                    try {
-//                        closeOutput();
-//                        System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
-//                    } catch (IOException e) {
-//                        // TODO: Handle ioexception
-//                        e.printStackTrace();
-//                    }
+
             }
-//                return runStatus;
-
-
-//            } catch (TerminateException te) {
-//                earlyTermination = Boolean.TRUE;
-//            }
         }
     }
-
-    /*
-Process the hierarchy of the schema.
- */
-    protected long[] writeRelationships(Context context, Map<String, Relationship> relationships) throws IOException, InterruptedException {
-        // status[0] for counts
-        // status[1] for size
-        long[] status = {0, 0};
-        if (relationships != null) {
-            Set<String> relationshipKeys = relationships.keySet();
-            for (String key : relationshipKeys) {
-                Relationship relationship = relationships.get(key);
-                Schema rRecord = relationship.getRecord();
-                try {
-                    int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
-                    if (range <= 0) {
-                        // Assume 1-1 relationship.
-                        rRecord.next();
-                        write(context, rRecord);
-                        status[0]++;
-                        // Recurse into hierarchy
-                        long[] rStatus;
-                        rStatus = writeRelationships(context, rRecord.getRelationships());
-                        status[0] += rStatus[0];
-                        status[1] += rStatus[1];
-                    } else {
-                        // Assume min to max relationship.
-                        int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
-                        for (int i = relationship.getCardinality().getMin(); i < rNum; i++) {
-                            rRecord.next();
-                            status[1] += write(context, rRecord);
-                            status[0]++;
-                            // Recurse into hierarchy
-                            long[] rStatus;
-                            rStatus = writeRelationships(context, rRecord.getRelationships());
-                            status[0] += rStatus[0];
-                            status[1] += rStatus[1];
-                        }
-                    }
-                } catch (TerminateException | IOException te) {
-
-                }
-            }
-        }
-        return status;
-    }
-
-    /*
-            if (!initialized) {
-            throw new RuntimeException("Builder was not initialized. Call init() before run().");
-        }
-        // 0 for counts
-        // 1 for size
-        long runStatus[] = new long[2];
-        long localCount = count;
-        long localSize = size;
-        try {
-            openOutput();
-            long loop = 0;
-            // Run the loop until the counts/sizes are met.  If the count/size has been set to -1, then run indefinitely.
-            do {
-                getSchema().next();
-                long lsize = write(getSchema());
-                runStatus[1] += lsize;
-                if (localSize != -1)
-                    localSize -= lsize;
-                runStatus[0]++;
-                long[] rStatus = writeRelationships(getSchema().getRelationships());
-                runStatus[0] += rStatus[0];
-                runStatus[1] += rStatus[1];
-                if (localCount != -1)
-                    localCount--;
-                if (localSize != -1)
-                    localSize -= rStatus[1];
-                if (loop % progressIndicatorCount == 0) {
-                    System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
-                }
-                loop++;
-            } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
-        } catch (TerminateException te) {
-            System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
-        } catch (IOException ioe) {
-            System.err.println("Issue Writing to file");
-            ioe.printStackTrace();
-        } finally {
-            try {
-                closeOutput();
-                System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
-            } catch (IOException e) {
-                // TODO: Handle ioexception
-                e.printStackTrace();
-            }
-        }
-        return runStatus;
-
-     */
 
 }

@@ -90,8 +90,8 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
                 IOUtils.closeStream(dfsConfigInputStream);
             }
         }
-        schema.link(schema.getTitle());
-        schema.validate();
+        schema.link();
+        schema.validate(context.getConfiguration().get(DataGenTool.DATAGEN_PARTITION, null));
     }
 
     /*

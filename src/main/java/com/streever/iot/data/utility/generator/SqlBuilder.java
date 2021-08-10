@@ -31,9 +31,9 @@ public class SqlBuilder {
         this.sqlType = sqlType;
     }
 
-    public void link(String entityName) {
+    public void link() {
         if (schema != null) {
-            schema.link(entityName);
+            schema.link();
         }
     }
 

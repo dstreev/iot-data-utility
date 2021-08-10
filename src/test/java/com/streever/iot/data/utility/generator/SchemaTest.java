@@ -19,10 +19,12 @@ public class SchemaTest {
     public void loadTest_001() {
         try {
             Schema r1 = Schema.deserializeResource("/generator_v2/cc_account_with_relationships.yaml");
+            r1.link();
+            r1.validate(null);
+            System.out.println("Made it");
         } catch (IOException e) {
             assertTrue(false);
         }
-        System.out.println("Made it");
     }
 
     @Test
