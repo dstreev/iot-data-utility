@@ -1,9 +1,12 @@
 package com.streever.iot.data.utility.generator;
 
+import com.streever.iot.data.cli.RecordGenerator;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.LocalFileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputBase;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Map;
@@ -15,6 +18,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * This class will bring together the Record and Output Spec's and generator the desired output
  */
 public class RecordBuilder {
+    private static Logger LOG = LogManager.getLogger(RecordBuilder.class);
+
     private boolean initialized = false;
     private long count = -1; // default if not specified.
     private long size = -1; // default size output limit. -1 = no check
@@ -155,7 +160,7 @@ public class RecordBuilder {
         boolean map = mapOutputSpecs();
         System.out.println("Map Processing Successful: " + map);
         // Ensure the associations are all valid.
-        if (!validate(null)) {
+        if (!validate()) {
             throw new RuntimeException("Failed to Validate");
         }
         initialized = true;
@@ -167,10 +172,10 @@ public class RecordBuilder {
     - Each 'record' has an output speck
     - relationship map name aren't duplicated
      */
-    protected boolean validate(String partition) {
+    protected boolean validate() {
         boolean rtn = Boolean.TRUE;
         if (this.getSchema() != null) {
-            if (!this.getSchema().validate(partition)) {
+            if (!this.getSchema().validate()) {
                 rtn = Boolean.FALSE;
             }
         } else {
@@ -178,15 +183,6 @@ public class RecordBuilder {
             System.err.println("Validation Issue: Set 'Record' in builder");
         }
         return rtn;
-    }
-
-    /*
-    Write a record, based on the schema, to the proper output path.
-     */
-    protected long write(Schema record) throws IOException {
-        Output output = this.outputMap.get(record);
-        // The last generated recordset
-        return output.write(record.getValueMap());
     }
 
     /*
@@ -213,6 +209,70 @@ public class RecordBuilder {
     }
 
     /*
+    Write a record, based on the schema, to the proper output path.
+     */
+    protected long write(Schema record) throws IOException {
+        Output output = this.outputMap.get(record);
+        // The last generated recordset
+        return output.write(record.getValueMap());
+    }
+
+    /*
+    Process the hierarchy of the schema.
+     */
+    protected long[] writeRelationships(Map<String, Relationship> relationships) {
+        // status[0] for counts
+        // status[1] for size
+        long[] status = {0, 0};
+        if (relationships != null) {
+            Set<String> relationshipKeys = relationships.keySet();
+            for (String key : relationshipKeys) {
+                Relationship relationship = relationships.get(key);
+                Schema rRecord = relationship.getRecord();
+                int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
+                if (range <= 0) {
+                    // Assume 1-1 relationship.
+                    try {
+                        rRecord.next();
+                        write(rRecord);
+                        status[0]++;
+                        // Recurse into hierarchy
+                        long[] rStatus;
+                        rStatus = writeRelationships(rRecord.getRelationships());
+                        status[0] += rStatus[0];
+                        status[1] += rStatus[1];
+                    } catch (TerminateException ete) {
+                        LOG.debug("Early Termination of " + key + " relationship.");
+                    } catch (IOException ioe) {
+                        LOG.error("IO Exception for " + key + " " + ioe.getMessage());
+                    }
+                } else {
+                    // Assume min to max relationship.
+                    int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
+                    for (int i = relationship.getCardinality().getMin(); i < rNum; i++) {
+                        try {
+                            rRecord.next();
+                            status[1] += write(rRecord);
+                            status[0]++;
+                            // Recurse into hierarchy
+                            long[] rStatus;
+                            rStatus = writeRelationships(rRecord.getRelationships());
+                            status[0] += rStatus[0];
+                            status[1] += rStatus[1];
+                        } catch (TerminateException ete) {
+                            LOG.debug("Early Termination of " + key + " relationship.");
+                            break;
+                        } catch (IOException ioe) {
+                            LOG.error("IO Exception for " + key + " " + ioe.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+        return status;
+    }
+
+    /*
     Return the number of records output. This count reflect the parent
     record count, not the cumulative children records (if defined).
      */
@@ -230,28 +290,33 @@ public class RecordBuilder {
             long loop = 0;
             // Run the loop until the counts/sizes are met.  If the count/size has been set to -1, then run indefinitely.
             do {
-//            while (localCount > 0) {
-                getSchema().next();
-                long lsize = write(getSchema());
-                runStatus[1] += lsize;
-                if (localSize != -1)
-                    localSize -= lsize;
-                runStatus[0]++;
-//                long[] rStatus = writeRelationships(getSchema().getRelationships(), getSchema().getKeyMap());
-                long[] rStatus = writeRelationships(getSchema().getRelationships());
-                runStatus[0] += rStatus[0];
-                runStatus[1] += rStatus[1];
-                if (localCount != -1)
-                    localCount--;
-                if (localSize != -1)
-                    localSize -= rStatus[1];
-                if (loop % progressIndicatorCount == 0) {
-                    System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
+                try {
+                    getSchema().next();
+                    long lsize = write(getSchema());
+                    runStatus[1] += lsize;
+                    if (localSize != -1)
+                        localSize -= lsize;
+                    runStatus[0]++;
+                    long[] rStatus = new long[]{0, 0};
+
+                    rStatus = writeRelationships(getSchema().getRelationships());
+                    runStatus[0] += rStatus[0];
+                    runStatus[1] += rStatus[1];
+                    if (localCount != -1)
+                        localCount--;
+                    if (localSize != -1)
+                        localSize -= rStatus[1];
+                    if (loop % progressIndicatorCount == 0) {
+                        System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
+                    }
+                } catch (TerminateException earlyTerminationException) {
+                    // Early Termination due to a threshold
+                    LOG.debug("Early Termination: " + earlyTerminationException.getMessage());
+                    localCount = 0;
+                    localSize = 0;
                 }
                 loop++;
             } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
-        } catch (TerminateException te) {
-            System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
         } catch (IOException ioe) {
             System.err.println("Issue Writing to file");
             ioe.printStackTrace();
@@ -264,54 +329,7 @@ public class RecordBuilder {
                 e.printStackTrace();
             }
         }
-//        runStatus[0] = count - runStatus[0];
         return runStatus;
-    }
-
-    /*
-    Process the hierarchy of the schema.
-     */
-    protected long[] writeRelationships(Map<String, Relationship> relationships) {
-        // status[0] for counts
-        // status[1] for size
-        long[] status = {0,0};
-        if (relationships != null) {
-            Set<String> relationshipKeys = relationships.keySet();
-            for (String key : relationshipKeys) {
-                Relationship relationship = relationships.get(key);
-                Schema rRecord = relationship.getRecord();
-                try {
-                    int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
-                    if (range <= 0) {
-                        // Assume 1-1 relationship.
-                        rRecord.next();
-                        write(rRecord);
-                        status[0]++;
-                        // Recurse into hierarchy
-                        long[] rStatus;
-                        rStatus = writeRelationships(rRecord.getRelationships());
-                        status[0] += rStatus[0];
-                        status[1] += rStatus[1];
-                    } else {
-                        // Assume min to max relationship.
-                        int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
-                        for (int i=relationship.getCardinality().getMin();i<rNum;i++) {
-                            rRecord.next();
-                            status[1] += write(rRecord);
-                            status[0]++;
-                            // Recurse into hierarchy
-                            long[] rStatus;
-                            rStatus = writeRelationships(rRecord.getRelationships());
-                            status[0] += rStatus[0];
-                            status[1] += rStatus[1];
-                        }
-                    }
-                } catch (TerminateException | IOException te) {
-
-                }
-            }
-        }
-        return status;
     }
 
 }

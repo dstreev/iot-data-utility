@@ -145,11 +145,11 @@ public class Schema implements Comparable<Schema> {
     /*
     Use this to loop through the fields and relationships to validate the configurations.
      */
-    public boolean validate(String partition) {
-        return validate(this, partition);
+    public boolean validate() {
+        return validate(this);
     }
 
-    protected boolean validate(Schema record, String partition) {
+    protected boolean validate(Schema record) {
         boolean rtn = Boolean.TRUE;
         for (FieldBase field: record.getFields()) {
             if (!field.validate()) {

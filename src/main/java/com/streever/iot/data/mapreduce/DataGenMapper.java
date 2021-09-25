@@ -47,9 +47,7 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     protected Boolean earlyTermination = Boolean.FALSE;
 
-    protected Text textRecord = new Text();
-    protected long localCount = 0l;
-    protected long localSize = 0l;
+    private long counter = 0l;
 
     // default format for now.
     protected CSVFormat format = new CSVFormat();
@@ -91,31 +89,19 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
             }
         }
         schema.link();
-        schema.validate(context.getConfiguration().get(DataGenTool.DATAGEN_PARTITION, null));
+        schema.validate();
     }
 
     /*
 Write a record, based on the schema, to the proper output path.
  */
     protected long write(Context context, Schema record) throws IOException, InterruptedException {
-//        Map<Schema, String> pathMap = record.getPathMap();
         String strRec = format.write(record.getValueMap());
-//        if (pathMap != null) {
-//            String schemaPath = pathMap.get(record);
-//            if (record.getPartitioned()) {
-//                schemaPath = schemaPath + "/" + partitionPathPrefix;
-//            }
-//            context.write(new Text(schemaPath), new Text(strRec));
-//        } else {
-            context.write(NullWritable.get(), new Text(strRec));
-//        }
-        // The last generated recordset
+        context.write(NullWritable.get(), new Text(strRec));
         return strRec.length();
     }
 
     public void map(LongWritable key, NullWritable value, Context context) throws IOException, InterruptedException {
-//        Text record = new Text();
-
         // Use this to quickly cycle through the remain counter,
         // even though we've reach to end because of the termination
         // event in the generator.
@@ -123,13 +109,6 @@ Write a record, based on the schema, to the proper output path.
             // TODO: Fix
             try {
                 schema.next();
-                // Need an Output spec (CSV, Json, etc, maybe ORC, Parquet, Seq)
-//                Object k = recordGenerator.getKey();
-//                Object v = schema.getValueMap();
-//                record.set(v.toString());
-//                context.write(NullWritable.get(), record);
-
-
                 // 0 for counts
                 // 1 for size
 //                long runStatus[] = new long[2];

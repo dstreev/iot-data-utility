@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 //import static com.streever.iot.data.mapreduce.DataGenMapper.SCHEMA_FILE;
@@ -52,7 +53,7 @@ public class DataGenTool extends Configured implements Tool {
 
     static private Logger LOG = Logger.getLogger(DataGenTool.class.getName());
     public static final String SCHEMA_FILE = "schema.file";
-    public static final String DATAGEN_PARTITION = "datagen.partition";
+//    public static final String DATAGEN_PARTITION = "datagen.partition";
 
     private Options options;
     private Path outputPath;
@@ -97,7 +98,7 @@ public class DataGenTool extends Configured implements Tool {
 //                .required(true)
 //                .build();
 
-        Option mappers = new Option("m", "mappers", true, "Parallelism");
+        Option mappers = new Option("p", "parallelism", true, "Parallelism");
         mappers.setRequired(false);
 //        Option mappers = Option.builder("m")
 //                .argName("mappers")
@@ -123,10 +124,13 @@ public class DataGenTool extends Configured implements Tool {
 
         OptionGroup layoutOptionGroup = new OptionGroup();
 
-        Option partitionOption = new Option("p", "partition", true, "Partition");
+        Option partitionOption = new Option("partition", "partition", true, "Partition");
+        partitionOption.setRequired(false);
+        options.addOption(partitionOption);
+
         Option forceFlatOption = new Option("ff", "force-flat", true, "Force Flat Output");
 
-        layoutOptionGroup.addOption(partitionOption);
+//        layoutOptionGroup.addOption(partitionOption);
         layoutOptionGroup.addOption(forceFlatOption);
         layoutOptionGroup.setRequired(false);
         options.addOptionGroup(layoutOptionGroup);
@@ -199,7 +203,7 @@ public class DataGenTool extends Configured implements Tool {
         }
 
         schema.link();
-        schema.validate(job.getConfiguration().get(DATAGEN_PARTITION, null));
+        schema.validate();
 
         // Multi-File Output.
         if (schema.getRelationships().size() > 0) {
@@ -265,21 +269,26 @@ public class DataGenTool extends Configured implements Tool {
             DataGenInputFormat.setNumberOfRows(job, DEFAULT_COUNT);
         }
 
-        if (line.hasOption("m")) {
-            configuration.set(MRJobConfig.NUM_MAPS, line.getOptionValue("m"));
+        if (line.hasOption("p")) {
+            int parallelism = Integer.parseInt(line.getOptionValue("p"));
+            job.setNumReduceTasks(parallelism);
+            configuration.setInt(MRJobConfig.NUM_MAPS, Integer.parseInt(line.getOptionValue("p")));
+//            configuration.setInt(MRJobConfig.NUM_REDUCES, Integer.parseInt(line.getOptionValue("p")));
         } else {
             // Default
             configuration.setInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS);
+            job.setNumReduceTasks(DEFAULT_MAPPERS);
+//            configuration.setInt(MRJobConfig.NUM_REDUCES, DEFAULT_MAPPERS);
         }
 
         if (line.hasOption("ff")) {
             forceFlat = Boolean.TRUE;
         }
 
-        if (line.hasOption("p")) {
-            configuration.set(DATAGEN_PARTITION, line.getOptionValue("p"));
+//        if (line.hasOption("p")) {
+//            configuration.set(DATAGEN_PARTITION, line.getOptionValue("p"));
 //            partitionPath = line.getOptionValue("p");
-        }
+//        }
 
 //        if (line.hasOption("sink")) {
 //            String sinkOption = line.getOptionValue("sink");
@@ -333,6 +342,19 @@ public class DataGenTool extends Configured implements Tool {
 
         job.setMapOutputValueClass(Text.class);
 
+        String outputDir = line.getOptionValue("d", "datagen-default");
+        String tempDir = null;
+
+        // When a partition element is specified, we need to push the results to a temp dir and
+        //   then move those result to the partition AFTER the MR job is complete.
+        if (line.hasOption("part")) {
+            tempDir = UUID.randomUUID().toString();
+            job.getConfiguration().set("partition-temp-dir", tempDir);
+        }
+
+        if (tempDir != null)
+            outputDir = outputDir + "/" + tempDir;
+
         outputPath = new Path(line.getOptionValue("d", "datagen-default"));
         FileOutputFormat.setOutputPath(job, outputPath);
 
@@ -378,6 +400,12 @@ public class DataGenTool extends Configured implements Tool {
 
         try {
             rtn_code = job.waitForCompletion(true) ? 0 : 1;
+            if (job.getConfiguration().getBoolean("partition-temp-dir", false)) {
+                // Move the data elements from the main dir to partition dirs.
+                // if schema has children.
+                // TODO: Left off here...
+//                if (schema.getPartitioned() || schema.get)
+            }
         } catch (RuntimeException rte) {
             rte.fillInStackTrace();
             rte.printStackTrace();

@@ -124,7 +124,7 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
         return Boolean.TRUE;
     }
 
-    public abstract T getNext();
+    public abstract T getNext() throws TerminateException;
 
     public FieldProperties getFieldProperties() {
         FieldProperties fp = new FieldProperties(this);

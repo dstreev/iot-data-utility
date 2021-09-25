@@ -138,7 +138,7 @@ public class DateField extends FieldBase<Object> implements ControlField {
     }
 
     @Override
-    public Object getNext() {
+    public Object getNext() throws TerminateException {
         Date working = null;
         if (!isMaintainState()) {
             if (current) {
@@ -157,6 +157,11 @@ public class DateField extends FieldBase<Object> implements ControlField {
                     long incrementL = Math.round((Long) diff * multiplierD);
 //                System.out.println("Increment: " + incrementL + "Multiplier: " + multiplierD);
                     lastIssued = lastIssued + incrementL;
+                    if (range != null && range.getMax() != null && range.getMax().getTime() < lastIssued) {
+                        lastValue = null;
+                        lastIssued = null;
+                        throw new TerminateException("Max Date Range met");
+                    }
                 }
                 lastValue = lastIssued;
                 if (lateArriving != null) {

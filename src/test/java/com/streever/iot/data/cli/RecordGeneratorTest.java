@@ -26,8 +26,8 @@ public class RecordGeneratorTest {
             cli.run(args);
             assertTrue(true);
         } catch (IOException e) {
-            assertTrue(false);
             e.printStackTrace();
+            assertTrue(false);
         }
     }
 
@@ -69,7 +69,6 @@ public class RecordGeneratorTest {
         String[] options = {"-csv", "-local", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", BASE_DIR, "-uuid"};
         doIt(options);
     }
-
 //    @Test
 //    public void test_006_01() {
 //        String[] options = {"-csv", "-hcfs", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", "s3a://dstreev-cdp/datagen_001", "-uuid"};
@@ -81,6 +80,18 @@ public class RecordGeneratorTest {
         String[] options = {"-json", "-local", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", BASE_DIR, "-ts"};
         doIt(options);
     }
+
+    @Test
+    public void test_007_01() {
+        String[] options = {"-csv", "-local", "-s", "/validation/multi-default.yaml", "-c", "5", "-p", BASE_DIR, "-uuid"};
+        doIt(options);
+    }
+    @Test
+    public void test_007_02() {
+        String[] options = {"-json", "-local", "-s", "/validation/multi-default.yaml", "-c", "50", "-p", BASE_DIR, "-uuid"};
+        doIt(options);
+    }
+
     @Test
     public void test_008() {
         String[] options = {"-json", "-local", "-s", "/sample_schemas/one-many.yaml", "-c", "5", "-p", BASE_DIR, "-uuid"};

@@ -29,6 +29,7 @@ import java.io.IOException;
 
 public class DataGenReducer extends Reducer<Text, Text, NullWritable, Text> {
     static private Logger LOG = Logger.getLogger(DataGenReducer.class.getName());
+    private long counter = 0l;
 
     private MultipleOutputs multipleOutputs;
 
@@ -41,8 +42,12 @@ public class DataGenReducer extends Reducer<Text, Text, NullWritable, Text> {
     protected void reduce(Text key, Iterable<Text> values, Context context)
             throws IOException, InterruptedException {
         for (Text value : values) {
-            LOG.info("Writing " + key.toString() + ": " + value.toString());
+            counter++;
+            LOG.debug("Writing " + key.toString() + ": " + value.toString());
             multipleOutputs.write(NullWritable.get(), value, key.toString());
+            if (counter % 10000 == 0) {
+                LOG.info("Record Count: " + counter);
+            }
         }
     }
 

@@ -22,6 +22,7 @@ package com.streever.iot.data.mapreduce;
 
 import com.streever.iot.data.utility.generator.Relationship;
 import com.streever.iot.data.utility.generator.Schema;
+import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.CSVFormat;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -43,9 +44,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text, Text> {
     static private Logger LOG = Logger.getLogger(DataGenMultiMapper.class.getName());
 
-//    public static final String SCHEMA_FILE = "schema.file";
+    //    public static final String SCHEMA_FILE = "schema.file";
     public static final String DEFAULT_MULTI_CONFIG_RESOURCE_FILE = "/validation/multi-default.yaml";
     public static final String PARTITION_PATH_PREFIX = "partition.path.prefix";
+
+    private long counter = 0l;
 
     protected Boolean earlyTermination = Boolean.FALSE;
     protected String partitionPathPrefix = null;
@@ -91,57 +94,50 @@ public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text,
             }
         }
         schema.link();
-        schema.validate(context.getConfiguration().get(DataGenTool.DATAGEN_PARTITION, null));
+        schema.validate();
     }
 
     /*
 Write a record, based on the schema, to the proper output path.
  */
     protected void write(Context context, Schema record) throws IOException, InterruptedException {
-//        Map<Schema, String> pathMap = record.getPathMap();
         String strRec = format.write(record.getValueMap());
-//        LOG.info("Writing record (" + record.getTitle() + "): " + strRec);
-//        if (pathMap != null) {
-//            String schemaPath = pathMap.get(record);
-            LOG.info("Writing record: " + record.getId() + ":" + strRec);
-            context.write(new Text(record.getId()), new Text(strRec));
-            writeRelationships(context, record.getRelationships());
-//        } else {
-            // Shouldn't happen.  Validations should ensure that there
-            // is a hierarchy.
-//            context.write(NullWritable.get(), new Text(strRec));
-//        }
-        // The last generated recordset
-//        return strRec.length();
+        LOG.debug("Writing record: " + record.getId() + ":" + strRec);
+        StringBuilder key = new StringBuilder();
+        for (Map.Entry<FieldProperties, Object> keyMap: record.getKeyMap().entrySet()) {
+            key.append(record.getValueMap().get(keyMap.getKey()));
+        }
+        context.write(new Text(key.toString()), new Text(strRec));
+        writeRelationships(context, record.getRelationships());
     }
 
     /*
     Process the hierarchy of the schema.
 */
     protected void writeRelationships(Context context, Map<String, Relationship> relationships) throws IOException, InterruptedException {
-        for (Map.Entry<String, Relationship> entry: relationships.entrySet()) {
+        for (Map.Entry<String, Relationship> entry : relationships.entrySet()) {
             Relationship relationship = entry.getValue();
             Schema schema = relationship.getRecord();
             int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
-            LOG.info("Range: " + range);
+            LOG.debug("Range: " + range);
             if (range <= 0) {
                 try {
                     schema.next();
+                    LOG.debug("(1)Writing relationship: " + schema.getId());
+                    write(context, schema);
                 } catch (TerminateException e) {
-                    e.printStackTrace();
+                    // Early Termination;
                 }
-                LOG.info("(1)Writing relationship: " + schema.getId());
-                write(context, schema);
             } else {
                 int rNum = ThreadLocalRandom.current().nextInt(range);
-                for (int i=0;i<=rNum;i++) {
+                for (int i = 0; i <= rNum; i++) {
                     try {
                         schema.next();
+                        LOG.debug("(n)Writing relationship: " + schema.getId());
+                        write(context, schema);
                     } catch (TerminateException e) {
-                        e.printStackTrace();
+                        break;
                     }
-                    LOG.info("(n)Writing relationship: " + schema.getId());
-                    write(context, schema);
                 }
             }
         }
@@ -157,8 +153,12 @@ Write a record, based on the schema, to the proper output path.
         if (!earlyTermination) {
             // TODO: Fix
             try {
+                counter++;
                 schema.next();
                 write(context, schema);
+                if (counter % 1000 == 0) {
+                    LOG.info("Main record count: " + counter);
+                }
             } catch (TerminateException te) {
 //                System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
             } catch (IOException ioe) {

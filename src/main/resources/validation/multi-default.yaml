@@ -148,7 +148,7 @@ relationships:
   transactions:
     cardinality:
       min: 10
-      max: 1000
+      max: 10000
     #      referenceFields:
     #        - acct_num
     record:
@@ -171,6 +171,12 @@ relationships:
       fields:
         - type: "date"
           name: "trans_date"
+          format: "yyyy-MM-dd HH:mm:ss"
+          increment: true
+          diff: 100000000
+          range:
+            min: "2021-01-01T07:00:00"
+            max: "2021-12-31T23:59:00"
         - type: "string"
           name: "pre_auth"
           pool:
