@@ -2,6 +2,7 @@ package com.streever.iot.data.utility.generator;
 
 import com.streever.iot.data.cli.RecordGenerator;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
+import com.streever.iot.data.utility.generator.output.DFSOutput;
 import com.streever.iot.data.utility.generator.output.LocalFileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputBase;
@@ -92,6 +93,10 @@ public class RecordBuilder {
                 if (getOutputConfig().getDefault() instanceof LocalFileOutput && ((LocalFileOutput) getOutputConfig().getDefault()).getFilename() == null) {
                     // The id is set in the linking process and is not a serialized element
                     ((LocalFileOutput) getOutputConfig().getDefault()).setFilename(getSchema().getId());
+                }
+                if (getOutputConfig().getDefault() instanceof DFSOutput && ((DFSOutput) getOutputConfig().getDefault()).getFilename() == null) {
+                    // The id is set in the linking process and is not a serialized element
+                    ((DFSOutput) getOutputConfig().getDefault()).setFilename(getSchema().getId());
                 }
                 if (getSchema().getRelationships() != null) {
                     // Start processing relationships

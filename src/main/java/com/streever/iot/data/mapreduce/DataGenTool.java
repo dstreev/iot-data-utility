@@ -113,7 +113,7 @@ public class DataGenTool extends Configured implements Tool {
 
         Option nestedOption = new Option("dn", "default-nested", false, "Nested Hierarchy Sample Schema");
         Option defaultOption = new Option("ds", "default-simple", false, "Sample Schema");
-        Option config = new Option("s", "schema", true, "Schema File in HDFS");
+        Option config = new Option("s", "schema", true, "Schema File on HDFS");
 
         schemaGroup.addOption(nestedOption);
         schemaGroup.addOption(defaultOption);

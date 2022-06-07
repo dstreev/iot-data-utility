@@ -19,6 +19,7 @@ public class RecordGenerator {
     private static Logger LOG = LogManager.getLogger(RecordGenerator.class);
 
     public static String DEFAULT_VALIDATION_YAML = "/validation/simple-default.yaml";
+    public static String DEFAULT_VALIDATION_MULTI_YAML = "/validation/multi-default.yaml";
     public static Long DEFAULT_COUNT = 500l;
 
     private Options options;
@@ -33,23 +34,48 @@ public class RecordGenerator {
                 "Prefix for Output Spec.  For filesystems, this is an output directory.");
         OUTPUT_PREFIX_OPTION.setRequired(false);
 
+
         Option SCHEMA_CONFIG_OPTION = new Option("s", "schema", true,
                 "Schema Config File.");
+        SCHEMA_CONFIG_OPTION.setArgName("schema-file");
+        SCHEMA_CONFIG_OPTION.setArgs(1);
         SCHEMA_CONFIG_OPTION.setRequired(false);
         SCHEMA_CONFIG_OPTION.setType(String.class);
 
+        Option SCHEMA_DEFAULT_OPTION = new Option("ds", "default-schema", false,
+                "Default (Sample) Schema Config File.");
+        SCHEMA_DEFAULT_OPTION.setRequired(false);
+        SCHEMA_DEFAULT_OPTION.setType(String.class);
+
+        Option SCHEMA_DEFAULT_MULTI_OPTION = new Option("dms", "default-multi-schema", false,
+                "Default (Sample) Multi Schema Config File.");
+        SCHEMA_DEFAULT_MULTI_OPTION.setRequired(false);
+        SCHEMA_DEFAULT_MULTI_OPTION.setType(String.class);
+
+        OptionGroup schemaGroup = new OptionGroup();
+        schemaGroup.setRequired(false);
+        schemaGroup.addOption(SCHEMA_CONFIG_OPTION);
+        schemaGroup.addOption(SCHEMA_DEFAULT_OPTION);
+        schemaGroup.addOption(SCHEMA_DEFAULT_MULTI_OPTION);
+
+        options.addOptionGroup(schemaGroup);
+
         Option COUNT_OPTION = new Option("c", "count", true,
                 "Record count.");
+        COUNT_OPTION.setArgName("count");
         COUNT_OPTION.setRequired(false);
         COUNT_OPTION.setType(Long.class);
 
         Option SIZE_MB_OPTION = new Option("mb", "megabyte", true,
                 "Output size(mb).");
+        SIZE_MB_OPTION.setArgName("megabytes");
+        SIZE_MB_OPTION.setArgs(1);
         SIZE_MB_OPTION.setRequired(false);
         SIZE_MB_OPTION.setType(Long.class);
 
         Option SIZE_GB_OPTION = new Option("gb", "gigabyte", true,
                 "Output size(gb).");
+        SIZE_GB_OPTION.setArgName("gigabytes");
         SIZE_GB_OPTION.setRequired(false);
         SIZE_GB_OPTION.setType(Long.class);
 
@@ -184,8 +210,16 @@ public class RecordGenerator {
                 record = Schema.deserializeResource(schemaFile);
             } else {
                 // use a default for testing.
-                LOG.info("No schema specified.  Using default 'validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
-                record = Schema.deserializeResource(DEFAULT_VALIDATION_YAML);
+                if (line.hasOption("dms")) {
+                    LOG.info("Default MULTI schema specified.  Using default 'multi-validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_MULTI_YAML);
+                    record = Schema.deserializeResource(DEFAULT_VALIDATION_MULTI_YAML);
+                } else if (line.hasOption("ds")) {
+                        LOG.info("Default schema specified.  Using default 'validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
+                        record = Schema.deserializeResource(DEFAULT_VALIDATION_YAML);
+                } else {
+                    LOG.info("No schema specified.  Using default 'validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
+                    record = Schema.deserializeResource(DEFAULT_VALIDATION_YAML);
+                }
             }
             RecordBuilder builder = new RecordBuilder();
             builder.setSchema(record);

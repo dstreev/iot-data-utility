@@ -67,7 +67,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       PRG_ARGS="${PRG_ARGS} \"$1\""
-      break;
+      shift
+      ;;
   esac
 done
 
@@ -108,5 +109,5 @@ fi
 $(${JAVA} -version)
 
 CLI_CMD="${JAVA} -cp ${CMD_CP} ${APP_JAVA_OPTS} ${REMOTE_DEBUG} com.streever.iot.data.cli.RecordGenerator ${PRG_ARGS}"
-
+echo "${CLI_CMD}"
 eval "${CLI_CMD}"

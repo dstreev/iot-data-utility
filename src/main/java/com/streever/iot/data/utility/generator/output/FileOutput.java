@@ -16,7 +16,12 @@ public abstract class FileOutput extends OutputBase {
 
     protected enum UniqueType {TIMESTAMP, UUID};
 
-    protected final String DEFAULT_TS_FORMAT = "yyyy-MM-dd HH-mm-ss";
+
+    /*
+    The format should NOT contain spaces to avoid filenames that won't be compatible on some
+    filesystems.
+     */
+    protected final String DEFAULT_TS_FORMAT = "yyyy-MM-dd_HH-mm-ss";
     protected DateFormat df = new SimpleDateFormat(DEFAULT_TS_FORMAT);
 
     private String filename;
