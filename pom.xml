@@ -51,7 +51,7 @@
         <apache.commons.codec.version>1.11</apache.commons.codec.version>
         <apache.commons.beanutils.version>1.9.4</apache.commons.beanutils.version>
 
-        <jackson.version>2.11.1</jackson.version>
+        <jackson.version>2.12.6.1</jackson.version>
         <generex.version>1.0.2</generex.version>
         <format.preserving.version>1.0.0</format.preserving.version>
     </properties>
