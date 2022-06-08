@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,

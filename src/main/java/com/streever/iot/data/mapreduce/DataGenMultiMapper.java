@@ -101,13 +101,11 @@ public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text,
 Write a record, based on the schema, to the proper output path.
  */
     protected void write(Context context, Schema record) throws IOException, InterruptedException {
+//        String strRec = format.write(record.getRecordMap());
         String strRec = format.write(record.getValueMap());
         LOG.debug("Writing record: " + record.getId() + ":" + strRec);
-        StringBuilder key = new StringBuilder();
-        for (Map.Entry<FieldProperties, Object> keyMap: record.getKeyMap().entrySet()) {
-            key.append(record.getValueMap().get(keyMap.getKey()));
-        }
-        context.write(new Text(key.toString()), new Text(strRec));
+        // TODO: Need some partitioning element here to drive more than 1 reducer per relationship
+        context.write(new Text(record.getTitle() + "/part"), new Text(strRec));
         writeRelationships(context, record.getRelationships());
     }
 

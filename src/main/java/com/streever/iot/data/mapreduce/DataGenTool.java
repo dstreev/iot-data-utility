@@ -111,7 +111,7 @@ public class DataGenTool extends Configured implements Tool {
 
         OptionGroup schemaGroup = new OptionGroup();
 
-        Option nestedOption = new Option("dn", "default-nested", false, "Nested Hierarchy Sample Schema");
+        Option nestedOption = new Option("dms", "default-multi", false, "Multi Sample Schema");
         Option defaultOption = new Option("ds", "default-simple", false, "Sample Schema");
         Option config = new Option("s", "schema", true, "Schema File on HDFS");
 
@@ -360,17 +360,15 @@ public class DataGenTool extends Configured implements Tool {
 
         // One of these is set.
         if (line.hasOption("s")) {
-            configuration.set(SCHEMA_FILE, line.getOptionValue("s"));
+            job.getConfiguration().set(SCHEMA_FILE, line.getOptionValue("s"));
         }
-        if (line.hasOption("dn")) {
-            configuration.set(SCHEMA_FILE, DataGenMultiMapper.DEFAULT_MULTI_CONFIG_RESOURCE_FILE);
+        if (line.hasOption("dms")) {
+            job.getConfiguration().set(SCHEMA_FILE, DataGenMultiMapper.DEFAULT_MULTI_CONFIG_RESOURCE_FILE);
             LOG.info("Using DEFAULT Config File: " + DataGenMultiMapper.DEFAULT_MULTI_CONFIG_RESOURCE_FILE + " from package resources.");
-
         }
         if (line.hasOption("ds")) {
-            configuration.set(SCHEMA_FILE, DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE);
+            job.getConfiguration().set(SCHEMA_FILE, DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE);
             LOG.info("Using DEFAULT Config File: " + DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE + " from package resources.");
-
         }
 
         return rtn;

@@ -388,10 +388,11 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ResourceBundleAppendingTransformer"/>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.streever.iot.data.cli.RecordGenerator</mainClass>
-                                </transformer>
+                                <!-- Don't activate the main class for jars.  It interferes with the MR implementation.-->
+                                <!--                                <transformer-->
+<!--                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+<!--                                    <mainClass>com.streever.iot.data.cli.RecordGenerator</mainClass>-->
+<!--                                </transformer>-->
                             </transformers>
                         </configuration>
                     </execution>

@@ -1,6 +1,5 @@
 package com.streever.iot.data.utility.generator;
 
-import com.streever.iot.data.cli.RecordGenerator;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.DFSOutput;
 import com.streever.iot.data.utility.generator.output.LocalFileOutput;

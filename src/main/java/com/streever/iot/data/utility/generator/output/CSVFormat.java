@@ -55,6 +55,7 @@ public class CSVFormat extends FormatBase {
         }
         String recLine = StringUtils.join(values, separator);
         return recLine;
+
     }
 
     public String write(Map<FieldProperties, Object> record) throws IOException {
