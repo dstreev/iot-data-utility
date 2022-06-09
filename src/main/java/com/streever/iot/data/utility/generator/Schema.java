@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.streever.iot.data.utility.generator.fields.*;
 import com.streever.iot.data.utility.generator.output.CSVFormat;
+//import com.sun.org.apache.xpath.internal.operations.String;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,13 +16,15 @@ import java.io.*;
 import java.net.URL;
 import java.util.*;
 
-@JsonIgnoreProperties({"orderedFields", "parent", "id", "keyMap", "valueMap", "pathMap"})
+@JsonIgnoreProperties({"orderedFields", "cardinality", "parent", "id", "keyHash", "keyMap", "valueMap", "pathMap"})
 public class Schema implements Comparable<Schema> {
     private String id;
     private String title;
     private String description;
     private Schema parent;
     private Boolean partitioned = Boolean.FALSE;
+
+    private Cardinality cardinality;
 
 //    private Map<Schema, String> pathMap = null;
 
@@ -47,6 +50,14 @@ public class Schema implements Comparable<Schema> {
 
     public void setPartitioned(Boolean partitioned) {
         this.partitioned = partitioned;
+    }
+
+    public Cardinality getCardinality() {
+        return cardinality;
+    }
+
+    public void setCardinality(Cardinality cardinality) {
+        this.cardinality = cardinality;
     }
 
     // Used to control if record gen is terminated
@@ -121,6 +132,8 @@ public class Schema implements Comparable<Schema> {
     }
 
     private Map<FieldProperties, Object> keyMap = new LinkedHashMap<FieldProperties, Object>();
+    private int keyHash = 0;
+
     private Map<FieldProperties, Object> valueMap = new LinkedHashMap<FieldProperties, Object>();
 
     protected ObjectMapper om = new ObjectMapper();
@@ -136,6 +149,14 @@ public class Schema implements Comparable<Schema> {
         } else {
             return Boolean.FALSE;
         }
+    }
+
+    public int getKeyHash() {
+        return keyHash;
+    }
+
+    public void setKeyHash(int keyHash) {
+        this.keyHash = keyHash;
     }
 
 //    public Map<Schema, String> getPathMap() {
@@ -295,6 +316,7 @@ public class Schema implements Comparable<Schema> {
         if (hasParent() && getParent().getKeyMap() != null) {
             keyMap.putAll(getParent().getKeyMap());
             valueMap.putAll(getParent().getKeyMap());
+            keyHash = getParent().keyHash;
         }
 
         Map<String, FieldProperties> fieldNextValues = new TreeMap<String, FieldProperties>();
@@ -307,6 +329,7 @@ public class Schema implements Comparable<Schema> {
         Iterator<String> iFieldKeys = orderedFields.keySet().iterator();
 
         Map<String, Object> keys = null;
+        StringBuilder keySb = new StringBuilder();
 
         while (iFieldKeys.hasNext()) {
             String iFieldKey = iFieldKeys.next();
@@ -332,7 +355,9 @@ public class Schema implements Comparable<Schema> {
                     }
                 } else {
                     if (keyFields != null && keyFields.contains(fp.getName())) {
-                        keyMap.put(fp, fp.getField().getLast());
+                        Object key = fp.getField().getLast();
+                        keySb.append(key.toString());
+                        keyMap.put(fp, key);
                     }
                     valueMap.put(fp, fp.getField().getLast());
                 }
@@ -342,9 +367,26 @@ public class Schema implements Comparable<Schema> {
 
         }
 
+        if (getParent() == null)
+            keyHash = Math.abs(keySb.toString().hashCode());
+
         if (controlFieldInt != null && controlFieldInt.terminate()) {
             throw new TerminateException("Field " + controlField + " has reached it limit and terminated the record generating process");
         }
+    }
+
+    public int getMaxFileParts(int mappers) {
+        int rtn = mappers;
+        for (Map.Entry<String, Relationship> entry : relationships.entrySet()) {
+            Relationship relationship = entry.getValue();
+            Schema schema = relationship.getRecord();
+            int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
+            double filepartBase = Math.log((double) range) * mappers;
+            int filepartBaseInt = new Double(filepartBase).intValue();
+            if (filepartBaseInt > rtn)
+                rtn = filepartBaseInt;
+        }
+        return rtn;
     }
 
     public void link() {

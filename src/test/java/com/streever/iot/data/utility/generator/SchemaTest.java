@@ -48,4 +48,26 @@ public class SchemaTest {
         }
     }
 
+    @Test
+    public void schema_filepart_test_001() {
+        Schema record = null;
+        try {
+            record = Schema.deserializeResource("/validation/multi-default.yaml");
+            System.out.println("Schema Max File Parts: " + record.getMaxFileParts(2));
+        } catch (IOException e) {
+            assertTrue(false);
+        }
+        try {
+            for (int i = 0; i < 10; i++) {
+                record.next();
+                Map keys = record.getKeyMap();
+                Map values = record.getValueMap();
+                System.out.println("KeyMap:" + keys.toString());
+                System.out.println("ValueMap:" + values.toString());
+            }
+        } catch (TerminateException te) {
+
+        }
+    }
+
 }

@@ -32,6 +32,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.log4j.Logger;
 
@@ -41,6 +42,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.streever.iot.data.mapreduce.DataGenTool.DEFAULT_MAPPERS;
+
 public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text, Text> {
     static private Logger LOG = Logger.getLogger(DataGenMultiMapper.class.getName());
 
@@ -49,6 +52,7 @@ public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text,
     public static final String PARTITION_PATH_PREFIX = "partition.path.prefix";
 
     private long counter = 0l;
+    private long childrenCounter = 0l;
 
     protected Boolean earlyTermination = Boolean.FALSE;
     protected String partitionPathPrefix = null;
@@ -100,12 +104,12 @@ public class DataGenMultiMapper extends Mapper<LongWritable, NullWritable, Text,
     /*
 Write a record, based on the schema, to the proper output path.
  */
-    protected void write(Context context, Schema record) throws IOException, InterruptedException {
+    protected void write(Context context, String pathPrefix, Schema record) throws IOException, InterruptedException {
 //        String strRec = format.write(record.getRecordMap());
         String strRec = format.write(record.getValueMap());
         LOG.debug("Writing record: " + record.getId() + ":" + strRec);
         // TODO: Need some partitioning element here to drive more than 1 reducer per relationship
-        context.write(new Text(record.getTitle() + "/part"), new Text(strRec));
+        context.write(new Text(pathPrefix), new Text(strRec));
         writeRelationships(context, record.getRelationships());
     }
 
@@ -113,16 +117,23 @@ Write a record, based on the schema, to the proper output path.
     Process the hierarchy of the schema.
 */
     protected void writeRelationships(Context context, Map<String, Relationship> relationships) throws IOException, InterruptedException {
+        int mapperCount = context.getConfiguration().getInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS);
+//        LOG.info("Mapper Count (in multi rel): " + mapperCount);
         for (Map.Entry<String, Relationship> entry : relationships.entrySet()) {
             Relationship relationship = entry.getValue();
             Schema schema = relationship.getRecord();
-            int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
-            LOG.debug("Range: " + range);
+            int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
+            double filepartBase = Math.log((double)range) * mapperCount;
+            int filepartBaseInt = new Double(filepartBase).intValue();
+            int filepartPrefix = schema.getKeyHash() % filepartBaseInt;
+            String pathPrefix = schema.getTitle() + "/" + String.format("%1$5s", filepartPrefix).replace(' ', '0');
+            LOG.debug(String.format("Base: %1f: BaseInt: %2d KeyHash: %3d Prefix: %4s", filepartBase, filepartBaseInt, schema.getKeyHash(), pathPrefix));
             if (range <= 0) {
                 try {
+                    childrenCounter++;
                     schema.next();
                     LOG.debug("(1)Writing relationship: " + schema.getId());
-                    write(context, schema);
+                    write(context, pathPrefix, schema);
                 } catch (TerminateException e) {
                     // Early Termination;
                 }
@@ -130,9 +141,10 @@ Write a record, based on the schema, to the proper output path.
                 int rNum = ThreadLocalRandom.current().nextInt(range);
                 for (int i = 0; i <= rNum; i++) {
                     try {
+                        childrenCounter++;
                         schema.next();
                         LOG.debug("(n)Writing relationship: " + schema.getId());
-                        write(context, schema);
+                        write(context, pathPrefix, schema);
                     } catch (TerminateException e) {
                         break;
                     }
@@ -153,9 +165,11 @@ Write a record, based on the schema, to the proper output path.
             try {
                 counter++;
                 schema.next();
-                write(context, schema);
+                int filepartPrefix = schema.getKeyHash() % context.getConfiguration().getInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS);
+                String pathPrefix = schema.getTitle() + "/" + String.format("%1$5s", filepartPrefix).replace(' ', '0');
+                write(context, pathPrefix, schema);
                 if (counter % 1000 == 0) {
-                    LOG.info("Main record count: " + counter);
+                    LOG.info(String.format("Master count: %1d Child count: %2d", counter, childrenCounter));
                 }
             } catch (TerminateException te) {
 //                System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");

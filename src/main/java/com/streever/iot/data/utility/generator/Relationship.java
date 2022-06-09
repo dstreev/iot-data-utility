@@ -10,6 +10,8 @@ public class Relationship {
 
     public void setCardinality(Cardinality cardinality) {
         this.cardinality = cardinality;
+        if (record != null)
+            record.setCardinality(this.cardinality);
     }
 
     public Schema getRecord() {
@@ -18,5 +20,7 @@ public class Relationship {
 
     public void setRecord(Schema record) {
         this.record = record;
+        if (cardinality != null)
+            this.record.setCardinality(cardinality);
     }
 }

@@ -98,7 +98,7 @@ public class DataGenTool extends Configured implements Tool {
 //                .required(true)
 //                .build();
 
-        Option mappers = new Option("p", "parallelism", true, "Parallelism");
+        Option mappers = new Option("m", "mappers", true, "Mappers");
         mappers.setRequired(false);
 //        Option mappers = Option.builder("m")
 //                .argName("mappers")
@@ -205,6 +205,8 @@ public class DataGenTool extends Configured implements Tool {
         schema.link();
         schema.validate();
 
+        job.setNumReduceTasks(schema.getMaxFileParts(job.getConfiguration().getInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS)));
+
         // Multi-File Output.
         if (schema.getRelationships().size() > 0) {
             // There is a hierarchy.
@@ -221,7 +223,7 @@ public class DataGenTool extends Configured implements Tool {
 
                 // Set Reducer, since there is a hierarchy.
                 job.setReducerClass(DataGenReducer.class);
-
+                //job.setNumReduceTasks(10);
                 // Force Reduce to push different writes.
                 for (Map.Entry<String, Relationship> relationshipEntry : schema.getRelationships().entrySet()) {
                     LOG.info("Multi-part: " + relationshipEntry.getKey());
@@ -269,15 +271,15 @@ public class DataGenTool extends Configured implements Tool {
             DataGenInputFormat.setNumberOfRows(job, DEFAULT_COUNT);
         }
 
-        if (line.hasOption("p")) {
-            int parallelism = Integer.parseInt(line.getOptionValue("p"));
-            job.setNumReduceTasks(parallelism);
-            configuration.setInt(MRJobConfig.NUM_MAPS, Integer.parseInt(line.getOptionValue("p")));
+        if (line.hasOption("m")) {
+            int parallelism = Integer.parseInt(line.getOptionValue("m"));
+//            job.setNumReduceTasks(parallelism);
+            configuration.setInt(MRJobConfig.NUM_MAPS, Integer.parseInt(line.getOptionValue("m")));
 //            configuration.setInt(MRJobConfig.NUM_REDUCES, Integer.parseInt(line.getOptionValue("p")));
         } else {
             // Default
             configuration.setInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS);
-            job.setNumReduceTasks(DEFAULT_MAPPERS);
+//            job.setNumReduceTasks(DEFAULT_MAPPERS);
 //            configuration.setInt(MRJobConfig.NUM_REDUCES, DEFAULT_MAPPERS);
         }
 

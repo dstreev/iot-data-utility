@@ -233,7 +233,7 @@ public class RecordBuilder {
             for (String key : relationshipKeys) {
                 Relationship relationship = relationships.get(key);
                 Schema rRecord = relationship.getRecord();
-                int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
+                int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
                 if (range <= 0) {
                     // Assume 1-1 relationship.
                     try {

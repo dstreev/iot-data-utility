@@ -46,7 +46,7 @@ public class DataGenReducer extends Reducer<Text, Text, NullWritable, Text> {
             LOG.debug("Writing " + key.toString() + ": " + value.toString());
             multipleOutputs.write(NullWritable.get(), value, key.toString());
             if (counter % 10000 == 0) {
-                LOG.info("Record Count: " + counter);
+                LOG.info("Reduce record Count: " + counter);
             }
         }
     }

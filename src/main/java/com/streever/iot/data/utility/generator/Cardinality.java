@@ -24,4 +24,9 @@ public class Cardinality {
     public void setMax(int max) {
         this.max = max;
     }
+
+    public int getRange() {
+        return getMax() - getMin();
+    }
+
 }
