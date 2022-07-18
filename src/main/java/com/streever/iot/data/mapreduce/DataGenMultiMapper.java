@@ -22,9 +22,9 @@ package com.streever.iot.data.mapreduce;
 
 import com.streever.iot.data.utility.generator.Relationship;
 import com.streever.iot.data.utility.generator.Schema;
-import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
 import com.streever.iot.data.utility.generator.output.CSVFormat;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,7 +39,6 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.streever.iot.data.mapreduce.DataGenTool.DEFAULT_MAPPERS;
@@ -122,31 +121,39 @@ Write a record, based on the schema, to the proper output path.
         for (Map.Entry<String, Relationship> entry : relationships.entrySet()) {
             Relationship relationship = entry.getValue();
             Schema schema = relationship.getRecord();
-            int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
-            double filepartBase = Math.log((double)range) * mapperCount;
-            int filepartBaseInt = new Double(filepartBase).intValue();
-            int filepartPrefix = schema.getKeyHash() % filepartBaseInt;
-            String pathPrefix = schema.getTitle() + "/" + String.format("%1$5s", filepartPrefix).replace(' ', '0');
-            LOG.debug(String.format("Base: %1f: BaseInt: %2d KeyHash: %3d Prefix: %4s", filepartBase, filepartBaseInt, schema.getKeyHash(), pathPrefix));
-            if (range <= 0) {
-                try {
-                    childrenCounter++;
-                    schema.next();
-                    LOG.debug("(1)Writing relationship: " + schema.getId());
-                    write(context, pathPrefix, schema);
-                } catch (TerminateException e) {
-                    // Early Termination;
+            for (int i = 1; i <= relationship.getCardinality().getRepeat(); i++) {
+                int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
+                double filepartBase = Math.log((double) range) * mapperCount;
+                int filepartBaseInt = new Double(filepartBase).intValue();
+                int filepartPrefix = schema.getKeyHash() % filepartBaseInt;
+                String pathPrefix = null;
+                if (relationship.getCardinality().getRepeat() == 1) {
+                    pathPrefix = entry.getKey() + "/" + String.format("%1$5s", filepartPrefix).replace(' ', '0');
+                } else {
+                    String repeatedCount = StringUtils.leftPad(Integer.toString(i), 4, "0");
+                    pathPrefix = entry.getKey() + "_" + repeatedCount + "/" + String.format("%1$5s", filepartPrefix).replace(' ', '0');
                 }
-            } else {
-                int rNum = ThreadLocalRandom.current().nextInt(range);
-                for (int i = 0; i <= rNum; i++) {
+                LOG.debug(String.format("Base: %1f: BaseInt: %2d KeyHash: %3d Prefix: %4s", filepartBase, filepartBaseInt, schema.getKeyHash(), pathPrefix));
+                if (range <= 0) {
                     try {
                         childrenCounter++;
                         schema.next();
-                        LOG.debug("(n)Writing relationship: " + schema.getId());
+                        LOG.debug("(1)Writing relationship: " + schema.getId());
                         write(context, pathPrefix, schema);
                     } catch (TerminateException e) {
-                        break;
+                        // Early Termination;
+                    }
+                } else {
+                    int rNum = ThreadLocalRandom.current().nextInt(range);
+                    for (int j = 0; j <= rNum; j++) {
+                        try {
+                            childrenCounter++;
+                            schema.next();
+                            LOG.debug("(n)Writing relationship: " + schema.getId());
+                            write(context, pathPrefix, schema);
+                        } catch (TerminateException e) {
+                            break;
+                        }
                     }
                 }
             }

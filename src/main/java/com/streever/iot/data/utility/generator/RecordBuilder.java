@@ -5,6 +5,7 @@ import com.streever.iot.data.utility.generator.output.DFSOutput;
 import com.streever.iot.data.utility.generator.output.LocalFileOutput;
 import com.streever.iot.data.utility.generator.output.Output;
 import com.streever.iot.data.utility.generator.output.OutputBase;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -30,7 +31,7 @@ public class RecordBuilder {
 
     private OutputConfig outputConfig;
 
-    private Map<Schema, Output> outputMap = new TreeMap<Schema, Output>();
+    private Map<String, Output> outputMap = new TreeMap<String, Output>();
 
     public long getCount() {
         return count;
@@ -86,7 +87,7 @@ public class RecordBuilder {
         if (getOutputConfig() != null) {
             if (getOutputConfig().getDefault() != null) {
                 getOutputConfig().getDefault().setName(getSchema().getId());
-                outputMap.put(getSchema(), getOutputConfig().getDefault());
+                outputMap.put(getSchema().getTitle(), getOutputConfig().getDefault());
                 // When filename in output spec if not set, use the 'record.id'
                 // TODO: file extension
                 if (getOutputConfig().getDefault() instanceof LocalFileOutput && ((LocalFileOutput) getOutputConfig().getDefault()).getFilename() == null) {
@@ -116,32 +117,44 @@ public class RecordBuilder {
         for (String key : relationshipNames) {
             Relationship relationship = relationships.get(key);
             Schema record = relationship.getRecord();
-            OutputBase output = outputRelationships.get(key);
-            if (output == null) {
-                // Output Spec matching name not found.
-                try {
-                    OutputBase spec = (OutputBase) getOutputConfig().getDefault().clone();
-                    spec.setName(key);
-                    outputMap.put(record, spec);
-                    spec.link(record);
-                    System.out.println("Cloned 'default' spec for record: " + key);
-                } catch (CloneNotSupportedException cnse) {
-                    cnse.printStackTrace();
-                }
-            } else {
-                if (!output.isUsed()) {
-                    output.setName(key);
-                    // When filename in output spec if not set, use the 'record.id'
-                    // TODO: file extension
-                    if (output instanceof LocalFileOutput && ((LocalFileOutput) output).getFilename() == null) {
-                        ((LocalFileOutput) output).setFilename(getSchema().getId());
-                    }
-                    outputMap.put(record, output);
-                    output.setUsed(Boolean.TRUE);
+            for (int i = 1; i <= relationship.getCardinality().getRepeat(); i++) {
+                String keyPos = null;
+                if (relationship.getCardinality().getRepeat() == 1) {
+                    keyPos = key;
                 } else {
-                    System.out.println("Output has been previous used, define a separate output for:" +
-                            record.getId());
-                    rtn = Boolean.FALSE;
+                    keyPos = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
+                }
+                OutputBase output = outputRelationships.get(keyPos);
+                if (output == null) {
+                    // Output Spec matching name not found.
+                    try {
+                        OutputBase spec = (OutputBase) getOutputConfig().getDefault().clone();
+                        if (spec instanceof LocalFileOutput) {
+                            ((LocalFileOutput)spec).setName(keyPos);
+                            ((LocalFileOutput)spec).setFilename(keyPos);
+                        }
+                        spec.setName(keyPos);
+                        outputMap.put(keyPos, spec);
+                        spec.link(record);
+                        System.out.println("Cloned 'default' spec for record: " + keyPos);
+                    } catch (CloneNotSupportedException cnse) {
+                        cnse.printStackTrace();
+                    }
+                } else {
+                    if (!output.isUsed()) {
+                        output.setName(keyPos);
+                        // When filename in output spec if not set, use the 'record.id'
+                        // TODO: file extension
+                        if (output instanceof LocalFileOutput && ((LocalFileOutput) output).getFilename() == null) {
+                            ((LocalFileOutput) output).setFilename(keyPos);
+                        }
+                        outputMap.put(keyPos, output);
+                        output.setUsed(Boolean.TRUE);
+                    } else {
+                        System.out.println("Output has been previous used, define a separate output for:" +
+                                record.getId());
+                        rtn = Boolean.FALSE;
+                    }
                 }
             }
             // If there are relationships, recurse and set them.
@@ -196,9 +209,9 @@ public class RecordBuilder {
         // Initialize if null;
         getOutputConfig();
         // Open specs
-        Set<Schema> outputKeys = outputMap.keySet();
-        for (Schema record : outputKeys) {
-            outputMap.get(record).open(outputPrefix);
+        Set<String> outputKeys = outputMap.keySet();
+        for (String recordKey : outputKeys) {
+            outputMap.get(recordKey).open(outputPrefix);
         }
     }
 
@@ -206,17 +219,17 @@ public class RecordBuilder {
     Clean up after we're done by closing the IO channels
      */
     protected void closeOutput() throws IOException {
-        Set<Schema> outputKeys = outputMap.keySet();
-        for (Schema record : outputKeys) {
-            outputMap.get(record).close();
+        Set<String> outputKeys = outputMap.keySet();
+        for (String recordKey : outputKeys) {
+            outputMap.get(recordKey).close();
         }
     }
 
     /*
     Write a record, based on the schema, to the proper output path.
      */
-    protected long write(Schema record) throws IOException {
-        Output output = this.outputMap.get(record);
+    protected long write(Schema record, String recordKey) throws IOException {
+        Output output = this.outputMap.get(recordKey);
         // The last generated recordset
         return output.write(record.getValueMap());
     }
@@ -233,30 +246,19 @@ public class RecordBuilder {
             for (String key : relationshipKeys) {
                 Relationship relationship = relationships.get(key);
                 Schema rRecord = relationship.getRecord();
-                int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
-                if (range <= 0) {
-                    // Assume 1-1 relationship.
-                    try {
-                        rRecord.next();
-                        write(rRecord);
-                        status[0]++;
-                        // Recurse into hierarchy
-                        long[] rStatus;
-                        rStatus = writeRelationships(rRecord.getRelationships());
-                        status[0] += rStatus[0];
-                        status[1] += rStatus[1];
-                    } catch (TerminateException ete) {
-                        LOG.debug("Early Termination of " + key + " relationship.");
-                    } catch (IOException ioe) {
-                        LOG.error("IO Exception for " + key + " " + ioe.getMessage());
+                for (int i = 1; i <= relationship.getCardinality().getRepeat(); i++) {
+                    String keyPos;
+                    if (relationship.getCardinality().getRepeat() <=1) {
+                        keyPos = key;
+                    } else {
+                        keyPos = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
                     }
-                } else {
-                    // Assume min to max relationship.
-                    int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
-                    for (int i = relationship.getCardinality().getMin(); i < rNum; i++) {
+                    int range = relationship.getCardinality().getRange(); //getMax() - relationship.getCardinality().getMin();
+                    if (range <= 0) {
+                        // Assume 1-1 relationship.
                         try {
                             rRecord.next();
-                            status[1] += write(rRecord);
+                            write(rRecord, keyPos);
                             status[0]++;
                             // Recurse into hierarchy
                             long[] rStatus;
@@ -265,9 +267,28 @@ public class RecordBuilder {
                             status[1] += rStatus[1];
                         } catch (TerminateException ete) {
                             LOG.debug("Early Termination of " + key + " relationship.");
-                            break;
                         } catch (IOException ioe) {
                             LOG.error("IO Exception for " + key + " " + ioe.getMessage());
+                        }
+                    } else {
+                        // Assume min to max relationship.
+                        int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
+                        for (int j = relationship.getCardinality().getMin(); j < rNum; j++) {
+                            try {
+                                rRecord.next();
+                                status[1] += write(rRecord, keyPos);
+                                status[0]++;
+                                // Recurse into hierarchy
+                                long[] rStatus;
+                                rStatus = writeRelationships(rRecord.getRelationships());
+                                status[0] += rStatus[0];
+                                status[1] += rStatus[1];
+                            } catch (TerminateException ete) {
+                                LOG.debug("Early Termination of " + key + " relationship.");
+                                break;
+                            } catch (IOException ioe) {
+                                LOG.error("IO Exception for " + key + " " + ioe.getMessage());
+                            }
                         }
                     }
                 }
@@ -296,7 +317,7 @@ public class RecordBuilder {
             do {
                 try {
                     getSchema().next();
-                    long lsize = write(getSchema());
+                    long lsize = write(getSchema(), getSchema().getTitle());
                     runStatus[1] += lsize;
                     if (localSize != -1)
                         localSize -= lsize;

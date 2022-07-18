@@ -29,6 +29,11 @@ public class SqlBuilderTest {
         }
     }
 
+    @Test
+    public void test_multi_001() {
+        doIt("/validation/multi-default.yaml");
+    }
+
     protected void doIt(String resource) {
         SqlBuilder sb = new SqlBuilder();
         Schema r1 = null;

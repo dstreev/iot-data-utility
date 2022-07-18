@@ -115,14 +115,14 @@ public abstract class FileOutput extends OutputBase {
             }
             if (prefix != null) {
                 if (isDirForRelationship()) {
-                    baseDir = prefix + System.getProperty("file.separator") + getFilename();
+                    baseDir = prefix + System.getProperty("file.separator") + getName();
                 } else {
                     baseDir = prefix;
                 }
                 createDir(baseDir);
             } else {
                 if (isDirForRelationship()) {
-                    baseDir = getFilename();
+                    baseDir = getName();
                 }
             }
             if (baseDir != null) {

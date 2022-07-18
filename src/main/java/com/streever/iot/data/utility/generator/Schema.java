@@ -94,7 +94,7 @@ public class Schema implements Comparable<Schema> {
     }
 
     public String getTitle() {
-        return title;
+        return title.toLowerCase();
     }
 
     public void setTitle(String title) {

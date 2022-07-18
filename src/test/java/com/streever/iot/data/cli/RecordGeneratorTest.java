@@ -98,6 +98,12 @@ public class RecordGeneratorTest {
         doIt(options);
     }
 
+    @Test
+    public void test_009() {
+        String[] options = {"-csv", "-local", "-s", "/sample_schemas/scale-out.yaml", "-c", "5", "-p", BASE_DIR, "-uuid"};
+        doIt(options);
+    }
+
 //    @Test
 //    public void test_009() {
 //        String[] options = {"-csv", "-std", "-s", "/sample_schemas/one-many.yaml", "-c", "5"};
