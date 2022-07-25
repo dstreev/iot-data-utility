@@ -104,6 +104,12 @@ public class RecordGeneratorTest {
         doIt(options);
     }
 
+    @Test
+    public void test_009_01() {
+        String[] options = {"-sql", "-s", "/sample_schemas/scale-out.yaml"};
+        doIt(options);
+    }
+
 //    @Test
 //    public void test_009() {
 //        String[] options = {"-csv", "-std", "-s", "/sample_schemas/one-many.yaml", "-c", "5"};

@@ -35,7 +35,7 @@ public class SqlBuilderTest {
     }
 
     protected void doIt(String resource) {
-        SqlBuilder sb = new SqlBuilder();
+        SqlBuilder sb = new HiveSqlBuilder();
         Schema r1 = null;
         try {
             r1 = Schema.deserializeResource(resource);

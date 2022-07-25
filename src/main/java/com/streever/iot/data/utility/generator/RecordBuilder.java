@@ -136,7 +136,7 @@ public class RecordBuilder {
                         spec.setName(keyPos);
                         outputMap.put(keyPos, spec);
                         spec.link(record);
-                        System.out.println("Cloned 'default' spec for record: " + keyPos);
+//                        System.out.println("Cloned 'default' spec for record: " + keyPos);
                     } catch (CloneNotSupportedException cnse) {
                         cnse.printStackTrace();
                     }
