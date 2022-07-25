@@ -1,10 +1,7 @@
 package com.streever.iot.data.cli;
 
 import com.jcabi.manifests.Manifests;
-import com.streever.iot.data.utility.generator.RecordBuilder;
-import com.streever.iot.data.utility.generator.OutputConfig;
-import com.streever.iot.data.utility.generator.Schema;
-import com.streever.iot.data.utility.generator.SqlBuilder;
+import com.streever.iot.data.utility.generator.*;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
@@ -226,7 +223,7 @@ public class RecordGenerator {
 
             if (line.hasOption("sql")) {
                 builder.init();
-                SqlBuilder sBuilder = new SqlBuilder();
+                SqlBuilder sBuilder = new HiveSqlBuilder();
                 sBuilder.setSchema(record);
                 System.out.println(sBuilder.build());
             } else {
