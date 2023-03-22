@@ -33,6 +33,15 @@ public class IPV4AddressField extends FieldBase<Object> {
 
     private As as = As.STRING;
 
+    @Override
+    public FieldType getFieldType() {
+        if (as == As.STRING) {
+            return FieldType.STRING;
+        } else {
+            return FieldType.LONG;
+        }
+    }
+
     public As getAs() {
         return as;
     }

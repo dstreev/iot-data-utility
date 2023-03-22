@@ -8,10 +8,11 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @JsonIgnoreProperties({"df", "startStop", "lastIssued"})
 public class DateField extends FieldBase<Object> implements ControlField {
-    private Range<Timestamp> range;
+    private Range<Date> range;
     private Long diff = 1000l;
     private Long startStopSpan = 100000l;
     private String format = "yyyy-MM-dd HH:mm:ss";
@@ -30,6 +31,15 @@ public class DateField extends FieldBase<Object> implements ControlField {
     private Long lastIssued;
     private As as = As.STRING;
 
+    @Override
+    public FieldType getFieldType() {
+        if (as == As.STRING) {
+            return FieldType.STRING;
+        } else {
+            return FieldType.LONG;
+        }
+    }
+
     public As getAs() {
         return as;
     }
@@ -42,11 +52,11 @@ public class DateField extends FieldBase<Object> implements ControlField {
     private Long lastValue;
     private Boolean controlField = Boolean.FALSE;
 
-    public Range<Timestamp> getRange() {
+    public Range<Date> getRange() {
         return range;
     }
 
-    public void setRange(Range<Timestamp> range) {
+    public void setRange(Range<Date> range) {
         this.range = range;
         if (range != null) {
             if (!increment) {
@@ -113,15 +123,15 @@ public class DateField extends FieldBase<Object> implements ControlField {
     }
 
     @Override
-    public boolean validate() {
+    public Boolean validate(List<String> reasons) {
         boolean rtn = Boolean.TRUE;
         if (!isMaintainState()) {
             if (current && increment) {
-                System.err.println("'current' and 'increment' can't both be 'true' in " + toString());
+                reasons.add(getParent().getTitle() + ":" + getName() + " - 'current' and 'increment' can't both be 'true'");
                 rtn = Boolean.FALSE;
             }
             if (!current && !increment && range == null) {
-                System.err.println("Validation Issue: 'current' and 'increment' are FALSE and 'range' isn't defined. " + toString());
+                reasons.add(getParent().getTitle() + ":" + getName() + " - 'current' and 'increment' are FALSE and 'range' isn't defined. " + toString());
                 rtn = Boolean.FALSE;
             }
         }
@@ -169,7 +179,7 @@ public class DateField extends FieldBase<Object> implements ControlField {
                 } else {
                     working = new Date(lastIssued);
                 }
-            } else if (range != null ){
+            } else if (range != null) {
 //                System.out.println("Range GAP: WIP " + toString());
 //                lastIssued = range.getMin().getTime();
                 double multiplierD = randomizer.nextDouble();
@@ -218,8 +228,7 @@ public class DateField extends FieldBase<Object> implements ControlField {
     public boolean terminate() {
         // If the last value issued exceeds the max range value, then terminate.
         if (getRange() != null && getRange().getMax() != null && this.isControlField()) {
-            if (getRange().getMax().getTime() <= lastValue)
-                return true;
+            if (getRange().getMax().getTime() <= lastValue) return true;
         }
         return false;
     }
@@ -231,19 +240,8 @@ public class DateField extends FieldBase<Object> implements ControlField {
 
     @Override
     public String toString() {
-        return super.toString() + "->DateField{" +
-                "range=" + range +
-                ", diff=" + diff +
-                ", startStopSpan=" + startStopSpan +
-                ", format='" + format + '\'' +
+        return super.toString() + "->DateField{" + "range=" + range + ", diff=" + diff + ", startStopSpan=" + startStopSpan + ", format='" + format + '\'' +
 //                ", df=" + df +
-                ", increment=" + increment +
-                ", current=" + current +
-                ", lateArriving=" + lateArriving +
-                ", lastIssued=" + lastIssued +
-                ", as=" + as +
-                ", lastValue=" + lastValue +
-                ", controlField=" + controlField +
-                '}';
+                ", increment=" + increment + ", current=" + current + ", lateArriving=" + lateArriving + ", lastIssued=" + lastIssued + ", as=" + as + ", lastValue=" + lastValue + ", controlField=" + controlField + '}';
     }
 }

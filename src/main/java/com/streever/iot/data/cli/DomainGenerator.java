@@ -3,59 +3,62 @@ package com.streever.iot.data.cli;
 import com.jcabi.manifests.Manifests;
 import com.streever.iot.data.utility.generator.*;
 import org.apache.commons.cli.*;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public class RecordGenerator {
-    private static Logger LOG = LogManager.getLogger(RecordGenerator.class);
+public class DomainGenerator {
+    private static Logger LOG = LogManager.getLogger(DomainGenerator.class);
 
     public static String DEFAULT_VALIDATION_YAML = "/validation/simple-default.yaml";
     public static String DEFAULT_VALIDATION_MULTI_YAML = "/validation/multi-default.yaml";
     public static Long DEFAULT_COUNT = 500l;
 
-    private Options options;
+//    private Options options;
     private CommandLine line;
 
-    private void buildOptions() {
-        options = new Options();
+    public static Options getOptions() {
+        Options options = new Options();
 
         Option HELP_OPTION = new Option("h", "help", false, "Help");
 
-        Option OUTPUT_PREFIX_OPTION = new Option("p", "prefix", true,
-                "Prefix for Output Spec.  For filesystems, this is an output directory.");
-        OUTPUT_PREFIX_OPTION.setRequired(false);
+        Option OUTPUT_DIRECTORY_OPTION = new Option("o", "output-dir", true,
+                "Output directory.");
+        OUTPUT_DIRECTORY_OPTION.setRequired(false);
 
 
-        Option SCHEMA_CONFIG_OPTION = new Option("s", "schema", true,
-                "Schema Config File.");
-        SCHEMA_CONFIG_OPTION.setArgName("schema-file");
-        SCHEMA_CONFIG_OPTION.setArgs(1);
-        SCHEMA_CONFIG_OPTION.setRequired(false);
-        SCHEMA_CONFIG_OPTION.setType(String.class);
+        Option DOMAIN_CONFIG_OPTION = new Option("d", "domain", true,
+                "Domain Config File.");
+        DOMAIN_CONFIG_OPTION.setArgName("domain-file");
+        DOMAIN_CONFIG_OPTION.setArgs(1);
+        DOMAIN_CONFIG_OPTION.setRequired(false);
+        DOMAIN_CONFIG_OPTION.setType(String.class);
 
-        Option SCHEMA_DEFAULT_OPTION = new Option("ds", "default-schema", false,
-                "Default (Sample) Schema Config File.");
-        SCHEMA_DEFAULT_OPTION.setRequired(false);
-        SCHEMA_DEFAULT_OPTION.setType(String.class);
 
-        Option SCHEMA_DEFAULT_MULTI_OPTION = new Option("dms", "default-multi-schema", false,
-                "Default (Sample) Multi Schema Config File.");
-        SCHEMA_DEFAULT_MULTI_OPTION.setRequired(false);
-        SCHEMA_DEFAULT_MULTI_OPTION.setType(String.class);
+        Option DOMAIN_DEFAULT_OPTION = new Option("dd", "default-domain", false,
+                "Default (Sample) Domain Config File.");
+        DOMAIN_DEFAULT_OPTION.setRequired(false);
+        DOMAIN_DEFAULT_OPTION.setType(String.class);
 
-        OptionGroup schemaGroup = new OptionGroup();
-        schemaGroup.setRequired(false);
-        schemaGroup.addOption(SCHEMA_CONFIG_OPTION);
-        schemaGroup.addOption(SCHEMA_DEFAULT_OPTION);
-        schemaGroup.addOption(SCHEMA_DEFAULT_MULTI_OPTION);
+        OptionGroup domainGroup = new OptionGroup();
+        domainGroup.setRequired(true);
+        domainGroup.addOption(DOMAIN_CONFIG_OPTION);
+        domainGroup.addOption(DOMAIN_DEFAULT_OPTION);
 
-        options.addOptionGroup(schemaGroup);
+        options.addOptionGroup(domainGroup);
+
+        Option ANCHOR_SCHEMA_OPTION = new Option("s", "schema", true,
+                "Anchor Schema name.");
+        ANCHOR_SCHEMA_OPTION.setArgName("schema-name");
+        ANCHOR_SCHEMA_OPTION.setArgs(1);
+        ANCHOR_SCHEMA_OPTION.setRequired(false);
+        ANCHOR_SCHEMA_OPTION.setType(String.class);
+        options.addOption(ANCHOR_SCHEMA_OPTION);
 
         Option COUNT_OPTION = new Option("c", "count", true,
                 "Record count.");
@@ -83,7 +86,15 @@ public class RecordGenerator {
         volumeGroup.addOption(SIZE_GB_OPTION);
         options.addOptionGroup(volumeGroup);
 
-        Option OUTPUT_CONFIG_OPTION = new Option("o", "output", true,
+        Option TOKEN_REPLACEMENT = new Option("tr", "token-replacement", true,
+                "Comma separated key=value pairs used to replace tokens in the config.");
+        TOKEN_REPLACEMENT.setArgName("key=value");
+        TOKEN_REPLACEMENT.setRequired(Boolean.FALSE);
+        TOKEN_REPLACEMENT.setValueSeparator(',');
+        TOKEN_REPLACEMENT.setArgs(100);
+        options.addOption(TOKEN_REPLACEMENT);
+
+        Option OUTPUT_CONFIG_OPTION = new Option("oc", "output-configuration", true,
                 "Output Configuration.");
         OUTPUT_CONFIG_OPTION.setRequired(false);
         OUTPUT_CONFIG_OPTION.setType(String.class);
@@ -139,8 +150,8 @@ public class RecordGenerator {
         options.addOptionGroup(outputGroup);
 
         options.addOption(HELP_OPTION);
-        options.addOption(OUTPUT_PREFIX_OPTION);
-        options.addOption(SCHEMA_CONFIG_OPTION);
+        options.addOption(OUTPUT_DIRECTORY_OPTION);
+        options.addOption(DOMAIN_CONFIG_OPTION);
 
         OptionGroup uniqueGroup = new OptionGroup();
         uniqueGroup.setRequired(false);
@@ -161,24 +172,28 @@ public class RecordGenerator {
 
         options.addOption(DEBUG_OPTION);
 
+        return options;
     }
 
     private void printUsage(String statement) {
         HelpFormatter formatter = new HelpFormatter();
-        String footer = RecordGenerator.substituteVariables("v.${Implementation-Version}");
-        formatter.printHelp("java " + this.getClass().getCanonicalName(), statement, options, footer, true);
+        String footer = DomainGenerator.substituteVariables("v.${Implementation-Version}");
+        formatter.printHelp("java " + this.getClass().getCanonicalName(), statement, getOptions(), footer, true);
     }
 
-    private boolean checkUsage(String[] args) {
+    private boolean init(String[] args) {
         boolean rtn = true;
-        buildOptions();
+        Options options = getOptions();
 
         CommandLineParser parser = new PosixParser();
 
         try {
             line = parser.parse(options, args, true);
         } catch (ParseException pe) {
-            printUsage("Missing Required Elements. " + StringUtils.join(args,","));
+            HelpFormatter formatter = new HelpFormatter();
+            // TODO: Proper cli usage...
+            formatter.printHelp(100, "hello", "Missing Required Elements", options, "footer");
+//            printUsage("Missing Required Elements. " + StringUtils.join(args, ","));
             return false;
         }
 
@@ -192,7 +207,7 @@ public class RecordGenerator {
     public int run(String[] args) throws IOException {
         int rtn = 0;
 
-        if (!checkUsage(args)) {
+        if (!init(args)) {
             rtn = -1;
         } else {
             if (line.hasOption("debug")) {
@@ -200,31 +215,59 @@ public class RecordGenerator {
                 System.out.println("Attached Remote Debugger <enter to proceed>");
                 sc.nextLine();
             }
-            Schema record = null;
-            if (line.hasOption("s")) {
-                String schemaFile = line.getOptionValue("s");
-                LOG.info("Schema File: " + schemaFile);
-                record = Schema.deserializeResource(schemaFile);
+            Domain domain = null;
+            String anchorSchema = null;
+            String domainFile = null;
+            if (line.hasOption("d")) {
+                domainFile = line.getOptionValue("d");
+//                if (anchorSchema == null || anchorSchema.trim().length() == 0) {
+//                    throw new RuntimeException("Need to specify `-s <anchor-schema> option");
+//                }
             } else {
                 // use a default for testing.
-                if (line.hasOption("dms")) {
-                    LOG.info("Default MULTI schema specified.  Using default 'multi-validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_MULTI_YAML);
-                    record = Schema.deserializeResource(DEFAULT_VALIDATION_MULTI_YAML);
-                } else if (line.hasOption("ds")) {
-                        LOG.info("Default schema specified.  Using default 'validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
-                        record = Schema.deserializeResource(DEFAULT_VALIDATION_YAML);
+                if (line.hasOption("dd")) {
+                        LOG.info("Default domain specified.  Using default 'validation' domain in 'resources' for testing: " + DEFAULT_VALIDATION_MULTI_YAML);
+                        domainFile = DEFAULT_VALIDATION_MULTI_YAML;
+                        if (anchorSchema == null)
+                            anchorSchema = "transaction";
                 } else {
-                    LOG.info("No schema specified.  Using default 'validation' schema in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
-                    record = Schema.deserializeResource(DEFAULT_VALIDATION_YAML);
+                    LOG.info("No domain specified.  Using default 'validation' domain in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
+                    domainFile = DEFAULT_VALIDATION_YAML;
+                    if (anchorSchema == null)
+                        anchorSchema = "account";
                 }
             }
-            RecordBuilder builder = new RecordBuilder();
-            builder.setSchema(record);
+            if (line.hasOption("s")) {
+                anchorSchema = line.getOptionValue("s");
+            }
+            LOG.info("Domain File: " + domainFile);
+            Map<String, Object> tokenReplacements = null;
+            if (line.hasOption("tr")) {
+                // token replacements
+                tokenReplacements = new HashMap<String, Object>();
+                String[] tokenReplacementStrs = line.getOptionValues("tr");
+                for (String trstr: tokenReplacementStrs) {
+                    String[] parts = trstr.split("=");
+                    if (parts.length == 2) {
+                        tokenReplacements.put(parts[0], parts[1]);
+                    }
+                }
+            }
+            domain = Domain.deserializeResource(tokenReplacements, domainFile);
+            domain.completeAssociations();
+            List<String> reasons = new ArrayList<String>();
+            if (!domain.validate(reasons)) {
+                System.out.println(reasons.stream().map(r -> r.toString()).collect(Collectors.joining("\n")));
+                throw new RuntimeException("Config didn't pass validation");
+            }
+
+            DomainBuilder builder = new DomainBuilder(domain, anchorSchema);
 
             if (line.hasOption("sql")) {
                 builder.init();
                 SqlBuilder sBuilder = new HiveSqlBuilder();
-                sBuilder.setSchema(record);
+                // TODO: Fix sqlBuilder
+//                sBuilder.setSchema(domain);
                 System.out.println(sBuilder.build());
             } else {
                 if (line.hasOption("c")) {
@@ -247,7 +290,7 @@ public class RecordGenerator {
                     builder.setCount(DEFAULT_COUNT);
                 }
 
-                // Use the supplied ouput spec
+                // Use the supplied ouTput spec
                 if (line.hasOption("o")) {
                     String ops = line.getOptionValue("o");
                     LOG.info("Output Configuration: " + ops);
@@ -285,7 +328,7 @@ public class RecordGenerator {
                     } else if (specOutput[0] == null && specOutput[1] != null) {
                         specFile = "csv_" + specOutput[1];
                     } else {
-                        specFile = "csv_std";
+                        specFile = "json_std";
                     }
 
                     if (!line.hasOption("std") && line.hasOption("ts")) {
@@ -306,6 +349,7 @@ public class RecordGenerator {
                 }
                 builder.init();
                 long[] counts = builder.run();
+                System.out.println(builder.getTerminationReason());
             }
             rtn = 0;
         }
@@ -340,7 +384,7 @@ public class RecordGenerator {
 
     public static void main(String[] args) {
         int result;
-        RecordGenerator cli = new RecordGenerator();
+        DomainGenerator cli = new DomainGenerator();
         try {
             result = cli.run(args);
         } catch (IOException e) {

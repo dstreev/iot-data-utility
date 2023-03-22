@@ -20,10 +20,14 @@ package com.streever.iot.data.mapreduce;
 
 //import com.streever.iot.data.utility.generator.RecordGenerator;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.streever.iot.data.utility.generator.Domain;
+import com.streever.iot.data.utility.generator.DomainBuilder;
 import com.streever.iot.data.utility.generator.Relationship;
-import com.streever.iot.data.utility.generator.Schema;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import com.streever.iot.data.utility.generator.output.CSVFormat;
+import com.streever.iot.data.utility.generator.output.Format;
+import com.streever.iot.data.utility.generator.output.FormatFactory;
+import com.streever.iot.data.utility.generator.output.JSONFormat;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -38,7 +42,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
+
+import static com.streever.iot.data.mapreduce.DataGenTool.FORMAT_TYPE;
 
 public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritable, Text> {
     static private Logger LOG = Logger.getLogger(DataGenMapper.class.getName());
@@ -47,22 +52,26 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
 
     protected Boolean earlyTermination = Boolean.FALSE;
 
-    private long counter = 0l;
-
     // default format for now.
-    protected CSVFormat format = new CSVFormat();
+    protected Format format = new JSONFormat();
 
-    protected Schema schema;
+    protected DomainBuilder domainBuilder;
 
     protected void setup(Context context) {
         // Get the conf location from the job conf.
-        String config = context.getConfiguration().get(DataGenTool.SCHEMA_FILE, DEFAULT_CONFIG_RESOURCE_FILE);
+        String config = context.getConfiguration().get(DataGenTool.DOMAIN_FILE, DEFAULT_CONFIG_RESOURCE_FILE);
+        Domain domain = null;
+        // Get Anchor.schema from config.
+        String anchorSchema = context.getConfiguration().get(DataGenTool.ANCHOR_SCHEMA);
+        format = FormatFactory.getFormatImplementation(context.getConfiguration().get(FORMAT_TYPE, "JSON"));
+        // TODO: Get Tokens from cli.
+        Map<String, Object> tokens = null;
 
         if (config.equals(DEFAULT_CONFIG_RESOURCE_FILE)) {
             // Use the default validation file.
             try {
                 InputStream configInputStream = getClass().getResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE);
-                schema = Schema.deserializeInputStream(configInputStream);
+                domain = Domain.deserializeInputStream(tokens, configInputStream);
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -70,33 +79,46 @@ public class DataGenMapper extends Mapper<LongWritable, NullWritable, NullWritab
         } else {
             LOG.info("Config File: " + config);
 
-            // Read the Config from the path.
-            FileSystem FS1 = null;
-            FSDataInputStream dfsConfigInputStream = null;
             try {
-                FS1 = FileSystem.get(context.getConfiguration());
-
-                Path path = new Path(config);
-
-                dfsConfigInputStream = FS1.open(path);
-
-                schema = Schema.deserializeInputStream(dfsConfigInputStream);
+                InputStream configInputStream = getClass().getResourceAsStream(config);
+                domain = Domain.deserializeInputStream(tokens, configInputStream);
             } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            } finally {
-                IOUtils.closeStream(dfsConfigInputStream);
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+                // Didn't find as resource, try FS.
+            }
+            // Read the Config from the path.
+            if (domain == null) {
+                // Read the Config from the path.
+                FileSystem FS1 = null;
+                FSDataInputStream dfsConfigInputStream = null;
+                try {
+                    FS1 = FileSystem.get(context.getConfiguration());
+
+                    Path path = new Path(config);
+
+                    dfsConfigInputStream = FS1.open(path);
+
+                    domain = Domain.deserializeInputStream(tokens, dfsConfigInputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } finally {
+                    IOUtils.closeStream(dfsConfigInputStream);
+                }
             }
         }
-        schema.link();
-        schema.validate();
+        domain.completeAssociations();
+        domainBuilder = new DomainBuilder(domain, anchorSchema);
+
     }
 
     /*
-Write a record, based on the schema, to the proper output path.
- */
-    protected long write(Context context, Schema record) throws IOException, InterruptedException {
-        String strRec = format.write(record.getValueMap());
+    Write a record, based on the schema, to the proper output path.
+    */
+    protected long write(Context context, ObjectNode node) throws IOException, InterruptedException {
+        String strRec = format.format(node);
+//        System.out.println(strRec);
         context.write(NullWritable.get(), new Text(strRec));
         return strRec.length();
     }
@@ -106,155 +128,16 @@ Write a record, based on the schema, to the proper output path.
         // even though we've reach to end because of the termination
         // event in the generator.
         if (!earlyTermination) {
-            // TODO: Fix
             try {
-                schema.next();
-                // 0 for counts
-                // 1 for size
-//                long runStatus[] = new long[2];
-//                long localCount = count;
-//                long localSize = size;
-//                try {
-//                    openOutput();
-//                    long loop = 0;
-                // Run the loop until the counts/sizes are met.  If the count/size has been set to -1, then run indefinitely.
-//                    do {
-//                        schema.next();
-                long lsize = write(context, schema);
-
-//                        runStatus[1] += lsize;
-//                        if (localSize != -1)
-//                            localSize -= lsize;
-//                        runStatus[0]++;
-                long[] rStatus = writeRelationships(context, schema.getRelationships());
-//                        runStatus[0] += rStatus[0];
-//                        runStatus[1] += rStatus[1];
-//                        if (localCount != -1)
-//                            localCount--;
-//                        if (localSize != -1)
-//                            localSize -= rStatus[1];
-//                        if (loop % progressIndicatorCount == 0) {
-//                            System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
-//                        }
-//                        loop++;
-//                    } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
+                ObjectNode node = domainBuilder.getRecord();
+                long lsize = write(context, node);
             } catch (TerminateException te) {
-//                System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
+                earlyTermination = Boolean.TRUE;
             } catch (IOException ioe) {
                 System.err.println("Issue Writing to file");
                 ioe.printStackTrace();
-            } finally {
-//                    try {
-//                        closeOutput();
-//                        System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
-//                    } catch (IOException e) {
-//                        // TODO: Handle ioexception
-//                        e.printStackTrace();
-//                    }
             }
-//                return runStatus;
-
-
-//            } catch (TerminateException te) {
-//                earlyTermination = Boolean.TRUE;
-//            }
         }
     }
-
-    /*
-Process the hierarchy of the schema.
- */
-    protected long[] writeRelationships(Context context, Map<String, Relationship> relationships) throws IOException, InterruptedException {
-        // status[0] for counts
-        // status[1] for size
-        long[] status = {0, 0};
-        if (relationships != null) {
-            Set<String> relationshipKeys = relationships.keySet();
-            for (String key : relationshipKeys) {
-                Relationship relationship = relationships.get(key);
-                Schema rRecord = relationship.getRecord();
-                try {
-                    int range = relationship.getCardinality().getMax() - relationship.getCardinality().getMin();
-                    if (range <= 0) {
-                        // Assume 1-1 relationship.
-                        rRecord.next();
-                        write(context, rRecord);
-                        status[0]++;
-                        // Recurse into hierarchy
-                        long[] rStatus;
-                        rStatus = writeRelationships(context, rRecord.getRelationships());
-                        status[0] += rStatus[0];
-                        status[1] += rStatus[1];
-                    } else {
-                        // Assume min to max relationship.
-                        int rNum = ThreadLocalRandom.current().nextInt(relationship.getCardinality().getMin(), relationship.getCardinality().getMax() + 1);
-                        for (int i = relationship.getCardinality().getMin(); i < rNum; i++) {
-                            rRecord.next();
-                            status[1] += write(context, rRecord);
-                            status[0]++;
-                            // Recurse into hierarchy
-                            long[] rStatus;
-                            rStatus = writeRelationships(context, rRecord.getRelationships());
-                            status[0] += rStatus[0];
-                            status[1] += rStatus[1];
-                        }
-                    }
-                } catch (TerminateException | IOException te) {
-
-                }
-            }
-        }
-        return status;
-    }
-
-    /*
-            if (!initialized) {
-            throw new RuntimeException("Builder was not initialized. Call init() before run().");
-        }
-        // 0 for counts
-        // 1 for size
-        long runStatus[] = new long[2];
-        long localCount = count;
-        long localSize = size;
-        try {
-            openOutput();
-            long loop = 0;
-            // Run the loop until the counts/sizes are met.  If the count/size has been set to -1, then run indefinitely.
-            do {
-                getSchema().next();
-                long lsize = write(getSchema());
-                runStatus[1] += lsize;
-                if (localSize != -1)
-                    localSize -= lsize;
-                runStatus[0]++;
-                long[] rStatus = writeRelationships(getSchema().getRelationships());
-                runStatus[0] += rStatus[0];
-                runStatus[1] += rStatus[1];
-                if (localCount != -1)
-                    localCount--;
-                if (localSize != -1)
-                    localSize -= rStatus[1];
-                if (loop % progressIndicatorCount == 0) {
-                    System.out.printf("[ %d, %d, %d ]%n", loop, runStatus[0], runStatus[1]);
-                }
-                loop++;
-            } while ((localCount > 0 || localCount == -1) && (localSize > 0 || localSize == -1));
-        } catch (TerminateException te) {
-            System.out.println("Terminate Exception Raised after " + (runStatus[0]) + " records");
-        } catch (IOException ioe) {
-            System.err.println("Issue Writing to file");
-            ioe.printStackTrace();
-        } finally {
-            try {
-                closeOutput();
-                System.out.printf("[ %d, %d ]%n", runStatus[0], runStatus[1]);
-            } catch (IOException e) {
-                // TODO: Handle ioexception
-                e.printStackTrace();
-            }
-        }
-        return runStatus;
-
-     */
 
 }

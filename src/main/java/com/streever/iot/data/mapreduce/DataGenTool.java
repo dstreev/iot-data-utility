@@ -20,7 +20,9 @@ package com.streever.iot.data.mapreduce;
 
 //import spec.bridge.hadoop2.KafkaOutputFormat;
 
-import com.streever.iot.data.utility.generator.Relationship;
+import com.streever.iot.data.cli.DomainGenerator;
+import com.streever.iot.data.utility.generator.Domain;
+import com.streever.iot.data.utility.generator.DomainBuilder;
 import com.streever.iot.data.utility.generator.Schema;
 import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
@@ -34,8 +36,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -43,139 +43,65 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+import static com.streever.iot.data.cli.DomainGenerator.DEFAULT_VALIDATION_YAML;
 
 //import static com.streever.iot.data.mapreduce.DataGenMapper.SCHEMA_FILE;
 
 public class DataGenTool extends Configured implements Tool {
 
     static private Logger LOG = Logger.getLogger(DataGenTool.class.getName());
-    public static final String SCHEMA_FILE = "schema.file";
-//    public static final String DATAGEN_PARTITION = "datagen.partition";
-
-    private Options options;
+    public static final String DOMAIN_FILE = "datagen.domain.file";
+    public static final String ANCHOR_SCHEMA = "datagen.anchor.schema";
+    public static final String FORMAT_TYPE = "datagen.output.format.type";
     private Path outputPath;
 //    private String partitionPath;
     private Boolean forceFlat = Boolean.FALSE;
 
-    private Schema schema;
+    private DomainBuilder domainBuilder;
 
-    //        private Sink sink;
     public static final int DEFAULT_MAPPERS = 2;
     public static final long DEFAULT_COUNT = 100;
 
-    public enum Sink {HDFS, KAFKA}
+    public enum Sink {HDFS, KAFKA};
 
-    ;
+    private Options getOptions() {
+        Options options = DomainGenerator.getOptions();
 
-    public DataGenTool() {
-        buildOptions();
-    }
+        Option MAPPER_NUM_OPTION = new Option("m", "mapper-count", true, "Number of Mappers");
+        MAPPER_NUM_OPTION.setRequired(false);
+        options.addOption(MAPPER_NUM_OPTION);
 
-    private void buildOptions() {
-        options = new Options();
-
-        Option help = new Option("h", "help", false, "Help");
-        help.setRequired(false);
-
-//        Option help = Option.builder("h")
-//                .argName("help")
-//                .desc("This Help")
-//                .hasArg(false)
-//                .required(false)
-//                .build();
-
-        Option outputDir = new Option("d", "directory", true, "Output Directory");
-        outputDir.setRequired(false);
-//        Option outputDir = Option.builder("d")
-//                .argName("directory")
-//                .desc("Output Directory")
-//                .hasArg(true)
-//                .numberOfArgs(1)
-//                .type(String.class)
-//                .required(true)
-//                .build();
-
-        Option mappers = new Option("m", "mappers", true, "Mappers");
-        mappers.setRequired(false);
-//        Option mappers = Option.builder("m")
-//                .argName("mappers")
-//                .desc("Parallelism")
-//                .hasArg(true)
-//                .numberOfArgs(1)
-//                .type(Integer.class)
-//                .required(true)
-//                .build();
-
-        OptionGroup schemaGroup = new OptionGroup();
-
-        Option nestedOption = new Option("dms", "default-multi", false, "Multi Sample Schema");
-        Option defaultOption = new Option("ds", "default-simple", false, "Sample Schema");
-        Option config = new Option("s", "schema", true, "Schema File on HDFS");
-
-        schemaGroup.addOption(nestedOption);
-        schemaGroup.addOption(defaultOption);
-        schemaGroup.addOption(config);
-        schemaGroup.setRequired(true);
-        options.addOptionGroup(schemaGroup);
-
-
-        OptionGroup layoutOptionGroup = new OptionGroup();
-
-        Option partitionOption = new Option("partition", "partition", true, "Partition");
-        partitionOption.setRequired(false);
-        options.addOption(partitionOption);
-
-        Option forceFlatOption = new Option("ff", "force-flat", true, "Force Flat Output");
-
-//        layoutOptionGroup.addOption(partitionOption);
-        layoutOptionGroup.addOption(forceFlatOption);
-        layoutOptionGroup.setRequired(false);
-        options.addOptionGroup(layoutOptionGroup);
-
-//        Option config = Option.builder("cfg")
-//                .argName("config")
-//                .desc("Configuration Filename (in HDFS)")
-//                .hasArg(true)
-//                .numberOfArgs(1)
-//                .type(String.class)
-//                .required(true)
-//                .build();
-
-        Option count = new Option("c", "count", true, "Record Count");
-        count.setRequired(false);
-//        Option count = Option.builder("c")
-//                .argName("count")
-//                .desc("Record Count")
-//                .hasArg(true)
-//                .numberOfArgs(1)
-//                .type(Long.class)
-//                .required(true)
-//                .build();
-
-
-        options.addOption(help);
-        options.addOption(mappers);
-        options.addOption(outputDir);
-        options.addOption(count);
+        return options;
     }
 
     private void printUsage() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("hadoop jar <jar-file> " + this.getClass().getCanonicalName(), options);
+        formatter.printHelp("hadoop jar <jar-file> " + this.getClass().getCanonicalName(), getOptions());
     }
 
     protected void setup(Job job) {
         // Get the conf location from the job conf.
+        // Get the conf location from the job conf.
+        String config = job.getConfiguration().get(DataGenTool.DOMAIN_FILE, DEFAULT_VALIDATION_YAML);
 
-        String config = job.getConfiguration().get(SCHEMA_FILE);
-        if (config.equals(DataGenMultiMapper.DEFAULT_MULTI_CONFIG_RESOURCE_FILE) || config.equals(DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE)) {
+        // Get Anchor.schema from config.
+        String anchorSchema = job.getConfiguration().get(DataGenTool.ANCHOR_SCHEMA);
+
+        // TODO: Get Tokens from cli.
+        Map<String, Object> tokens = null;
+
+        Domain domain = null;
+        if (config.equals(DEFAULT_VALIDATION_YAML)) {
             // Use the default validation file.
             try {
-                InputStream configInputStream = getClass().getResourceAsStream(config);
-                schema = Schema.deserializeInputStream(configInputStream);
+                InputStream configInputStream = getClass().getResourceAsStream(DEFAULT_VALIDATION_YAML);
+                domain = Domain.deserializeInputStream(tokens, configInputStream);
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -183,75 +109,56 @@ public class DataGenTool extends Configured implements Tool {
         } else {
             LOG.info("Config File: " + config);
 
-            // Read the Config from the path.
-            FileSystem FS1 = null;
-            FSDataInputStream dfsConfigInputStream = null;
             try {
-                FS1 = FileSystem.get(job.getConfiguration());
-
-                Path path = new Path(config);
-
-                dfsConfigInputStream = FS1.open(path);
-
-                schema = Schema.deserializeInputStream(dfsConfigInputStream);
+                InputStream configInputStream = getClass().getResourceAsStream(config);
+                domain = Domain.deserializeInputStream(tokens, configInputStream);
             } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            } finally {
-                IOUtils.closeStream(dfsConfigInputStream);
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+                // Didn't find as resource, try FS.
             }
-        }
+            // Read the Config from the path.
+            if (domain == null) {
+                FileSystem FS1 = null;
+                FSDataInputStream dfsConfigInputStream = null;
+                try {
+                    FS1 = FileSystem.get(job.getConfiguration());
 
-        schema.link();
-        schema.validate();
+                    Path path = new Path(config);
 
-        job.setNumReduceTasks(schema.getMaxFileParts(job.getConfiguration().getInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS)));
+                    dfsConfigInputStream = FS1.open(path);
 
-        // Multi-File Output.
-        if (schema.getRelationships().size() > 0) {
-            // There is a hierarchy.
-            LOG.info("Multi-File Output");
-            if (!forceFlat) {
-                job.setMapperClass(DataGenMultiMapper.class);
-                job.setMapOutputKeyClass(Text.class);
-                job.setMapOutputValueClass(Text.class);
-
-                // Remove write of mapper.
-                LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
-                // Causes NPE
-//                job.setOutputFormatClass(LazyOutputFormat.class);
-
-                // Set Reducer, since there is a hierarchy.
-                job.setReducerClass(DataGenReducer.class);
-                //job.setNumReduceTasks(10);
-                // Force Reduce to push different writes.
-                for (Map.Entry<String, Relationship> relationshipEntry : schema.getRelationships().entrySet()) {
-                    LOG.info("Multi-part: " + relationshipEntry.getKey());
-                    MultipleOutputs.addNamedOutput(job, relationshipEntry.getKey(), TextOutputFormat.class, Text.class, Text.class);
+                    domain = Domain.deserializeInputStream(tokens, dfsConfigInputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } finally {
+                    IOUtils.closeStream(dfsConfigInputStream);
                 }
-            } else {
-                // Flat Output (even when hierarchy present)
-                job.setMapperClass(DataGenMapper.class);
-                job.setMapOutputKeyClass(NullWritable.class);
-                // Map Only.
-                job.setNumReduceTasks(0);
             }
-        } else {
-            // Map Only Job
-            job.setMapperClass(DataGenMapper.class);
-            job.setMapOutputKeyClass(NullWritable.class);
-            job.setNumReduceTasks(0);
         }
+
+        domain.completeAssociations();
+        List<String> reasons = new ArrayList<String>();
+        if (!domain.validate(reasons)) {
+            System.out.println(reasons.stream().map(r -> r.toString()).collect(Collectors.joining("\n")));
+            throw new RuntimeException("Config didn't pass validation");
+        }
+
+        domainBuilder = new DomainBuilder(domain, anchorSchema);
+        domainBuilder.init();
+
 
     }
 
-    private boolean checkUsage(String[] args, Job job) {
+    private boolean init(String[] args, Job job) {
         boolean rtn = true;
         Configuration configuration = job.getConfiguration();
 
         CommandLineParser clParser = new PosixParser();
 
         CommandLine line = null;
+        Options options = getOptions();
         try {
             line = clParser.parse(options, args);
         } catch (ParseException pe) {
@@ -263,8 +170,16 @@ public class DataGenTool extends Configured implements Tool {
             return false;
         }
 
-        job.setInputFormatClass(DataGenInputFormat.class);
+        if (line.hasOption("csv")) {
+            configuration.set(FORMAT_TYPE, "csv");
+        }
 
+        if (line.hasOption("json")) {
+            configuration.set(FORMAT_TYPE, "json");
+        }
+        if (line.hasOption("s")) {
+            configuration.set(ANCHOR_SCHEMA, line.getOptionValue("s"));
+        }
         if (line.hasOption("c")) {
             DataGenInputFormat.setNumberOfRows(job, Long.parseLong(line.getOptionValue("c")));
         } else {
@@ -272,104 +187,29 @@ public class DataGenTool extends Configured implements Tool {
         }
 
         if (line.hasOption("m")) {
-            int parallelism = Integer.parseInt(line.getOptionValue("m"));
-//            job.setNumReduceTasks(parallelism);
             configuration.setInt(MRJobConfig.NUM_MAPS, Integer.parseInt(line.getOptionValue("m")));
-//            configuration.setInt(MRJobConfig.NUM_REDUCES, Integer.parseInt(line.getOptionValue("p")));
         } else {
             // Default
             configuration.setInt(MRJobConfig.NUM_MAPS, DEFAULT_MAPPERS);
-//            job.setNumReduceTasks(DEFAULT_MAPPERS);
-//            configuration.setInt(MRJobConfig.NUM_REDUCES, DEFAULT_MAPPERS);
         }
 
-        if (line.hasOption("ff")) {
-            forceFlat = Boolean.TRUE;
-        }
-
-//        if (line.hasOption("p")) {
-//            configuration.set(DATAGEN_PARTITION, line.getOptionValue("p"));
-//            partitionPath = line.getOptionValue("p");
-//        }
-
-//        if (line.hasOption("sink")) {
-//            String sinkOption = line.getOptionValue("sink");
-//            try {
-//                sink = Sink.valueOf(sinkOption.toUpperCase());
-//
-//                job.setInputFormatClass(DataGenInputFormat.class);
-//
-//                LOG.info("Using Sink:" + sink.toString());
-//
-//                switch (sink) {
-//                    case HDFS:
-//                        job.setOutputFormatClass(TextOutputFormat.class);
-//                        if (line.hasOption("output")) {
-//                            outputPath = new Path(line.getOptionValue("output"));
-//                            FileOutputFormat.setOutputPath(job, outputPath);
-//                            job.setMapperClass(DataGenMapper.class);
-//                            job.setMapOutputKeyClass(NullWritable.class);
-//                            job.setMapOutputValueClass(Text.class);
-//                        } else {
-//                            return false;
-//                        }
-//                        break;
-//                    case KAFKA:
-//                        job.setOutputFormatClass(KafkaOutputFormat.class);
-//                        if (line.hasOption("output")) {
-//                            outputPath = new Path(line.getOptionValue("output"));
-//                            // The Topic should be included in the URL as well.
-//                            job.setMapperClass(KafkaDataGenMapper.class);
-////                            job.setMapOutputKeyClass(NullWritable.class);
-////                            job.setMapOutputValueClass(byte[].class);
-//                            KafkaOutputFormat.setOutputPath(job, outputPath);
-//                        } else {
-//                            return false;
-//                        }
-//                        break;
-//                }
-//
-//            } catch (IllegalArgumentException iae) {
-//                return false;
-//            }
-//        } else {
-        // Default HDFS.
-//        LOG.info("No SINK specified, using DEFAULT (HDFS)");
-
+        // Set Datagen Mapper Class
+        job.setMapperClass(DataGenMapper.class);
         job.setInputFormatClass(DataGenInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-//        job.setMapperClass(DataGenMapper.class);
-//        job.setMapOutputKeyClass(Text.class);
+        // Map Only Job
+        job.setNumReduceTasks(0);
 
-        job.setMapOutputValueClass(Text.class);
-
-        String outputDir = line.getOptionValue("d", "datagen-default");
-        String tempDir = null;
-
-        // When a partition element is specified, we need to push the results to a temp dir and
-        //   then move those result to the partition AFTER the MR job is complete.
-        if (line.hasOption("part")) {
-            tempDir = UUID.randomUUID().toString();
-            job.getConfiguration().set("partition-temp-dir", tempDir);
-        }
-
-        if (tempDir != null)
-            outputDir = outputDir + "/" + tempDir;
-
-        outputPath = new Path(line.getOptionValue("d", "datagen-default"));
+        outputPath = new Path(line.getOptionValue("o", "datagen-default"));
         FileOutputFormat.setOutputPath(job, outputPath);
 
         // One of these is set.
-        if (line.hasOption("s")) {
-            job.getConfiguration().set(SCHEMA_FILE, line.getOptionValue("s"));
+        if (line.hasOption("d")) {
+            job.getConfiguration().set(DOMAIN_FILE, line.getOptionValue("d"));
         }
-        if (line.hasOption("dms")) {
-            job.getConfiguration().set(SCHEMA_FILE, DataGenMultiMapper.DEFAULT_MULTI_CONFIG_RESOURCE_FILE);
-            LOG.info("Using DEFAULT Config File: " + DataGenMultiMapper.DEFAULT_MULTI_CONFIG_RESOURCE_FILE + " from package resources.");
-        }
-        if (line.hasOption("ds")) {
-            job.getConfiguration().set(SCHEMA_FILE, DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE);
+        if (line.hasOption("dd")) {
+            job.getConfiguration().set(DOMAIN_FILE, DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE);
             LOG.info("Using DEFAULT Config File: " + DataGenMapper.DEFAULT_CONFIG_RESOURCE_FILE + " from package resources.");
         }
 
@@ -382,7 +222,7 @@ public class DataGenTool extends Configured implements Tool {
         Job job = Job.getInstance(getConf()); // new Job(conf, this.getClass().getCanonicalName());
 
         System.out.println("Checking Input");
-        if (!checkUsage(args, job)) {
+        if (!init(args, job)) {
             printUsage();
             return -1;
         }
@@ -400,12 +240,6 @@ public class DataGenTool extends Configured implements Tool {
 
         try {
             rtn_code = job.waitForCompletion(true) ? 0 : 1;
-            if (job.getConfiguration().getBoolean("partition-temp-dir", false)) {
-                // Move the data elements from the main dir to partition dirs.
-                // if schema has children.
-                // TODO: Left off here...
-//                if (schema.getPartitioned() || schema.get)
-            }
         } catch (RuntimeException rte) {
             rte.fillInStackTrace();
             rte.printStackTrace();

@@ -1,0 +1,54 @@
+schemas:
+  -
+    id: "acct"
+    title: "Account"
+    description: "entity datasource"
+    order:
+      - acct_num
+      - phone_num
+      - open_date
+      - closed_date
+      - status
+      - credit_rating
+      - referal
+    fields:
+      # Will limit this 'key' to a range of 10,000,000 possible values.
+      -
+        type: "string"
+        name: "acct_num"
+        hash: true
+        messageDigest: "SHA-1"
+        characters: "0123456789"
+        range:
+          min: 7
+          max: 7
+      -
+        type: "regex"
+        name: "phone_num"
+        regex: "\\(\\d{3}\\)\\d{3}\\-\\d{4}"
+      -
+        type: "date"
+        name: "open_date"
+      -
+        type: "date"
+        name: "closed_date"
+      -
+        type: "string"
+        name: "status"
+        pool:
+          items:
+            - "ACTIVE"
+            - "TERMINATED"
+      -
+        type: "int"
+        name: "credit_rating"
+        range:
+          min: 200
+          max: 850
+      -
+        type: "string"
+        name: "referal"
+        pool:
+          items:
+            - "OTHER_CUSTOMER"
+            - "VENDOR"

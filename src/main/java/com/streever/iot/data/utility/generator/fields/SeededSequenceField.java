@@ -11,6 +11,11 @@ public class SeededSequenceField extends FieldBase<String> {
     private String messageDigest = null;
     private DigestUtils dg = null;
 
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
+
     public AtomicLong getStart() {
         return start;
     }

@@ -8,28 +8,16 @@ import com.streever.iot.data.utility.generator.output.OutputBase;
 import org.apache.commons.io.IOUtils;
 
 import java.net.URL;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class OutputConfig {
-    private OutputBase default_ = new LocalFileOutput();
-    private Map<String, OutputBase> relationships = new TreeMap<String, OutputBase>();
+    private OutputBase config = new LocalFileOutput();
 
-    public void setDefault(OutputBase default_) {
-        this.default_ = default_;
+    public void setConfig(OutputBase config) {
+        this.config = config;
     }
 
-    @JsonProperty("default")
-    public OutputBase getDefault() {
-        return default_;
-    }
-
-    public Map<String, OutputBase> getRelationships() {
-        return relationships;
-    }
-
-    public void setRelationships(Map<String, OutputBase> relationships) {
-        this.relationships = relationships;
+    public OutputBase getConfig() {
+        return config;
     }
 
     public static OutputConfig deserialize(String configResource) {

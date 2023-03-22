@@ -5,6 +5,7 @@ import com.streever.iot.data.utility.generator.fields.support.Range;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.random.RandomDataGenerator;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.security.DigestException;
 
@@ -13,15 +14,31 @@ public class StringField extends FieldBase<String> {
     private String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private Range<Integer> range = new Range<Integer>(10, 10);
     private boolean hash = false;
-    private String messageDigest = null;
+    private String messageDigest = "MD5";
+    @JsonIgnore
     private DigestUtils dg = null;
-    
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
+
     public Pool<String> getPool() {
         return pool;
     }
 
     public void setPool(Pool<String> pool) {
         this.pool = pool;
+    }
+
+    protected Integer getDiff() {
+        Integer rtn = null;
+        if (range != null) {
+            rtn = Math.abs(range.getMax() - range.getMin());
+        } else {
+            rtn = 0;
+        }
+        return rtn;
     }
 
     public Range<Integer> getRange() {
@@ -38,6 +55,13 @@ public class StringField extends FieldBase<String> {
 
     public void setHash(boolean hash) {
         this.hash = hash;
+    }
+
+    public DigestUtils getDg() {
+        if (dg == null) {
+            dg = new DigestUtils(getMessageDigest());
+        }
+        return dg;
     }
 
     public String getMessageDigest() {

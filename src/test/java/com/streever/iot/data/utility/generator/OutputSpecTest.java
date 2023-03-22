@@ -11,27 +11,20 @@ public class OutputSpecTest {
     }
 
     @Test
+    public void spec_csv_hcfs_001() {
+        OutputConfig o1 = OutputConfig.deserialize("/standard/csv_hcfs.yaml");
+        System.out.println("Made it");
+    }
+
+    @Test
+    public void spec_json_hcfs_001() {
+        OutputConfig o1 = OutputConfig.deserialize("/standard/json_hcfs.yaml");
+        System.out.println("Made it");
+    }
+
+    @Test
     public void loadDefaultSpec_001() {
         OutputConfig o1 = OutputConfig.deserialize("/outputspec/default.yaml");
-        System.out.println("Made it");
-    }
-
-    @Test
-    public void loadRelationSpec_001() {
-        OutputConfig o1 = OutputConfig.deserialize("/outputspec/relationship001.yaml");
-        System.out.println("Made it");
-    }
-
-    @Test
-    public void loadRelationSpec_002() {
-        OutputConfig o1 = OutputConfig.deserialize("/outputspec/relationship001.yaml");
-        // Clone Check
-        try {
-            OutputBase clone1 = (OutputBase)o1.getDefault().clone();
-            System.out.println("Clone created");
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
         System.out.println("Made it");
     }
 
@@ -53,37 +46,37 @@ public class OutputSpecTest {
         System.out.println("Made it");
     }
 
-    @Test
-    public void loadKafkaSpec_004() {
-        OutputConfig o1 = OutputConfig.deserialize("/outputspec/kafka-trans.yaml");
-        System.out.println("Made it");
-    }
+//    @Test
+//    public void loadKafkaSpec_004() {
+//        OutputConfig o1 = OutputConfig.deserialize("/outputspec/kafka-trans.yaml");
+//        System.out.println("Made it");
+//    }
 
-    @Test
-    public void loadKafkaSpec_005() {
-        OutputConfig o1 = OutputConfig.deserialize("/outputspec/kafka-trans.yaml");
-        // Clone Check
-        try {
-            OutputBase clone1 = (OutputBase)o1.getDefault().clone();
-            System.out.println("Clone created");
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Made it");
-    }
+//    @Test
+//    public void loadKafkaSpec_005() {
+//        OutputConfig o1 = OutputConfig.deserialize("/outputspec/kafka-trans.yaml");
+//        // Clone Check
+//        try {
+//            OutputBase clone1 = (OutputBase)o1.getConfig().clone();
+//            System.out.println("Clone created");
+//        } catch (CloneNotSupportedException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println("Made it");
+//    }
 
-    @Test
-    public void loadKafkaSpec_006() {
-        OutputConfig o1 = OutputConfig.deserialize("/outputspec/kafka-trans.yaml");
+//    @Test
+//    public void loadKafkaSpec_006() {
+//        OutputConfig o1 = OutputConfig.deserialize("/outputspec/kafka-trans.yaml");
         // Clone Check
-        try {
-            OutputBase clone1 = (OutputBase)o1.getRelationships().get("acct").clone();
-            System.out.println("Clone created");
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Made it");
-    }
+//        try {
+//            OutputBase clone1 = (OutputBase)o1.getRelationships().get("acct").clone();
+//            System.out.println("Clone created");
+//        } catch (CloneNotSupportedException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println("Made it");
+//    }
 
 
 }

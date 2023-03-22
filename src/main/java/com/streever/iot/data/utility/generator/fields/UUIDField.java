@@ -7,6 +7,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import java.util.UUID;
 
 public class UUIDField extends FieldBase<String> {
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
+
     private Pool<String> pool;
 
     public Pool<String> getPool() {

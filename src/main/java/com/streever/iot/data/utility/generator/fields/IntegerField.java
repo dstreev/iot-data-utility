@@ -19,6 +19,11 @@ public class IntegerField extends FieldBase<Integer> {
         return pool;
     }
 
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.INTEGER;
+    }
+
     public void setPool(Pool<Integer> pool) {
         this.pool = pool;
     }

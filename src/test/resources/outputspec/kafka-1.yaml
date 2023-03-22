@@ -1,4 +1,4 @@
-default:
+config:
   type: "kafka"
   name: "airline-demo"
   format:

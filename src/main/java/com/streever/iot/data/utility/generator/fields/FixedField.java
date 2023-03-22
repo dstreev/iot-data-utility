@@ -16,4 +16,9 @@ public class FixedField extends FieldBase<String> {
         setLast(value);
         return value;
     }
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
 }

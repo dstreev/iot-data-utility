@@ -7,6 +7,11 @@ public class LongField extends FieldBase<Long> {
     private Range<Long> range = new Range(0, Long.MAX_VALUE);
     private Pool<Long> pool;
 
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.LONG;
+    }
+
     public Range<Long> getRange() {
         return range;
     }

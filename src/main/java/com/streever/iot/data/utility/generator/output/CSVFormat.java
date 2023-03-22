@@ -1,79 +1,90 @@
 package com.streever.iot.data.utility.generator.output;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.CsvWriteException;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
 
 public class CSVFormat extends FormatBase {
-    private String separator = ",";
-//    private String newLine = "\n";
-    private String quoteChar = "\"";
+    private char separator = ',';
+    //    private String newLine = "\n";
+    private char quoteChar = '"';
+    private char escapeChar = '\\';
 
     public String getExtension() {
         return "csv";
     }
 
-    public String getSeparator() {
+    public char getSeparator() {
         return separator;
     }
 
-    public void setSeparator(String separator) {
+    public void setSeparator(char separator) {
         this.separator = separator;
     }
 
-//    public String getNewLine() {
-//        return newLine;
-//    }
-
-//    public void setNewLine(String newLine) {
-//        this.newLine = newLine;
-//    }
-
-    public String getQuoteChar() {
+    public char getQuoteChar() {
         return quoteChar;
     }
 
-    public void setQuoteChar(String quoteChar) {
+    public void setQuoteChar(char quoteChar) {
         this.quoteChar = quoteChar;
     }
 
-    public static String getLine(Map<FieldProperties, Object> record, String quote, String separator) {
-        List<String> values = new ArrayList<String>();
-        Set<Map.Entry<FieldProperties, Object>> entries = record.entrySet();
-        for (Map.Entry<FieldProperties, Object> entry: entries) {
-            if (entry.getKey().isNumber()) {
-                values.add(entry.getValue().toString());
-            } else {
-                // TODO: Need to encode/escape special characters.
-                values.add(quote + entry.getValue().toString() + quote);
-            }
-        }
-        String recLine = StringUtils.join(values, separator);
-        return recLine;
-
+    public char getEscapeChar() {
+        return escapeChar;
     }
 
-    public String write(Map<FieldProperties, Object> record) throws IOException {
+    public void setEscapeChar(char escapeChar) {
+        this.escapeChar = escapeChar;
+    }
+
+    private CsvSchema csvSchema = null;
+    private CsvMapper csvMapper = new CsvMapper();
+
+    private String getLine(ObjectNode node) {
+        // TODO: Doesn't support nested Objects.
+        //
+        // WARNING: We might have an issue with nested items.  When they aren't present
+        //          how do we consistently ensure we have a 'placeholder' for it.
+        if (csvSchema == null) {
+            CsvSchema.Builder csvSchemaBuilder = CsvSchema.builder();
+            node.fieldNames().forEachRemaining(fieldName -> {
+                csvSchemaBuilder.addColumn(fieldName);
+            });
+            csvSchema = csvSchemaBuilder.build().withColumnSeparator(separator)
+                    .withQuoteChar(quoteChar).withEscapeChar(escapeChar);
+        }
+
+        try {
+            // chop removes last character, which is a line feed in this case.
+            return StringUtils.chop(csvMapper.writerFor(JsonNode.class)
+                    .with(csvSchema).writeValueAsString(node));
+        } catch (JsonProcessingException e) {
+            if (e instanceof CsvWriteException) {
+                System.err.println("We can't support csv output for nested records.  Use the `-json` format.");
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String format(ObjectNode node) {
         String rtn = null;
-//        if (isOpen()) {
-            rtn = getLine(record, getQuoteChar(), getSeparator());
-//            rtn = recLine.length() + 1;
-//            writeLine(recLine);
-//        } else {
-            // TODO: Throw not open exception.
-//        }
+        rtn = getLine(node);
         return rtn;
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        CSVFormat clone = (CSVFormat)super.clone();
-//        clone.setNewLine(this.newLine);
+        CSVFormat clone = (CSVFormat) super.clone();
         clone.setQuoteChar(this.quoteChar);
         clone.setSeparator(this.separator);
         return clone;

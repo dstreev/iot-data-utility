@@ -53,4 +53,9 @@ public class DateStartField extends FieldBase<String> {
             return df.format(new Date(dateValue));
         }
     }
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
 }

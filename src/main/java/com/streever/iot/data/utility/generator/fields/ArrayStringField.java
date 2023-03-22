@@ -8,4 +8,9 @@ public class ArrayStringField extends ArrayField<String> {
     protected String get() {
         return RandomStringUtils.random(getCharacterLength().intValue(), getCharacters());
     }
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
 }

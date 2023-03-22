@@ -2,15 +2,23 @@ package com.streever.iot.data.utility.generator.fields;
 
 import com.streever.iot.data.utility.generator.fields.support.Pool;
 import com.streever.iot.data.utility.generator.fields.support.Range;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.text.DecimalFormat;
 
 public class FloatField extends FieldBase<Float> {
 
     private Range<Float> range = new Range(0, Integer.MAX_VALUE);
-    private DecimalFormat format = new DecimalFormat("#.##");
+    private String format = "#.##";
+    @JsonIgnore
+    private DecimalFormat decimalFormat = new DecimalFormat("#.##");
     private Pool<Float> pool;
     private Float last;
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.FLOAT;
+    }
 
     public Range<Float> getRange() {
         return range;
@@ -28,12 +36,21 @@ public class FloatField extends FieldBase<Float> {
         this.pool = pool;
     }
 
-    public DecimalFormat getFormat() {
+    public String getFormat() {
         return format;
     }
 
-    public void setFormat(DecimalFormat format) {
+    public void setFormat(String format) {
         this.format = format;
+        decimalFormat = new DecimalFormat(this.format);
+    }
+
+    public DecimalFormat getDecimalFormat() {
+        return decimalFormat;
+    }
+
+    public void setDecimalFormat(DecimalFormat decimalFormat) {
+        this.decimalFormat = decimalFormat;
     }
 
     public Float getLast() {
@@ -59,7 +76,7 @@ public class FloatField extends FieldBase<Float> {
     public Float getNext() {
         float multiplierF = randomizer.nextFloat();
         Float valF = (Float) range.getMin() + ((Float) getDiff() * multiplierF);
-        setLast(Float.valueOf(format.format(valF)));
+        setLast(Float.valueOf(decimalFormat.format(valF)));
         return getLast();
     }
 }

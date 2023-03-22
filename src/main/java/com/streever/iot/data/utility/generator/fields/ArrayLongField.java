@@ -12,4 +12,9 @@ public class ArrayLongField extends ArrayField<Long> {
         double multiplierD = randomizer.nextDouble();
         return (Long)getRange().getMin() + Math.round((Long)getDiff() * multiplierD);
     }
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.LONG;
+    }
 }

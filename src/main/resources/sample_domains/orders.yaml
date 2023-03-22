@@ -1,0 +1,468 @@
+schemas:
+  -
+    title: "country"
+    description: "country"
+    order:
+      - code
+      - short_code
+      - name
+    fields:
+      # lookup element will populate.
+      -
+        type: "id"
+        name: "code"
+      -
+        type: "string"
+        name: "short_code"
+      -
+        type: "string"
+        name: "name"
+  -
+    title: "user"
+    description: "user"
+    order:
+      - id
+      - full_name
+      - email
+      - gender
+      - date_of_birth
+      - country_code
+    fields:
+      -
+        type: "id"
+        name: "id"
+        range:
+          min: ${user.id.min:1000}
+          max: ${user.id.max:2000}
+        idType: "SOURCE"
+      -
+        type: "string"
+        name: "full_name"
+        range:
+          min: 5
+          max: 30
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      -
+        type: "regex"
+        name: "email"
+        regex: "[a-z]{10}\\@[A-Z]{15}\\.com"
+      -
+        type: "string"
+        name: "gender"
+        pool:
+          items:
+            - "M"
+            - "F"
+      -
+        type: "date"
+        name: "date_of_birth"
+      -
+        type: "id"
+        name: "country_code"
+        idType: "LOOKUP"
+  -
+    title: "order"
+    description: "order"
+    order:
+      - id
+      - user_id
+      - order_date
+      - status
+    fields:
+      -
+        type: "id"
+        name: "id"
+        idType: "TRANSACTIONAL"
+      -
+        type: "id"
+        name: "user_id"
+      -
+        type: "date"
+        name: "order_date"
+      -
+        type: "string"
+        name: "status"
+        pool:
+          items:
+            - "OPEN"
+            - "PENDING"
+            - "CLOSED"
+            - "SUSPENDED"
+            - "IN-REVIEW"
+  -
+    title: "order_item"
+    description: "order item"
+    order:
+      - order_item_id
+      - order_id
+      - product_id
+      - quantity
+      - cost
+    fields:
+      -
+        type: "id"
+        name: "order_item_id"
+        idType: "TRANSACTIONAL"
+      -
+        type: "id"
+        name: "order_id"
+      -
+        type: "id"
+        name: "product_id"
+      -
+        type: "int"
+        name: "quantity"
+        range:
+          min: 1
+          max: 10
+      -
+        type: "double"
+        name: "cost"
+        range:
+          min: ${order.item.cost.min:0.50}
+          max: ${order.item.cost.max:1000}
+  -
+    title: "merchant"
+    description: "merchant"
+    order:
+      - id
+      - merchant_name
+      - admin_id
+      - country_code
+    fields:
+      -
+        type: "id"
+        name: "id"
+        idType: "SOURCE"
+        range:
+          min: ${merchant.id.min:1000}
+          max: ${merchant.id.max:2000}
+      -
+        type: "string"
+        name: "merchant_name"
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        range:
+          min: 10
+          max: 20
+      -
+        type: "id"
+        name: "admin_id"
+      -
+        type: "id"
+        name: "country_code"
+        idType: "LOOKUP"
+  -
+    title: "product"
+    description: "product"
+    order:
+      - id
+      - merchant_id
+      - name
+      - price
+      - status
+    fields:
+      -
+        type: "id"
+        name: "id"
+        range:
+          min: 1000
+          max: 2000
+        idType: "SOURCE"
+      -
+        type: "id"
+        name: "merchant_id"
+      -
+        type: "regex"
+        name: "name"
+        regex: "[a-zA-z]{20}"
+      -
+        type: "double"
+        name: "price"
+        range:
+          min: 0
+          max: 1000
+      -
+        type: "string"
+        name: "status"
+        pool:
+          items:
+            - "COMING"
+            - "NEW"
+            - "AVAILABLE"
+            - "DISCONTINUED"
+            - "NOT-AVAILABLE"
+relationships:
+  -
+    from: "user.id"
+    to: "order.user_id"
+  -
+    from: "order.id"
+    # When there isn't an ID, consider this a child record.
+    to: "order_item.order_id"
+    cardinality:
+      min: 1
+      max: 100
+  -
+    from: "user.country_code"
+    to: "country.code"
+  -
+    from: "merchant.id"
+    to: "product.merchant_id"
+  -
+    from: "product.merchant_id"
+    to: "merchant.id"
+  -
+    from: "order_item.product_id"
+    to:   "product.id"
+  -
+    from: "user.id"
+    to: "merchant.admin_id"
+  -
+    from: "merchant.country_code"
+    to: "country.code"
+# Build the lookup tables, these should be skipped in the generation process.
+# In MR processing, these should be built and saved by the "Driver".  And each
+#   MR process will use the same data to address relationships.
+lookup:
+  country:
+    - ["AFG","AF","Afghanistan"]
+    - ["ALB","AL","Albania"]
+    - ["DZA","DZ","Algeria"]
+    - ["ASM","AS","American Samoa"]
+    - ["AND","AD","Andorra"]
+    - ["AGO","AO","Angola"]
+    - ["AIA","AI","Anguilla"]
+    - ["ATA","AQ","Antarctica"]
+    - ["ATG","AG","Antigua and Barbuda"]
+    - ["ARG","AR","Argentina"]
+    - ["ARM","AM","Armenia"]
+    - ["ABW","AW","Aruba"]
+    - ["AUS","AU","Australia"]
+    - ["AUT","AT","Austria"]
+    - ["AZE","AZ","Azerbaijan"]
+    - ["BHS","BS","Bahamas"]
+    - ["BHR","BH","Bahrain"]
+    - ["BGD","BD","Bangladesh"]
+    - ["BRB","BB","Barbados"]
+    - ["BLR","BY","Belarus"]
+    - ["BEL","BE","Belgium"]
+    - ["BLZ","BZ","Belize"]
+    - ["BEN","BJ","Benin"]
+    - ["BMU","BM","Bermuda"]
+    - ["BTN","BT","Bhutan"]
+    - ["BOL","BO","Bolivia"]
+    - ["BIH","BA","Bosnia-Herzegovina"]
+    - ["BWA","BW","Botswana"]
+    - ["BVT","BV","Bouvet Island"]
+    - ["BRA","BR","Brazil"]
+    - ["IOT","IO","British Indian Ocean Territory"]
+    - ["BRN","BN","Brunei Darussalam"]
+    - ["BGR","BG","Bulgaria"]
+    - ["BFA","BF","Burkina Faso"]
+    - ["BDI","BI","Burundi"]
+    - ["KHM","KH","Cambodia"]
+    - ["CMR","CM","Cameroon"]
+    - ["CAN","CA","Canada"]
+    - ["CPV","CV","Cape Verde"]
+    - ["CYM","KY","Cayman Islands"]
+    - ["CAF","CF","Central African Republic"]
+    - ["TCD","TD","Chad"]
+    - ["CHL","CL","Chile"]
+    - ["CHN","CN","China"]
+    - ["CXR","CX","Christmas Island"]
+    - ["CCK","CC","Cocos (Keeling) Islands"]
+    - ["COL","CO","Colombia"]
+    - ["COM","KM","Comoros"]
+    - ["COG","CG","Congo"]
+    - ["COD","CD","Congo Democratic Republic of"]
+    - ["COK","CK","Cook Islands"]
+    - ["CRI","CR","Costa Rica"]
+    - ["CIV","CI","Cote D'Ivoire"]
+    - ["HRV","HR","Croatia (Hrvatska)"]
+    - ["CUB","CU","Cuba"]
+    - ["CYP","CY","Cyprus"]
+    - ["CZE","CZ","Czech Republic"]
+    - ["DNK","DK","Denmark"]
+    - ["DJI","DJ","Djibouti"]
+    - ["DMA","DM","Dominica"]
+    - ["DOM","DO","Dominican Republic"]
+    - ["TMP","TP","East Timor"]
+    - ["ECU","EC","Ecuador"]
+    - ["EGY","EG","Egypt"]
+    - ["SLV","SV","El Salvador"]
+    - ["GNQ","GQ","Equatorial Guinea"]
+    - ["ERI","ER","Eritrea"]
+    - ["EST","EE","Estonia"]
+    - ["ETH","ET","Ethiopia"]
+    - ["FLK","FK","Falkland Islands (Malvinas)"]
+    - ["FRO","FO","Faroe Islands"]
+    - ["FJI","FJ","Fiji"]
+    - ["FIN","FI","Finland"]
+    - ["FRA","FR","France"]
+    - ["GUF","GF","French Guiana"]
+    - ["PYF","PF","French Polynesia"]
+    - ["ATF","TF","French Southern Territories"]
+    - ["GAB","GA","Gabon"]
+    - ["GMB","GM","Gambia"]
+    - ["GEO","GE","Georgia"]
+    - ["DEU","DE","Germany"]
+    - ["GHA","GH","Ghana"]
+    - ["GIB","GI","Gibraltar"]
+    - ["GBR","GB","Great Britain (England Scotland Wales)"]
+    - ["GRC","GR","Greece"]
+    - ["GRL","GL","Greenland"]
+    - ["GRD","GD","Grenada"]
+    - ["GLP","GP","Guadeloupe"]
+    - ["GUM","GU","Guam"]
+    - ["GTM","GT","Guatemala"]
+    - ["GIN","GN","Guinea"]
+    - ["GNB","GW","Guinea-Bissau"]
+    - ["GUY","GY","Guyana"]
+    - ["HTI","HT","Haiti"]
+    - ["HMD","HM","Heard Island and McDonald Islands"]
+    - ["HND","HN","Honduras"]
+    - ["HKG","HK","Hong Kong SAR of PRC"]
+    - ["HUN","HU","Hungary"]
+    - ["ISL","IS","Iceland"]
+    - ["IND","IN","India"]
+    - ["IDN","ID","Indonesia"]
+    - ["IRN","IR","Iran"]
+    - ["IRQ","IQ","Iraq"]
+    - ["IRL","IE","Ireland"]
+    - ["ISR","IL","Israel"]
+    - ["ITA","IT","Italy"]
+    - ["JAM","JM","Jamaica"]
+    - ["JPN","JP","Japan"]
+    - ["JOR","JO","Jordan"]
+    - ["KAZ","KZ","Kazakhstan"]
+    - ["KEN","KE","Kenya"]
+    - ["KIR","KI","Kiribati"]
+    - ["KOR","KR","Republic of Korea (South Korea)"]
+    - ["PRK","KP","Korea Democratic People's Republic (North Korea)"]
+    - ["UNK","XK","Kosovo"]
+    - ["KWT","KW","Kuwait"]
+    - ["KGZ","KG","Kyrgyzstan"]
+    - ["LAO","LA","Lao People's Democratic Republic"]
+    - ["LVA","LV","Latvia"]
+    - ["LBN","LB","Lebanon"]
+    - ["LSO","LS","Lesotho"]
+    - ["LBR","LR","Liberia"]
+    - ["LBY","LY","Libyan Arab Jamahiriya"]
+    - ["LIE","LI","Liechtenstein"]
+    - ["LTU","LT","Lithuania"]
+    - ["LUX","LU","Luxembourg"]
+    - ["MAC","MO","Macao SAR of PRC (Macau)"]
+    - ["MKD","MK","Macedonia"]
+    - ["MDG","MG","Madagascar"]
+    - ["MWI","MW","Malawi"]
+    - ["MYS","MY","Malaysia"]
+    - ["MDV","MV","Maldives"]
+    - ["MLI","ML","Mali"]
+    - ["MLT","MT","Malta"]
+    - ["MHL","MH","Marshall Islands"]
+    - ["MTQ","MQ","Martinique"]
+    - ["MRT","MR","Mauritania"]
+    - ["MUS","MU","Mauritius"]
+    - ["MYT","YT","Mayotte"]
+    - ["MEX","MX","Mexico"]
+    - ["FSM","FM","Micronesia Federated States of"]
+    - ["MCO","MC","Monaco"]
+    - ["MNG","MN","Mongolia"]
+    - ["MNE","ME","Montenegro"]
+    - ["MSR","MS","Montserrat"]
+    - ["MAR","MA","Morocco"]
+    - ["MOZ","MZ","Mozambique"]
+    - ["MMR","MM","Myanmar"]
+    - ["NAM","NA","Namibia"]
+    - ["NRU","NR","Nauru"]
+    - ["NPL","NP","Nepal"]
+    - ["NLD","NL","Netherlands"]
+    - ["ANT","AN","Netherlands Antilles"]
+    - ["NCL","NC","New Caledonia"]
+    - ["NZL","NZ","New Zealand"]
+    - ["NIC","NI","Nicaragua"]
+    - ["NER","NE","Niger"]
+    - ["NGA","NG","Nigeria"]
+    - ["NIU","NU","Niue"]
+    - ["NFK","NF","Norfolk Island"]
+    - ["MNP","MP","Northern Mariana Islands"]
+    - ["NOR","NO","Norway"]
+    - ["OMN","OM","Oman"]
+    - ["PAK","PK","Pakistan"]
+    - ["PLW","PW","Palau"]
+    - ["PAN","PA","Panama"]
+    - ["PNG","PG","Papua New Guinea"]
+    - ["PRY","PY","Paraguay"]
+    - ["PER","PE","Peru"]
+    - ["PHL","PH","Philippines"]
+    - ["PCN","PN","Pitcairn"]
+    - ["POL","PL","Poland"]
+    - ["PRT","PT","Portugal"]
+    - ["PRI","PR","Puerto Rico"]
+    - ["QAT","QA","Qatar"]
+    - ["MDA","MD","Republic of Moldova"]
+    - ["REU","RE","Reunion"]
+    - ["ROM","RO","Romania"]
+    - ["RUS","RU","Russia"]
+    - ["RWA","RW","Rwanda"]
+    - ["SHN","SH","Saint Helena"]
+    - ["KNA","KN","Saint Kitts and Nevis"]
+    - ["LCA","LC","Saint Lucia"]
+    - ["SPM","PM","Saint Pierre and Miquelon"]
+    - ["VCT","VC","Saint Vincent and the Grenadines"]
+    - ["WSM","WS","Samoa"]
+    - ["SMR","SM","San Marino"]
+    - ["STP","ST","Sao Tome and Principe"]
+    - ["SAU","SA","Saudi Arabia"]
+    - ["SEN","SN","Senegal"]
+    - ["SRB","RS","Serbia"]
+    - ["SYC","SC","Seychelles"]
+    - ["SLE","SL","Sierra Leone"]
+    - ["SGP","SG","Singapore"]
+    - ["SVK","SK","Slovakia"]
+    - ["SVN","SI","Slovenia"]
+    - ["SLB","SB","Solomon Islands"]
+    - ["SOM","SO","Somalia"]
+    - ["ZAF","ZA","South Africa"]
+    - ["SGS","GS","South Georgia and South Sandwich Islands"]
+    - ["ESP","ES","Spain"]
+    - ["LKA","LK","Sri Lanka"]
+    - ["SDN","SD","Sudan"]
+    - ["SUR","SR","Suriname"]
+    - ["SJM","SJ","Svalbard and Jan Mayen"]
+    - ["SWZ","SZ","Swaziland"]
+    - ["SWE","SE","Sweden"]
+    - ["CHE","CH","Switzerland"]
+    - ["SYR","SY","Syria"]
+    - ["TWN","TW","Taiwan"]
+    - ["TJK","TJ","Tajikistan"]
+    - ["TZA","TZ","Tanzania United Republic of"]
+    - ["THA","TH","Thailand"]
+    - ["TGO","TG","Togo"]
+    - ["TKL","TK","Tokelau"]
+    - ["TON","TO","Tonga"]
+    - ["TTE","TT","Trinidad and Tobago"]
+    - ["TUN","TN","Tunisia"]
+    - ["TUR","TR","Turkey"]
+    - ["TKM","TM","Turkmenistan"]
+    - ["TCA","TC","Turks and Caicos Islands"]
+    - ["TUV","TV","Tuvalu"]
+    - ["UGA","UG","Uganda"]
+    - ["UKR","UA","Ukraine"]
+    - ["ARE","AE","United Arab Emirates"]
+    - ["USA","US","United States"]
+    - ["UMI","UM","United States Minor Outlying Islands"]
+    - ["URY","UY","Uruguay"]
+    - ["UZB","UZ","Uzbekistan"]
+    - ["VUT","VU","Vanuatu"]
+    - ["VAT","VA","Vatican City State"]
+    - ["VEN","VE","Venezuela"]
+    - ["VNM","VN","Vietnam"]
+    - ["VGB","VG","Virgin Islands (UK)"]
+    - ["VIR","VI","Virgin Islands (US)"]
+    - ["WLF","WF","Wallis and Futuna"]
+    - ["ESH","EH","Western Sahara"]
+    - ["YEM","YE","Yemen"]
+    - ["ZMB","ZM","Zambia"]
+    - ["ZWE","ZW","Zimbabwe"]
+

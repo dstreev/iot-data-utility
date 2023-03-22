@@ -5,6 +5,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SequenceField extends FieldBase<Long> {
     private AtomicLong start = new AtomicLong(0l);
 
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.LONG;
+    }
+
     public AtomicLong getStart() {
         return start;
     }

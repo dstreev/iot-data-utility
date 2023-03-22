@@ -3,11 +3,10 @@ package com.streever.iot.data.utility.generator.output;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.streever.iot.data.utility.generator.fields.FieldProperties;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.streever.iot.data.utility.generator.output.kafka.KafkaOutput;
 
 import java.io.IOException;
-import java.util.Map;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -59,8 +58,8 @@ public abstract class OutputBase implements Output, Cloneable {
 
     protected abstract void writeLine(String line) throws IOException;
 
-    public long write(Map<FieldProperties, Object> value) throws IOException {
-        String line = format.write(value);
+    public long write(ObjectNode node) throws IOException {
+        String line = format.format(node);
         writeLine(line);
         long rtn = line.length() + 1;
         return rtn;

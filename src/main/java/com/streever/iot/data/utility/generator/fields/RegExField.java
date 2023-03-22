@@ -8,6 +8,11 @@ public class RegExField extends FieldBase<String> {
     private String regex = "[A-Z]{3}";
     private Generex generex = new Generex(regex);
 
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
+
     public Pool<String> getPool() {
         return pool;
     }

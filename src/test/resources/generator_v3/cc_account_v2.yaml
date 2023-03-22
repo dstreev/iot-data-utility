@@ -1,0 +1,162 @@
+schemas:
+  -
+    title:       "account"
+    description: "entity datasource"
+    order:
+      - acct_num
+      - phone_num
+      - open_date
+      - closed_date
+      - status
+      - credit_rating
+      - referal
+    fields:
+      # Will limit this 'key' to a range of 10,000,000 possible values.
+      - type:          "id"
+        name:          "acct_num"
+        hash:          true
+        messageDigest: "SHA-1"
+        characters:    "0123456789"
+        compound: false
+        range:
+          min: 7
+          max: 7
+        idType: "SOURCE"
+      - type:  "regex"
+        name:  "phone_num"
+        regex: "\\(\\d{3}\\)\\d{3}\\-\\d{4}"
+      - type: "date"
+        name: "open_date"
+      - type: "date"
+        name: "closed_date"
+      - type: "string"
+        name: "status"
+        pool:
+          items:
+            - "ACTIVE"
+            - "TERMINATED"
+      - type: "int"
+        name: "credit_rating"
+        range:
+          min: 200
+          max: 850
+      - type: "string"
+        name: "referal"
+        pool:
+          items:
+            - "OTHER_CUSTOMER"
+            - "VENDOR"
+  - title: "card_holder"
+    order:
+      - acct_num
+      - first_name
+      - last_name
+      - dob
+      - gender
+    fields:
+      - type: "id"
+        name: "acct_num"
+      - type: "string"
+        name: "first_name"
+        range:
+          min: 5
+          max: 20
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      - type: "string"
+        name: "last_name"
+        range:
+          min: 5
+          max: 20
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      - type: "date"
+        name: "dob"
+      - type: "string"
+        name: "gender"
+        pool:
+          items:
+            - "M"
+            - "F"
+  -
+    title: "contact"
+    order:
+      - acct_num
+      - type
+      - value
+    fields:
+      - type: "id"
+        name: "acct_num"
+      - type: "string"
+        name: "type"
+        pool:
+          items:
+            - "HOME PHONE"
+            - "CELL PHONE"
+            - "WORK PHONE"
+            - "PERSONAL EMAIL"
+            - "WORK EMAIL"
+      - type: "string"
+        name: "value"
+        range:
+          min: 10
+          max: 30
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  -
+    title: "address"
+    description: "address"
+    order:
+      - acct_num
+      - street_num
+      - street_name
+      - city
+      - state
+      - zip_code
+    fields:
+      - type: "id"
+        name: "acct_num"
+      - type: "long"
+        name: "street_num"
+        range:
+          min: 1
+          max: 10000
+      - type: "string"
+        name: "street_name"
+        range:
+          min: 5
+          max: 20
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      - type: "string"
+        name: "city"
+        range:
+          min: 5
+          max: 15
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      - type: "string"
+        name: "state"
+        range:
+          min: 2
+          max: 2
+        characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      - type: "string"
+        name: "zip_code"
+        range:
+          min: 5
+          max: 5
+        characters: "0123456789"
+
+relationships:
+  - from: "account.acct_num"
+    to: "card_holder.acct_num"
+    cardinality:
+      min: 1
+      max: 2
+  - from: "account.acct_num"
+    to: "contact.acct_num"
+    cardinality:
+      min: 1
+      max: 3
+  - from: "account.acct_num"
+    to: "address.acct_num"
+    cardinality:
+      min: 1
+      max: 3
+

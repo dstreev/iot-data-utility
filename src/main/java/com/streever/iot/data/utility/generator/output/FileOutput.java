@@ -26,8 +26,6 @@ public abstract class FileOutput extends OutputBase {
 
     private String filename;
 
-    // Build sub-directories for the relationships
-    private boolean dirForRelationship = true;
     // Control if output files are unique.
     private boolean unique = false;
     // Control unique TS format for output files.
@@ -41,14 +39,6 @@ public abstract class FileOutput extends OutputBase {
 
     public void setFilename(String filename) {
         this.filename = filename;
-    }
-    
-    public boolean isDirForRelationship() {
-        return dirForRelationship;
-    }
-
-    public void setDirForRelationship(boolean dirForRelationship) {
-        this.dirForRelationship = dirForRelationship;
     }
 
     public boolean isUnique() {
@@ -114,16 +104,16 @@ public abstract class FileOutput extends OutputBase {
                 }
             }
             if (prefix != null) {
-                if (isDirForRelationship()) {
-                    baseDir = prefix + System.getProperty("file.separator") + getName();
-                } else {
+//                if (isDirForRelationship()) {
+//                    baseDir = prefix + System.getProperty("file.separator") + getName();
+//                } else {
                     baseDir = prefix;
-                }
+//                }
                 createDir(baseDir);
             } else {
-                if (isDirForRelationship()) {
+//                if (isDirForRelationship()) {
                     baseDir = getName();
-                }
+//                }
             }
             if (baseDir != null) {
                 createDir(baseDir);
@@ -153,7 +143,7 @@ public abstract class FileOutput extends OutputBase {
     @Override
     public Object clone() throws CloneNotSupportedException {
         LocalFileOutput clone = (LocalFileOutput) super.clone();
-        clone.setDirForRelationship(new Boolean(isDirForRelationship()));
+//        clone.setDirForRelationship(new Boolean(isDirForRelationship()));
         if (getFilename() != null)
             clone.setFilename(new String(getFilename()));
         clone.setUnique(new Boolean(this.unique));

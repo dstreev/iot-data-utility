@@ -1,7 +1,7 @@
-default:
+config:
   type: "dfs"
   format:
     type: "json"
-  dirForRelationship: true
+#  dirForRelationship: true
   unique: true
   uniqueType: UUID

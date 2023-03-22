@@ -1,7 +1,6 @@
-default:
+config:
   type: "file"
   format:
     type: "csv"
-  dirForRelationship: true
   unique: true
   uniqueType: UUID

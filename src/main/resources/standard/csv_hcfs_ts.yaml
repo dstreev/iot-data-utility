@@ -1,7 +1,7 @@
-default:
+config:
   type: "dfs"
   format:
     type: "csv"
-  dirForRelationship: true
+#  dirForRelationship: true
   unique: true
   uniqueType: TIMESTAMP

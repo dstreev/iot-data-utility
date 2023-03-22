@@ -12,6 +12,11 @@ public class SeededLongField extends FieldBase<String> {
     private String messageDigest = null;
     private DigestUtils dg = null;
 
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.STRING;
+    }
+
     public Range<Long> getRange() {
         return range;
     }

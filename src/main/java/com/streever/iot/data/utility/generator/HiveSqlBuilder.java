@@ -3,15 +3,14 @@ package com.streever.iot.data.utility.generator;
 import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import com.streever.iot.data.utility.generator.fields.SqlType;
 import com.streever.iot.data.utility.generator.fields.TerminateException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 public class HiveSqlBuilder implements SqlBuilder {
-    private Schema schema;
-    private SqlType sqlType = SqlType.HIVE;
+    private Domain domain;
+//    private SqlType sqlType = SqlType.HIVE;
     private FileFormat sourceFileFormat = FileFormat.TEXTFILE;
     private FileFormat targetFileFormat = FileFormat.ORC;
     private String sourceDb = "sourceDb";
@@ -20,41 +19,13 @@ public class HiveSqlBuilder implements SqlBuilder {
     private Boolean buildSweepSql = Boolean.TRUE;
 
     @Override
-    public Schema getSchema() {
-        return schema;
+    public Domain getDomain() {
+        return domain;
     }
 
     @Override
-    public void setSchema(Schema schema) {
-        this.schema = schema;
-    }
-
-    public SqlType getSqlType() {
-        return sqlType;
-    }
-
-    public void setSqlType(SqlType sqlType) {
-        this.sqlType = sqlType;
-    }
-
-    @Override
-    public void link() {
-        if (schema != null) {
-            schema.link();
-        }
-    }
-
-    private void getNext(Schema schema) {
-        try {
-            schema.next();
-        } catch (TerminateException e) {
-            e.printStackTrace();
-        }
-        if (schema.getRelationships() != null) {
-            for (Map.Entry<String, Relationship> entry : schema.getRelationships().entrySet()) {
-                getNext(entry.getValue().getRecord());
-            }
-        }
+    public void setDomain(Domain domain) {
+        this.domain = domain;
     }
 
     protected String createUseDb(String db) {
@@ -67,13 +38,12 @@ public class HiveSqlBuilder implements SqlBuilder {
     @Override
     public String build() {
         // Initial returns for one record.
-        getNext(getSchema());
         StringBuilder sb = new StringBuilder();
         sb.append(createUseDb(sourceDb));
-        sb.append(writeCreateStatement(getSchema(), getSchema().getTitle(), sourceFileFormat, TableType.EXTERNAL)).append("\n\n");
+//        sb.append(writeCreateStatement(getDomain(), getDomain().getTitle(), sourceFileFormat, TableType.EXTERNAL)).append("\n\n");
         sb.append(createUseDb(targetDb));
-        sb.append(writeCreateStatement(getSchema(), getSchema().getTitle(), targetFileFormat, TableType.MANAGED)).append("\n\n");
-        sb.append(writeSweepStatement(getSchema(), getSchema().getTitle(), sourceDb, targetDb));
+//        sb.append(writeCreateStatement(getDomain(), getDomain().getTitle(), targetFileFormat, TableType.MANAGED)).append("\n\n");
+//        sb.append(writeSweepStatement(getDomain(), getDomain().getTitle(), sourceDb, targetDb));
         return sb.toString();
     }
 
@@ -95,7 +65,7 @@ public class HiveSqlBuilder implements SqlBuilder {
         while (iValueKeys.hasNext()) {
             FieldProperties checkFp = iValueKeys.next();
             Object value = schema.getValueMap().get(checkFp);
-            sb.append("\t" + checkFp.getName() + " " + schema.getSqlType(this.sqlType, value));
+//            sb.append("\t" + checkFp.getName() + " " + schema.getSqlType(this.sqlType, value));
             if (checkFp.getField().getDesc() != null) {
                 sb.append(" COMMENT \"" + checkFp.getField().getDesc() + "\"");
             }
@@ -125,7 +95,7 @@ public class HiveSqlBuilder implements SqlBuilder {
         sb.append("STORED AS ");
         sb.append(fileFormat.toString());
         sb.append(";\n");
-        sb.append(writeCreateRelationshipStatements(schema.getRelationships(), fileFormat, tableType));
+//        sb.append(writeCreateRelationshipStatements(schema.getRelationships(), fileFormat, tableType));
         return sb.toString();
     }
 
@@ -135,18 +105,18 @@ public class HiveSqlBuilder implements SqlBuilder {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {
                 Relationship relationship = relationships.get(key);
-                Schema rRecord = relationship.getRecord();
-                for (int i = 1;i <= relationship.getCardinality().getRepeat();i++) {
-                    String tablename = null;
-                    if (relationship.getCardinality().getRepeat() <= 1) {
-                        tablename = key;
-                    } else {
-                        tablename = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
-                    }
-                    sb.append(writeCreateStatement(rRecord, tablename, fileFormat, tableType)).append("\n\n");
-                    // Recurse into hierarchy
-                    sb.append(writeCreateRelationshipStatements(rRecord.getRelationships(), fileFormat, tableType));
-                }
+//                Schema rRecord = relationship.getRecord();
+//                for (int i = 1;i <= relationship.getCardinality().getRepeat();i++) {
+//                    String tablename = null;
+//                    if (relationship.getCardinality().getRepeat() <= 1) {
+//                        tablename = key;
+//                    } else {
+//                        tablename = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
+//                    }
+//                    sb.append(writeCreateStatement(rRecord, tablename, fileFormat, tableType)).append("\n\n");
+//                    // Recurse into hierarchy
+//                    sb.append(writeCreateRelationshipStatements(rRecord.getRelationships(), fileFormat, tableType));
+//                }
             }
         }
         return sb.toString();
@@ -160,7 +130,7 @@ public class HiveSqlBuilder implements SqlBuilder {
         sb.append(targetDb).append(".").append(tableName).append("\n");
         sb.append("SELECT *").append(";\n\n");
 
-        sb.append(writeSweepRelationshipStatements(schema.getRelationships(), sourceDb, targetDb));
+//        sb.append(writeSweepRelationshipStatements(schema.getRelationships(), sourceDb, targetDb));
         return sb.toString();
     }
 
@@ -170,18 +140,18 @@ public class HiveSqlBuilder implements SqlBuilder {
             Set<String> relationshipKeys = relationships.keySet();
             for (String key : relationshipKeys) {
                 Relationship relationship = relationships.get(key);
-                Schema rRecord = relationship.getRecord();
-                for (int i = 1;i <= relationship.getCardinality().getRepeat();i++) {
-                    String tablename = null;
-                    if (relationship.getCardinality().getRepeat() <= 1) {
-                        tablename = key;
-                    } else {
-                        tablename = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
-                    }
-                    sb.append(writeSweepStatement(rRecord, tablename, sourceDb, targetDb));
-                    // Recurse into hierarchy
-                    sb.append(writeSweepRelationshipStatements(rRecord.getRelationships(),sourceDb, targetDb));
-                }
+//                Schema rRecord = relationship.getRecord();
+//                for (int i = 1;i <= relationship.getCardinality().getRepeat();i++) {
+//                    String tablename = null;
+//                    if (relationship.getCardinality().getRepeat() <= 1) {
+//                        tablename = key;
+//                    } else {
+//                        tablename = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
+//                    }
+//                    sb.append(writeSweepStatement(rRecord, tablename, sourceDb, targetDb));
+//                    // Recurse into hierarchy
+//                    sb.append(writeSweepRelationshipStatements(rRecord.getRelationships(),sourceDb, targetDb));
+//                }
             }
         }
         return sb.toString();

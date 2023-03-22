@@ -1,0 +1,87 @@
+schemas:
+  -
+    title: hello
+    description: helloDesc
+    order:
+      - state
+      - city
+      - active.start
+      - active.stop
+      - output
+      - amount
+      - coordinate
+      - longs
+      - types
+      - report_date
+      - count
+      - now
+      - seq
+    fields:
+      -
+        type: "reference.string"
+        name: "state"
+        delimiter: ","
+        position: 1
+        file: "/states.csv"
+      -
+        type: "reference.string"
+        name: "city"
+        delimiter: ","
+        position: 1
+        file: "/uscities.csv"
+      -
+        type: "fixed"
+        name: "count"
+        value: 1
+      -
+        type: "float"
+        name: "amount"
+        format: "#.##"
+        range:
+          min: 1
+          max: 1000
+      -
+        type: "array.string"
+        name: "types"
+      -
+        type: "array.long"
+        name: "longs"
+        range:
+          min: 1
+          max: 29999999
+      -
+        type: "string"
+        name: "output"
+        range:
+          min: 2
+          max: 19
+        pool:
+          size: 100
+      -
+        type: "location"
+        name: "coordinate"
+        pool:
+          items:
+            -
+              longitude: 33.5
+              latitude: -63.5
+      -
+        type: "date"
+        name: "report_date"
+        range:
+          min: "2017-10-01"
+          max: "2017-11-30"
+      -
+        type: "date"
+        name: "active"
+        range:
+          min: "2017-10-01"
+          max: "2017-11-30"
+      -
+        type: "date"
+        name: "now"
+        current: true
+      -
+        type: "sequence"
+        name: "seq"
+        start: 200

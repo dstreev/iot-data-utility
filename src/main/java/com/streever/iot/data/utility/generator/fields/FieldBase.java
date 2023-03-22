@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.streever.iot.data.utility.generator.Relationship;
+import com.streever.iot.data.utility.generator.Schema;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -24,6 +23,7 @@ import java.util.TreeMap;
         @JsonSubTypes.Type(value = SeededLongField.class, name = "seeded.long"),
         @JsonSubTypes.Type(value = DateField.class, name = "date"),
         @JsonSubTypes.Type(value = IntegerField.class, name = "int"),
+        @JsonSubTypes.Type(value = IdField.class, name = "id"),
         @JsonSubTypes.Type(value = LongField.class, name = "long"),
         @JsonSubTypes.Type(value = FloatField.class, name = "float"),
         @JsonSubTypes.Type(value = DoubleField.class, name = "double"),
@@ -33,21 +33,48 @@ import java.util.TreeMap;
         @JsonSubTypes.Type(value = ArrayStringField.class, name = "array.string"),
         @JsonSubTypes.Type(value = Relationship.class, name = "relationship")
 })
-@JsonIgnoreProperties({ "randomizer", "order", "startStopState", "key", "last", "ext", "maintainState" })
+@JsonIgnoreProperties({ "randomizer", "order", "startStopState", "key", "last", "ext", "maintainState", "fieldNum" })
 public abstract class FieldBase<T> implements Comparable<FieldBase> {
+    protected Map<String, Object> stateValues = new TreeMap<String, Object>();
+    protected Random randomizer = new Random(new Date().getTime());
 //    private Integer order;
     private String name;
     private boolean maintainState = false;
-    protected Map<String, Object> stateValues = new TreeMap<String, Object>();
     private boolean key = false;
     private Integer repeat = 1;
     private String desc;
     private boolean number = false;
+    @JsonIgnore
+    private Schema parent;
+    /*
+    Sets the field number in the schema based on ordered position.
+     */
+    private Integer fieldNum = null;
     private Boolean random = Boolean.TRUE;
-    protected Random randomizer = new Random(new Date().getTime());
-//    private StartStopState startStopState = StartStopState.NA;
-
     private Object last;
+
+    public Schema getParent() {
+        return parent;
+    }
+
+    public void setParent(Schema parent) {
+        this.parent = parent;
+    }
+
+    public Integer getFieldNum() {
+        return fieldNum;
+    }
+
+    public void setFieldNum(Integer fieldNum) {
+        this.fieldNum = fieldNum;
+    }
+
+//    private StartStopState startStopState = StartStopState.NA;
+    public Random getRandomizer() {
+        return randomizer;
+    }
+
+    public abstract FieldType getFieldType();
 
     public void setLast(Object last) {
         this.last = last;
@@ -120,7 +147,10 @@ public abstract class FieldBase<T> implements Comparable<FieldBase> {
         return number;
     }
 
-    public boolean validate() {
+    /*
+    TODO: Validate Fields
+     */
+    public Boolean validate(List<String> reasons) {
         return Boolean.TRUE;
     }
 

@@ -3,14 +3,18 @@ package com.streever.iot.data.utility.generator.fields;
 import com.streever.iot.data.utility.generator.fields.support.GeoCircle;
 import com.streever.iot.data.utility.generator.fields.support.GeoLocation;
 import com.streever.iot.data.utility.generator.fields.support.Pool;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.util.Date;
+import org.apache.commons.lang3.NotImplementedException;
+//import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class GeoLocationField extends FieldBase<GeoLocation> {
 
     private GeoCircle center;
     private Pool<GeoLocation> pool;
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.GEOLOCATION;
+    }
 
     public GeoCircle getCenter() {
         return center;
@@ -39,8 +43,10 @@ public class GeoLocationField extends FieldBase<GeoLocation> {
 
     // TODO: Build Random GeoLocation from GeoCenter
     protected GeoLocation newValue() {
-        throw new NotImplementedException();
-//        return null;
+        GeoLocation rtn = new GeoLocation();
+        rtn.setLatitude(0.0);
+        rtn.setLongitude(0.0);
+        return rtn;
     }
 
     @Override
