@@ -1,6 +1,5 @@
 package com.streever.iot.data.utility.generator;
 
-import com.amazonaws.thirdparty.joda.time.format.DateTimeFormat;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,10 +11,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -59,8 +56,12 @@ public class Domain {
         List<String> resolvedConfigLines = TokenReplacement.getInstance().replace(configLines, condensedTokens);
 
         configDefinition = resolvedConfigLines.stream().map(n -> String.valueOf(n)).collect(Collectors.joining("\n"));
-        domain = mapper.readerFor(Domain.class).readValue(configDefinition);
-
+        try {
+            domain = mapper.readerFor(Domain.class).readValue(configDefinition);
+        } catch (Throwable t) {
+            System.err.println(t.getMessage());
+            throw new RuntimeException(t);
+        }
         return domain;
     }
 

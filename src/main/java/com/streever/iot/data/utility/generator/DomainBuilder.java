@@ -44,7 +44,9 @@ public class DomainBuilder {
         this.terminationReason = terminationReason;
     }
 
-//    private Map<String, Output> outputMap = new TreeMap<String, Output>();
+    public Schema getAnchorSchema() {
+        return anchorSchema;
+    }
 
     public DomainBuilder() {
 
@@ -122,95 +124,6 @@ public class DomainBuilder {
         this.outputConfig = outputConfig;
     }
 
-    /*
-    Using the record and output specs, build and assign the writers for each
-    record.
-    */
-//    protected boolean mapOutputSpecs() {
-//        boolean rtn = Boolean.TRUE;
-//        if (getOutputConfig() != null) {
-//            if (getOutputConfig().getDefault() != null) {
-//                getOutputConfig().getDefault().setName(getSchema().getId());
-//                outputMap.put(getSchema().getTitle(), getOutputConfig().getDefault());
-//                // When filename in output spec if not set, use the 'record.id'
-//                // TODO: file extension
-//                if (getOutputConfig().getDefault() instanceof LocalFileOutput && ((LocalFileOutput) getOutputConfig().getDefault()).getFilename() == null) {
-//                    // The id is set in the linking process and is not a serialized element
-//                    ((LocalFileOutput) getOutputConfig().getDefault()).setFilename(getSchema().getId());
-//                }
-//                if (getOutputConfig().getDefault() instanceof DFSOutput && ((DFSOutput) getOutputConfig().getDefault()).getFilename() == null) {
-//                    // The id is set in the linking process and is not a serialized element
-//                    ((DFSOutput) getOutputConfig().getDefault()).setFilename(getSchema().getId());
-//                }
-////                if (getSchema().getRelationships() != null) {
-////                    // Start processing relationships
-////                    rtn = mapOutputSpecRelationships(getSchema().getRelationships(), getOutputConfig().getRelationships());
-////                }
-//            } else {
-//                rtn = Boolean.FALSE;
-//            }
-//        } else {
-//            rtn = Boolean.FALSE;
-//        }
-//        return rtn;
-//    }
-
-//    protected boolean mapOutputSpecRelationships(Map<String, Relationship> relationships, Map<String, OutputBase> outputRelationships) {
-//        boolean rtn = Boolean.TRUE;
-//        Set<String> relationshipNames = relationships.keySet();
-//        for (String key : relationshipNames) {
-//            Relationship relationship = relationships.get(key);
-////            Schema record = relationship.getRecord();
-//            for (int i = 1; i <= relationship.getCardinality().getRepeat(); i++) {
-//                String keyPos = null;
-//                if (relationship.getCardinality().getRepeat() == 1) {
-//                    keyPos = key;
-//                } else {
-//                    keyPos = key + "_" + StringUtils.leftPad(Integer.toString(i), 4, "0");
-//                }
-//                OutputBase output = outputRelationships.get(keyPos);
-//                if (output == null) {
-//                    // Output Spec matching name not found.
-//                    try {
-//                        OutputBase spec = (OutputBase) getOutputConfig().getConfig().clone();
-//                        if (spec instanceof LocalFileOutput) {
-//                            ((LocalFileOutput) spec).setName(keyPos);
-//                            ((LocalFileOutput) spec).setFilename(keyPos);
-//                        }
-//                        spec.setName(keyPos);
-//                        outputMap.put(keyPos, spec);
-////                        spec.link(record);
-////                        System.out.println("Cloned 'default' spec for record: " + keyPos);
-//                    } catch (CloneNotSupportedException cnse) {
-//                        cnse.printStackTrace();
-//                    }
-//                } else {
-//                    if (!output.isUsed()) {
-//                        output.setName(keyPos);
-//                        // When filename in output spec if not set, use the 'record.id'
-//                        // TODO: file extension
-//                        if (output instanceof LocalFileOutput && ((LocalFileOutput) output).getFilename() == null) {
-//                            ((LocalFileOutput) output).setFilename(keyPos);
-//                        }
-//                        outputMap.put(keyPos, output);
-//                        output.setUsed(Boolean.TRUE);
-//                    } else {
-////                        System.out.println("Output has been previous used, define a separate output for:" +
-////                                record.getId());
-//                        rtn = Boolean.FALSE;
-//                    }
-//                }
-//            }
-//            // If there are relationships, recurse and set them.
-////            if (record.getRelationships() != null) {
-////                if (!mapOutputSpecRelationships(record.getRelationships(), outputRelationships)) {
-////                    rtn = Boolean.FALSE;
-////                }
-////            }
-//        }
-//        return rtn;
-//    }
-
     public void init() {
         // Part of the initialization requires us to sweep through the schema and
         // link the parts of the schema together (hierarchy) so we can build complex
@@ -229,24 +142,6 @@ public class DomainBuilder {
         initialized = true;
     }
 
-    /*
-    Combine the record and output spec to ensure they are valid.
-    For instance:
-    - Each 'record' has an output speck
-    - relationship map name aren't duplicated
-     */
-//    protected boolean validate() {
-//        boolean rtn = Boolean.TRUE;
-//        if (this.getDomain() != null) {
-//            if (!this.getDomain().validate()) {
-//                rtn = Boolean.FALSE;
-//            }
-//        } else {
-//            rtn = Boolean.FALSE;
-//            System.err.println("Validation Issue: Set 'Record' in builder");
-//        }
-//        return rtn;
-//    }
 
     /*
     Open the output spec IO channel(s) for writing.
@@ -255,11 +150,6 @@ public class DomainBuilder {
         // Initialize if null;
         OutputConfig oc = getOutputConfig();
         oc.getConfig().open(outputPrefix);
-//        // Open specs
-//        Set<String> outputKeys = outputMap.keySet();
-//        for (String recordKey : outputKeys) {
-//            outputMap.get(recordKey).open(outputPrefix);
-//        }
     }
 
     /*

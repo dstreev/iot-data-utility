@@ -109,14 +109,16 @@ public class DataGenTool extends Configured implements Tool {
         } else {
             LOG.info("Config File: " + config);
 
-            try {
-                InputStream configInputStream = getClass().getResourceAsStream(config);
-                domain = Domain.deserializeInputStream(tokens, configInputStream);
-            } catch (IOException e) {
-//                e.printStackTrace();
-//                throw new RuntimeException(e);
-                // Didn't find as resource, try FS.
-            }
+//            try {
+//                InputStream configInputStream = getClass().getResourceAsStream(config);
+//                domain = Domain.deserializeInputStream(tokens, configInputStream);
+//            } catch (RuntimeException e) {
+////                e.printStackTrace();
+////                throw new RuntimeException(e);
+//                // Didn't find as resource, try FS.
+//            } catch (IOException e) {
+////                throw new RuntimeException(e);
+//            }
             // Read the Config from the path.
             if (domain == null) {
                 FileSystem FS1 = null;
@@ -130,6 +132,7 @@ public class DataGenTool extends Configured implements Tool {
 
                     domain = Domain.deserializeInputStream(tokens, dfsConfigInputStream);
                 } catch (IOException e) {
+                    System.err.println(e.getMessage());
                     e.printStackTrace();
                     throw new RuntimeException(e);
                 } finally {

@@ -6,12 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.CsvWriteException;
-import com.streever.iot.data.utility.generator.fields.FieldProperties;
 import org.apache.commons.lang3.StringUtils;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Consumer;
 
 public class CSVFormat extends FormatBase {
     private char separator = ',';

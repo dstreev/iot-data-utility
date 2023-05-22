@@ -1,0 +1,92 @@
+schemas:
+  -
+    title: entity
+    description:
+    order:
+      - id
+      - code
+      - field1
+    fields:
+      -
+        type: "id"
+        name: "id"
+        idType: "TRANSACTIONAL"
+      -
+        type: "string"
+        name: "code"
+      -
+        type: "string"
+        name: "field1"
+  -
+    title: "left"
+    description: ""
+    order:
+      - entity_id
+      - id
+      - code
+      - cost
+      - field
+    fields:
+      -
+        type: "id"
+        name: "entity_id"
+      -
+        type: "id"
+        name: "id"
+        idType: "TRANSACTIONAL"
+      -
+        type: "string"
+        name: "code"
+      -
+        type: "int"
+        name: "cost"
+        range:
+          min: 0
+          max: 1000
+      -
+        type: string
+        name: "field"
+        repeat: 100
+  -
+    title: "right"
+    description: ""
+    order:
+      - entity_id
+      - id
+      - code
+      - cost
+      - field
+    fields:
+      -
+        type: "id"
+        name: "entity_id"
+      -
+        type: "id"
+        name: "id"
+        idType: "TRANSACTIONAL"
+      -
+        type: "string"
+        name: "code"
+      -
+        type: "int"
+        name: "cost"
+        range:
+          min: 0
+          max: 1000
+      -
+        type: string
+        name: "field"
+        repeat: 100
+relationships:
+  -
+    from: "entity.id"
+    to: "left.entity_id"
+    cardinality:
+      min: 1
+      max: 100
+  -
+    from: "entity.id"
+    to: "right.entity_id"
+    cardinality:
+      min: 1
+      max: 100

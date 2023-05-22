@@ -2,6 +2,7 @@ package com.streever.iot.data.cli;
 
 import com.jcabi.manifests.Manifests;
 import com.streever.iot.data.utility.generator.*;
+import com.streever.iot.data.utility.generator.output.FileOutput;
 import org.apache.commons.cli.*;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -19,7 +20,7 @@ public class DomainGenerator {
     public static String DEFAULT_VALIDATION_MULTI_YAML = "/validation/multi-default.yaml";
     public static Long DEFAULT_COUNT = 500l;
 
-//    private Options options;
+    //    private Options options;
     private CommandLine line;
 
     public static Options getOptions() {
@@ -220,16 +221,13 @@ public class DomainGenerator {
             String domainFile = null;
             if (line.hasOption("d")) {
                 domainFile = line.getOptionValue("d");
-//                if (anchorSchema == null || anchorSchema.trim().length() == 0) {
-//                    throw new RuntimeException("Need to specify `-s <anchor-schema> option");
-//                }
             } else {
                 // use a default for testing.
                 if (line.hasOption("dd")) {
-                        LOG.info("Default domain specified.  Using default 'validation' domain in 'resources' for testing: " + DEFAULT_VALIDATION_MULTI_YAML);
-                        domainFile = DEFAULT_VALIDATION_MULTI_YAML;
-                        if (anchorSchema == null)
-                            anchorSchema = "transaction";
+                    LOG.info("Default domain specified.  Using default 'validation' domain in 'resources' for testing: " + DEFAULT_VALIDATION_MULTI_YAML);
+                    domainFile = DEFAULT_VALIDATION_MULTI_YAML;
+                    if (anchorSchema == null)
+                        anchorSchema = "transaction";
                 } else {
                     LOG.info("No domain specified.  Using default 'validation' domain in 'resources' for testing: " + DEFAULT_VALIDATION_YAML);
                     domainFile = DEFAULT_VALIDATION_YAML;
@@ -246,7 +244,7 @@ public class DomainGenerator {
                 // token replacements
                 tokenReplacements = new HashMap<String, Object>();
                 String[] tokenReplacementStrs = line.getOptionValues("tr");
-                for (String trstr: tokenReplacementStrs) {
+                for (String trstr : tokenReplacementStrs) {
                     String[] parts = trstr.split("=");
                     if (parts.length == 2) {
                         tokenReplacements.put(parts[0], parts[1]);
@@ -290,60 +288,55 @@ public class DomainGenerator {
                     builder.setCount(DEFAULT_COUNT);
                 }
 
-                // Use the supplied ouTput spec
-                if (line.hasOption("o")) {
-                    String ops = line.getOptionValue("o");
-                    LOG.info("Output Configuration: " + ops);
-                    OutputConfig outputCfg = OutputConfig.deserialize(ops);
-                    builder.setOutputConfig(outputCfg);
-                } else {
-                    // or build the reference based in flags.
-                    String[] specOutput = new String[2];
-                    if (line.hasOption("csv")) {
-                        LOG.info("Output Spec: csv");
-                        specOutput[0] = "csv";
-                    }
-                    if (line.hasOption("json")) {
-                        LOG.info("Output Spec: json");
-                        specOutput[0] = "json";
-                    }
-                    if (line.hasOption("std")) {
-                        LOG.info("Output Spec: std");
-                        specOutput[1] = "std";
-                    }
-                    if (line.hasOption("local")) {
-                        LOG.info("Output Spec: local");
-                        specOutput[1] = "local";
-                    }
-                    if (line.hasOption("hcfs")) {
-                        LOG.info("Output Spec: hcfs");
-                        specOutput[1] = "hcfs";
-                    }
-
-                    String specFile = null;
-                    if (specOutput[0] != null && specOutput[1] != null) {
-                        specFile = specOutput[0] + "_" + specOutput[1];
-                    } else if (specOutput[0] != null && specOutput[1] == null) {
-                        specFile = specOutput[0] + "_std";
-                    } else if (specOutput[0] == null && specOutput[1] != null) {
-                        specFile = "csv_" + specOutput[1];
-                    } else {
-                        specFile = "json_std";
-                    }
-
-                    if (!line.hasOption("std") && line.hasOption("ts")) {
-                        specFile = specFile + "_ts";
-                    } else if (!line.hasOption("std") && line.hasOption("uuid")) {
-                        specFile = specFile + "_uuid";
-                    }
-                    specFile = "/standard/" + specFile + ".yaml";
-                    LOG.info("SpecFile: " + specFile);
-
-                    OutputConfig outputSpec = OutputConfig.deserialize(specFile);
-                    builder.setOutputConfig(outputSpec);
+                String[] specOutput = new String[2];
+                if (line.hasOption("csv")) {
+                    LOG.info("Output Spec: csv");
+                    specOutput[0] = "csv";
                 }
-                if (line.hasOption("p")) {
-                    String outputPrefix = line.getOptionValue("p");
+                if (line.hasOption("json")) {
+                    LOG.info("Output Spec: json");
+                    specOutput[0] = "json";
+                }
+                if (line.hasOption("std")) {
+                    LOG.info("Output Spec: std");
+                    specOutput[1] = "std";
+                }
+                if (line.hasOption("local")) {
+                    LOG.info("Output Spec: local");
+                    specOutput[1] = "local";
+                }
+                if (line.hasOption("hcfs")) {
+                    LOG.info("Output Spec: hcfs");
+                    specOutput[1] = "hcfs";
+                }
+
+                String specFile = null;
+                if (specOutput[0] != null && specOutput[1] != null) {
+                    specFile = specOutput[0] + "_" + specOutput[1];
+                } else if (specOutput[0] != null && specOutput[1] == null) {
+                    specFile = specOutput[0] + "_std";
+                } else if (specOutput[0] == null && specOutput[1] != null) {
+                    specFile = "csv_" + specOutput[1];
+                } else {
+                    specFile = "json_std";
+                }
+
+                if (!line.hasOption("std") && line.hasOption("ts")) {
+                    specFile = specFile + "_ts";
+                } else if (!line.hasOption("std") && line.hasOption("uuid")) {
+                    specFile = specFile + "_uuid";
+                }
+                specFile = "/standard/" + specFile + ".yaml";
+                LOG.info("SpecFile: " + specFile);
+
+                OutputConfig outputSpec = OutputConfig.deserialize(specFile);
+                if (outputSpec.getConfig() instanceof FileOutput) {
+                    ((FileOutput) outputSpec.getConfig()).setFilename(builder.getAnchorSchema().getTitle());
+                }
+                builder.setOutputConfig(outputSpec);
+
+                if (line.hasOption("o")) {
+                    String outputPrefix = line.getOptionValue("o");
                     LOG.info("Output Prefix: " + outputPrefix);
                     builder.setOutputPrefix(outputPrefix);
                 }
